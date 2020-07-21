@@ -54,13 +54,13 @@ def display_menu(clear):
     print(
         term_pos(menu_pos.top + 3, menu_pos.menu_2y) + term_codes.bold + term_codes.yellow + "7. " + term_codes.normal +
         " Process Episodes")
-    '''
     print(
         term_pos(menu_pos.top + 4, menu_pos.menu_2y) + term_codes.bold + term_codes.yellow + "8. " + term_codes.normal +
-        " Process Followed Shows")
+        " Process Downloads")
     print(
         term_pos(menu_pos.top + 5, menu_pos.menu_2y) + term_codes.bold + term_codes.yellow + "9. " + term_codes.normal +
-        " Process Followed Show Updates")
+        " Process Statistics")
+    '''
     print(term_pos(menu_pos.top + 6,
                    menu_pos.menu_2y) + term_codes.bold + term_codes.yellow + "10. " + term_codes.normal +
           "Process Episodes by Followed Shows")
@@ -210,8 +210,9 @@ def process_ou_menu(inp):
     elif inp == "6c":
         print(term_pos(menu_pos.status_x, menu_pos.status_y), "Cleaned crontab run log" + term_codes.cl_eol)
         print()
-        subprocess.call("echo "" >/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/Apps/Logs/Download_Episodes.txt "
-                        , shell=True)
+        subprocess.call("echo "" "
+                        ">/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/Apps/Logs/Download_Episodes.txt ",
+                        shell=True)
     elif inp == "7":
         display_ou_menu(True)
         print(term_pos(menu_pos.status_x, menu_pos.status_y), "TVMaze Error log" + term_codes.cl_eol)
@@ -234,8 +235,9 @@ def process_ou_menu(inp):
         display_ou_menu(True)
         print(term_pos(menu_pos.status_x, menu_pos.status_y), "Cleaned Transmission log" + term_codes.cl_eol)
         print()
-        subprocess.call("echo "" >/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/Apps/Logs/LogPlexThemProgram.txt "
-                        , shell=True)
+        subprocess.call("echo "" "
+                        ">/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/Apps/Logs/LogPlexThemProgram.txt ",
+                        shell=True)
     elif inp == "9":
         display_ou_menu(True)
         print(term_pos(menu_pos.status_x, menu_pos.status_y), "TVMaze Cleanup SRTs log" + term_codes.cl_eol)
@@ -316,14 +318,14 @@ def tvm_follow(fl, si):
     if fl == "F":
         shows = requests.put(info_api,
                              headers={'Authorization':
-                                          'Basic RGlja0tsdWlzOlRUSFlfQ2hIeUF5SU1fV1ZZRmUwcDhrWTkxTkE1WUNH'})
+                                      'Basic RGlja0tsdWlzOlRUSFlfQ2hIeUF5SU1fV1ZZRmUwcDhrWTkxTkE1WUNH'})
         if shows.status_code != 200:
             print("Error trying to follow show:", si, shows.status_code)
             return False
     elif fl == "U":
         shows = requests.delete(info_api,
                                 headers={'Authorization':
-                                             'Basic RGlja0tsdWlzOlRUSFlfQ2hIeUF5SU1fV1ZZRmUwcDhrWTkxTkE1WUNH'})
+                                         'Basic RGlja0tsdWlzOlRUSFlfQ2hIeUF5SU1fV1ZZRmUwcDhrWTkxTkE1WUNH'})
         if shows.status_code != 200 and shows.status_code != 404:
             print("Error trying to un-follow show:", si, shows.status_code)
             return False
@@ -384,55 +386,23 @@ def un_follow_a_show(si):
         print("TVMaze could not un-follow Shows", si)
         return False
     # First set the all-show info to Skipped
-    try:
-        tvm_cur.execute("UPDATE shows "
-                        "SET status = 'Skipped', download = Null "
-                        "WHERE showid = ?", (si,))
-        tvm_db.commit()
-    except sqlite3.IntegrityError as uas_er:
-        print("Update Integrity Error for All Shows", si, uas_er)
+    result = execute_sql(sqltype='Commit', sql=f"UPDATE shows "
+                                               f"SET status = 'Skipped', download = Null "
+                                               f"WHERE showid = {si}")
+    if not result:
+        print(f'Update of show {si} did not work and did not try to delete the episodes')
         return False
-    except sqlite3.Error as uas_er:
-        print("Update Error All Shows:", si, uas_er)
-        return False
-    
-    # Second delete the show from the Followed Shows
-    try:
-        tvm_cur.execute('DELETE from followed_shows '
-                        'WHERE showid = ?', (si,))
-        tvm_db.commit()
-    except sqlite3.IntegrityError as uas_er:
-        print("Delete Integrity Error for Followed Shows", si, uas_er)
-        return False
-    except sqlite3.Error as uas_er:
-        print("Delete Error Followed Shows:", si, uas_er)
-        return False
-    
-    # Third delete the show form the Episodes Table
-    try:
-        tvm_cur.execute('DELETE from eps_by_show '
-                        'WHERE showid = ?', (si,))
-        tvm_db.commit()
-    except sqlite3.IntegrityError as uas_er:
-        print("Delete Integrity Error for Eps by Show", si, uas_er)
-        return False
-    except sqlite3.Error as uas_er:
-        print("Delete Error Eps by Show:", si, uas_er)
-        return False
+    # then delete the show form the Episodes Table
+    result = execute_sql(sqltype='Commit', sql=f'DELETE from episodes WHERE showid = {si}')
+    if not result:
+        print(f'Delete of the episodes did not work for show {si}')
     return True
 
 
 def change_download_for_a_show(si, dl):
-    try:
-        tvm_cur.execute("UPDATE shows "
-                        "SET download = ?"
-                        "WHERE showid = ?", (dl, si,))
-        tvm_db.commit()
-    except sqlite3.IntegrityError as uas_er:
-        print("Update Integrity Error for All Shows", si, uas_er)
-        return False
-    except sqlite3.Error as uas_er:
-        print("Update Error All Shows:", si, uas_er)
+    result = execute_sql(sqltype='Commit', sql=f"UPDATE shows SET download = {dl} WHERE showid = {si}")
+    if not result:
+        print(f'Update to change the download to {dl} for show {si} did not work')
         return False
     return True
 
@@ -649,27 +619,27 @@ while loop:
         cl_screen = False
     elif cons_in == "6":
         display_menu(True)
-        print(term_pos(menu_pos.status_x, menu_pos.status_y), "Process All Shows" + term_codes.cl_eol)
+        print(term_pos(menu_pos.status_x, menu_pos.status_y), "Process Shows" + term_codes.cl_eol)
         print()
         subprocess.call(" python3 shows.py -u", shell=True)
         cl_screen = False
     elif cons_in == "7":
         display_menu(True)
-        print(term_pos(menu_pos.status_x, menu_pos.status_y), "Process Alternate Shownames" + term_codes.cl_eol)
+        print(term_pos(menu_pos.status_x, menu_pos.status_y), "Process Episodes" + term_codes.cl_eol)
         print()
         subprocess.call(" python3 episodes.py", shell=True)
         cl_screen = False
     elif cons_in == "8":
         display_menu(True)
-        print(term_pos(menu_pos.status_x, menu_pos.status_y), "Process Followed Shows" + term_codes.cl_eol)
+        print(term_pos(menu_pos.status_x, menu_pos.status_y), "Process Downloads" + term_codes.cl_eol)
         print()
-        subprocess.call(" python3 tvm_followed_shows.py", shell=True)
+        subprocess.call(" python3 actions.py -d", shell=True)
         cl_screen = False
     elif cons_in == "9":
         display_menu(True)
-        print(term_pos(menu_pos.status_x, menu_pos.status_y), "Process Followed Shows Updates" + term_codes.cl_eol)
+        print(term_pos(menu_pos.status_x, menu_pos.status_y), "Process Statistics" + term_codes.cl_eol)
         print()
-        subprocess.call(" python3 tvm_update_all_shows.py", shell=True)
+        subprocess.call(" python3 statistics.py -s", shell=True)
         cl_screen = False
     elif cons_in == "10":
         print(term_pos(menu_pos.status_x, menu_pos.status_y), "Process Episodes by Followed Show" + term_codes.cl_eol)

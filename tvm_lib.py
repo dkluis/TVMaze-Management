@@ -8,12 +8,12 @@ from db_lib import *
 
 
 class release:
-    console_version = 'Version: In Development - Alpha'
-    console_description = "TVMaze Management system (MariaDB)"
+    console_version = 'Version: In Development - V1.0 - July 21 at 10:00 AM'
+    console_description = "TVMaze Management system"
 
 
 class def_downloader:
-    dl = 'rarbg'
+    dl = 'piratebay'
 
 
 def get_today(tp='human', fmt='full'):

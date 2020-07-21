@@ -1,6 +1,7 @@
 from tvm_api_lib import *
 from db_lib import *
 from terminal_lib import *
+from tvm_lib import def_downloader
 
 from timeit import default_timer as timer
 from datetime import datetime, date
@@ -227,18 +228,17 @@ def process_followed_shows():
                 found = False
         if not found:
             nf_list.append(show[0])
-    
+    new_followed = 0
     for res in result:
-        new_followed = 0
         validates = execute_sql(sqltype='Fetch',
                                 sql=f'SELECT showname, status from shows where showid={res["show_id"]}')
         if validates[0][1] != 'Followed':
             new_followed += 1
             print(validates[0][0], validates[0][1])
             result = execute_sql(sqltype='Commit', sql=f'UPDATE shows SET status="Followed", '
-                                                       f'download="piratebay" WHERE showid={res["show_id"]}')
+                                                       f'download="{def_downloader.dl}" WHERE showid={res["show_id"]}')
             if not result:
-                print(f'Update error on Shows table for show: {nf} trying to make a followed show')
+                print(f'Update error on Shows table for show: {res["show_id"]} trying to make a followed show')
                 quit()
             print(f'Now following show {validates[0][0]}')
 
