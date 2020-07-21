@@ -37,15 +37,10 @@ def display_menu(clear):
         term_pos(menu_pos.top + 4, menu_pos.menu_y) + term_codes.bold + term_codes.yellow + "3. " + term_codes.normal +
         "Un-follow a Show (erase history)")
     print(
-        term_pos(menu_pos.top + 6, menu_pos.menu_y) + term_codes.bold + term_codes.yellow + "D (or d). " +
+        term_pos(menu_pos.top + 5, menu_pos.menu_y) + term_codes.bold + term_codes.yellow + "4. " +
         term_codes.normal + "Change a Show Download Option (API)")
-    '''
     print(
-        term_pos(menu_pos.top + 8, menu_pos.menu_y) + term_codes.bold + term_codes.yellow + "4. " + term_codes.normal +
-        "TVMaze Update Run")
-    '''
-    print(
-        term_pos(menu_pos.top + 9, menu_pos.menu_y) + term_codes.bold + term_codes.yellow + "5. " + term_codes.normal +
+        term_pos(menu_pos.top + 6, menu_pos.menu_y) + term_codes.bold + term_codes.yellow + "5. " + term_codes.normal +
         "New Shows to Review (" + str(num_list.num_newshows) + ")")
     
     print(
@@ -60,19 +55,11 @@ def display_menu(clear):
     print(
         term_pos(menu_pos.top + 5, menu_pos.menu_2y) + term_codes.bold + term_codes.yellow + "9. " + term_codes.normal +
         " Process Statistics")
-    '''
     print(term_pos(menu_pos.top + 6,
                    menu_pos.menu_2y) + term_codes.bold + term_codes.yellow + "10. " + term_codes.normal +
-          "Process Episodes by Followed Shows")
-    print(term_pos(menu_pos.top + 7,
+          "Process All (complete run)")
+    print(term_pos(menu_pos.top + 8,
                    menu_pos.menu_2y) + term_codes.bold + term_codes.yellow + "11. " + term_codes.normal +
-          "Process Episode Statuses")
-    print(
-        term_pos(menu_pos.top + 8, menu_pos.menu_2y) + term_codes.bold + term_codes.yellow + "12. " +
-        term_codes.normal + "Process Download Episodes")
-    '''
-    print(term_pos(menu_pos.top + 9,
-                   menu_pos.menu_2y) + term_codes.bold + term_codes.yellow + "13. " + term_codes.normal +
           "Clean up Subtitle leftovers in Plex")
     '''
     print(term_pos(menu_pos.top + 2,
@@ -550,7 +537,7 @@ while loop:
             print(term_pos(menu_pos.status_x, menu_pos.status_y), "No Show selected to un-follow " + term_codes.cl_eol)
             print(term_pos(menu_pos.status_x + 2, menu_pos.menu_y) + term_codes.cl_eol)
             cl_screen = False
-    elif cons_in == "d":
+    elif cons_in == "4":
         display_menu(True)
         print(term_pos(menu_pos.status_x, menu_pos.status_y), "Change Download for a Show" + term_codes.cl_eol)
         print()
@@ -605,11 +592,11 @@ while loop:
                 dl_link = dl_str + str(showinfo[2]).replace(' ', dl[3]).lower() + sfx
                 follow_str = 'open -a safari ' + dl_link
                 os.system(follow_str)
-    elif cons_in == "4":
+    elif cons_in == "10":
         display_menu(True)
         print(term_pos(menu_pos.status_x, menu_pos.status_y), "Complete TVMaze Update Run" + term_codes.cl_eol)
         print()
-        subprocess.call(" /Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/download_episodes.sh", shell=True)
+        subprocess.call(" /Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/process.sh", shell=True)
         cl_screen = False
     elif cons_in == "5":
         display_menu(True)
@@ -641,24 +628,8 @@ while loop:
         print()
         subprocess.call(" python3 statistics.py -s", shell=True)
         cl_screen = False
-    elif cons_in == "10":
-        print(term_pos(menu_pos.status_x, menu_pos.status_y), "Process Episodes by Followed Show" + term_codes.cl_eol)
-        print()
-        subprocess.call(" python3 tvm_episodes_by_show.py", shell=True)
-        back_to_menu(2)
-    elif cons_in == "11":
-        display_menu(True)
-        print(term_pos(menu_pos.status_x, menu_pos.status_y), "Process Episode Statuses" + term_codes.cl_eol)
-        print()
-        subprocess.call(" python3 tvm_update_episode_status.py", shell=True)
-        cl_screen = False
-    elif cons_in == "12":
-        display_menu(True)
-        print(term_pos(menu_pos.status_x, menu_pos.status_y), "Process Download Episodes" + term_codes.cl_eol)
-        print()
-        cl_screen = False
         subprocess.call(" python3 tvm_action_list.py -e", shell=True)
-    elif cons_in == "13":
+    elif cons_in == "11":
         display_menu(True)
         print(term_pos(menu_pos.status_x, menu_pos.status_y), "Clean up leftovers in Plex" + term_codes.cl_eol)
         print()
