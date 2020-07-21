@@ -95,20 +95,15 @@ def display_ou_menu(clear):
     print(
         term_pos(menu_pos.top + 2,
                  menu_pos.menu_2y) + term_codes.bold + term_codes.yellow + "6.  " + term_codes.normal +
-        "View crontab Log of last run ")
+        "View Full Process Log File")
     print(
         term_pos(menu_pos.top + 3,
                  menu_pos.menu_2y) + term_codes.bold + term_codes.yellow + "7.  " + term_codes.normal +
-        "View Error Log (Python Aborts)")
+        "View Plex Cleanup Log File")
     print(
         term_pos(menu_pos.top + 4,
                  menu_pos.menu_2y) + term_codes.bold + term_codes.yellow + "8.  " + term_codes.normal +
-        "View Transmision Log")
-    print(
-        term_pos(menu_pos.top + 5,
-                 menu_pos.menu_2y) + term_codes.bold + term_codes.yellow + "9.  " + term_codes.normal +
-        "View Cleanup PlexMedia Directories")
-    
+        "View Download Log")
     print(
         term_pos(menu_pos.top + 2,
                  menu_pos.menu_3y) + term_codes.bold + term_codes.yellow + "S. (or s) " + term_codes.normal +
@@ -163,74 +158,48 @@ def display_recs(records, header, extra=0):
 
 
 def process_ou_menu(inp):
-    if inp == "1":
-        display_recs(num_list.list_maltswas, "Missing Alt Shownames <> Shows")
-    elif inp == "2":
-        display_recs(num_list.list_maswalts, "Missing Shows <> Alt Shownames")
-    elif inp == "3":
-        display_recs(num_list.list_mas, "Missing Followed Shows")
-    elif inp == "4":
-        display_recs(num_list.list_mfs, "Missing Shows <> Followed Shows")
-    elif inp == "5":
+    if inp == "5":
         display_recs(num_list.new_list, "New Shows to Review")
     elif inp == "6":
-        display_ou_menu(True)
-        print(term_pos(menu_pos.status_x, menu_pos.status_y), "TVMaze crontab run log" + term_codes.cl_eol)
+        print(term_pos(menu_pos.status_x, menu_pos.status_y), "Opening Console" + term_codes.cl_eol)
         print()
-        subprocess.call("cat /Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/Apps/Logs/Download_Episodes.txt ",
-                        shell=True)
-    elif inp == "6c":
-        print(term_pos(menu_pos.status_x, menu_pos.status_y), "Cleaned crontab run log" + term_codes.cl_eol)
-        print()
-        subprocess.call("echo "" "
-                        ">/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/Apps/Logs/Download_Episodes.txt ",
-                        shell=True)
-    elif inp == "7":
-        display_ou_menu(True)
-        print(term_pos(menu_pos.status_x, menu_pos.status_y), "TVMaze Error log" + term_codes.cl_eol)
-        print()
-        subprocess.call("cat /Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/Apps/Logs/Errors.txt ",
-                        shell=True)
-    elif inp == "7c":
-        display_ou_menu(True)
-        print(term_pos(menu_pos.status_x, menu_pos.status_y), "Cleaned Error log" + term_codes.cl_eol)
-        print()
-        subprocess.call("echo "" >/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/Apps/Logs/Errors.txt ",
-                        shell=True)
+        log_file = '/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Logs/30M-Process.log'
+        log_path = 'open -a /System/Applications/Utilities/Console.app ' + log_file
+        os.system(log_path)
     elif inp == "8":
         display_ou_menu(True)
-        print(term_pos(menu_pos.status_x, menu_pos.status_y), "TVMaze Transmission log" + term_codes.cl_eol)
+        print(term_pos(menu_pos.status_x, menu_pos.status_y), "Viewing Transmission Log" + term_codes.cl_eol)
         print()
         subprocess.call("cat /Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/Apps/Logs/LogPlexThemProgram.txt ",
                         shell=True)
     elif inp == "8c":
         display_ou_menu(True)
-        print(term_pos(menu_pos.status_x, menu_pos.status_y), "Cleaned Transmission log" + term_codes.cl_eol)
+        print(term_pos(menu_pos.status_x, menu_pos.status_y), "Cleaning Transmission log" + term_codes.cl_eol)
         print()
         subprocess.call("echo "" "
                         ">/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/Apps/Logs/LogPlexThemProgram.txt ",
                         shell=True)
-    elif inp == "9":
+    elif inp == "7":
         display_ou_menu(True)
-        print(term_pos(menu_pos.status_x, menu_pos.status_y), "TVMaze Cleanup SRTs log" + term_codes.cl_eol)
+        print(term_pos(menu_pos.status_x, menu_pos.status_y), "Viewing Plex Cleanup Log" + term_codes.cl_eol)
         print()
         subprocess.call("cat /Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/Apps/Logs/Clean_SRTs_log.txt ",
                         shell=True)
-    elif inp == "9c":
+    elif inp == "7c":
         display_ou_menu(True)
-        print(term_pos(menu_pos.status_x, menu_pos.status_y), "TVMaze Cleanup SRTs log" + term_codes.cl_eol)
+        print(term_pos(menu_pos.status_x, menu_pos.status_y), "Cleaning Plex Cleanup Log" + term_codes.cl_eol)
         print()
         subprocess.call("echo "" >/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/Apps/Logs/Clean_SRTs_log.txt ",
                         shell=True)
     elif inp == "s":
         display_ou_menu(True)
         print(term_pos(menu_pos.status_x, menu_pos.status_y), "Displaying the current Statistics" + term_codes.cl_eol)
-        subprocess.call(" python3 tvm_statistics.py -d", shell=True)
+        subprocess.call(" python3 statistics.py -d", shell=True)
     elif inp == "h":
         display_ou_menu(True)
         print(term_pos(menu_pos.status_x, menu_pos.status_y), "Displaying the historical Statistics" +
               term_codes.cl_eol)
-        subprocess.call(" python3 tvm_statistics.py -v", shell=True)
+        subprocess.call(" python3 statistics.py -v", shell=True)
     elif inp == "d":
         display_ou_menu(True)
         print(term_pos(menu_pos.status_x, menu_pos.status_y), "Showing the Downloader count of shows" +
