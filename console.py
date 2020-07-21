@@ -61,12 +61,9 @@ def display_menu(clear):
     print(term_pos(menu_pos.top + 8,
                    menu_pos.menu_2y) + term_codes.bold + term_codes.yellow + "11. " + term_codes.normal +
           "Clean up Subtitle leftovers in Plex")
-    '''
     print(term_pos(menu_pos.top + 2,
                    menu_pos.menu_3y) + term_codes.bold + term_codes.yellow + "O (or o). " + term_codes.normal +
-          "Other Utilities (" + str(num_list.num_ou) + ")")
-    '''
-    
+          "Other Utilities")
     print(term_pos(menu_pos.top + 4,
                    menu_pos.menu_3y) + term_codes.bold + term_codes.yellow + "H (or h). " + term_codes.normal +
           "TVMaze Help")
@@ -91,18 +88,6 @@ def display_ou_menu(clear):
     print(term_pos(menu_pos.top, menu_pos.menu_2y - 10) + term_codes.bold + term_codes.green +
           "TVMaze Other Utilities" +
           term_codes.red + " -> " + release.console_version + term_codes.normal)
-    print(
-        term_pos(menu_pos.top + 2, menu_pos.menu_y) + term_codes.bold + term_codes.yellow + "1. " + term_codes.normal +
-        "View Missing Alt Shownames <> Shows (" + str(num_list.num_maltswas) + ")")
-    print(
-        term_pos(menu_pos.top + 3, menu_pos.menu_y) + term_codes.bold + term_codes.yellow + "2. " + term_codes.normal +
-        "View Missing Shows <> Alt Shownames (" + str(num_list.num_maswalts) + ")")
-    print(
-        term_pos(menu_pos.top + 4, menu_pos.menu_y) + term_codes.bold + term_codes.yellow + "3. " + term_codes.normal +
-        "View Missing Followed Shows (" + str(num_list.num_mas) + ")")
-    print(
-        term_pos(menu_pos.top + 5, menu_pos.menu_y) + term_codes.bold + term_codes.yellow + "4. " + term_codes.normal +
-        "View Shows <> Followed Shows (" + str(num_list.num_mfs) + ")")
     print(
         term_pos(menu_pos.top + 6, menu_pos.menu_y) + term_codes.bold + term_codes.yellow + "5. " + term_codes.normal +
         "View Shows to Review (" + str(num_list.num_newshows) + ")")
@@ -347,9 +332,9 @@ def get_alt_showname(si):
 
 
 def follow_a_show(si):
-    success = tvm_follow("F", si)
-    if not success:
-        print("TVMaze could not follow Shows", si, success)
+    succe = tvm_follow("F", si)
+    if not succe:
+        print("TVMaze could not follow Shows", si, succe)
         return False
     return True
 
@@ -386,10 +371,10 @@ def un_follow_a_show(si):
     return True
 
 
-def change_download_for_a_show(si, dl):
-    result = execute_sql(sqltype='Commit', sql=f"UPDATE shows SET download = {dl} WHERE showid = {si}")
+def change_download_for_a_show(si, dled):
+    result = execute_sql(sqltype='Commit', sql=f"UPDATE shows SET download = {dled} WHERE showid = {si}")
     if not result:
-        print(f'Update to change the download to {dl} for show {si} did not work')
+        print(f'Update to change the download to {dled} for show {si} did not work')
         return False
     return True
 
@@ -527,7 +512,7 @@ while loop:
             success = un_follow_a_show(shownum)
             if success:
                 print(term_pos(menu_pos.status_x, menu_pos.status_y),
-                      "Show un-followed: " + str(shownum) + downloader[1] + term_codes.cl_eol)
+                      "Show un-followed: " + str(shownum) + term_codes.cl_eol)
                 cl_screen = False
             else:
                 print(term_pos(menu_pos.status_x, menu_pos.status_y),
@@ -596,7 +581,7 @@ while loop:
         display_menu(True)
         print(term_pos(menu_pos.status_x, menu_pos.status_y), "Complete TVMaze Update Run" + term_codes.cl_eol)
         print()
-        subprocess.call(" /Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/process.sh", shell=True)
+        subprocess.call(" /Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/tvm_process.sh", shell=True)
         cl_screen = False
     elif cons_in == "5":
         display_menu(True)

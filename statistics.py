@@ -2,6 +2,7 @@ from terminal_lib import *
 from tvm_lib import get_today, count_by_downloaders
 from db_lib import stat_views, execute_sql, connect_mdb, close_mdb
 import pandas as pd
+from sqlalchemy import create_engine
 import time
 
 
@@ -82,24 +83,22 @@ def go_store_downloaders(dls):
 def view_history(last: False):
     shows = execute_sql(sqltype='Fetch',
                         sql='SELECT * from statistics where statrecind = "TVMaze" order by statdate desc ')
-    mdbi = connect_mdb()
-    mdb = mdbi['mdb']
-    mcur = mdbi['mcursor']
+
+    mdbe = create_engine('mysql://dick:Sandy3942@127.0.0.1/TVMazeDB')
     if last:
         if len(shows) == 0:
             return False
         else:
             return shows[0]
     else:
-        pd.set_option('max_rows', 41)
-        pd.set_option('min_rows', 40)
+        pd.set_option('max_rows', 31)
+        pd.set_option('min_rows', 30)
         df = pd.read_sql_query('select statepoch, statdate, tvmshows, myshows, myshowsended,'
                                'myshowstbd, myshowsrunning, myshowsindevelopment,'
                                'myepisodes, myepisodeswatched, myepisodestowatch, myepisodesskipped, '
                                'myepisodestodownloaded, myepisodesannounced '
-                               'from statistics where statrecind = "TVMaze" order by statepoch asc', mdb)
+                               'from statistics where statrecind = "TVMaze" order by statepoch asc', mdbe)
         print(df)
-    close_mdb(mdb)
     return
 
 

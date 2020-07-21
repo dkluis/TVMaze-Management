@@ -8,6 +8,15 @@ from tvm_api_lib import execute_tvm_request
 
 from datetime import datetime, timedelta
 
+from sqlalchemy import create_engine
+
+mdbe = create_engine('mysql://dick:Sandy3942@127.0.0.1/TVMazeDB')
+
+df = pd.read_sql_query('select * from statistics', mdbe)
+print(df)
+quit()
+
+
 print('Filling the Statistics Table')
 statistics = execute_sqlite(sqltype='Fetch', sql='SELECT * from statistics order by statepoch ')
 print(len(statistics))

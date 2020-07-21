@@ -46,12 +46,10 @@ def find_new_shows():
 
 def get_downloaders(html=False):
     if not html:
-        downloaders = execute_sql(sqltype='Fetch', sql="SELECT * from downloaders "
-                                                       "order by providername asc")
+        downloaders = execute_sql(sqltype='Fetch', sql="SELECT * from downloaders ")
     else:
         downloaders = execute_sql(sqltype='Fetch', sql="SELECT * from downloaders "
-                                                       "where link_prefix like 'http%' "
-                                                       "order by providername asc")
+                                                       "where link_prefix like 'http%' ")
     return downloaders
 
 
@@ -115,6 +113,7 @@ def count_by_downloaders():
     torrentfunk = execute_sql(sqltype='Fetch',
                               sql="SELECT COUNT(*) from shows WHERE download = 'torrentfunk' AND status = 'Followed'")
     piratebay = execute_sql(sqltype='Fetch',
-                              sql="SELECT COUNT(*) from shows WHERE download = 'piratebay' AND status = 'Followed'")
-    return no_dl[0][0], rarbg_api[0][0], rarbg[0][0], rarbgmirror[0][0], showrss[0][0], skip[0][0], \
-           eztv_api[0][0], eztv[0][0], magnetdl[0][0], torrentfunk[0][0], piratebay[0][0]
+                            sql="SELECT COUNT(*) from shows WHERE download = 'piratebay' AND status = 'Followed'")
+    value = (no_dl[0][0], rarbg_api[0][0], rarbg[0][0], rarbgmirror[0][0], showrss[0][0], skip[0][0],
+             eztv_api[0][0], eztv[0][0], magnetdl[0][0], torrentfunk[0][0], piratebay[0][0])
+    return value
