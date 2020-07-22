@@ -78,11 +78,19 @@ def find_epiid(si, s, e, i_s):
         if len(result) < 1:
             # print("Episode not found: ---> ", "'" + showname + "'")
             return False
+        else:
+            # ToDo figure out if this episode has been watched before
+            if result[0][7] == 'Watched':
+                print(f'Episode of {si} for season {s} and episde {e} was watched before')
+                return False
     else:
         result = execute_sql(sqltype='Fetch', sql=f'SELECT * FROM  episodes '
                                                   f'WHERE showid = {si} AND season = {s}')
         if len(result) < 1:
             # print("Episode not found: ---> ", "'" + showname + "'")
+            if result[0][7] == 'Watched':
+                print(f'Episodes of {si} for season {s} were watched before')
+                return False
             return False
     return result
 
