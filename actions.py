@@ -64,27 +64,35 @@ def update_tvmaze_episode_status(epiid):
     return
 
 
-def validate_requirements(episode, container):
+def validate_requirements(filename, container, showname):
     res1 = '1080p'
     res2 = '720p'
     codex = '264'
     cont1 = "mkv"
     cont2 = "mp4"
     priority = 0
-    if res1 in episode:
+    if res1 in filename:
         priority = priority + 30
-    elif res2 in episode:
+    elif res2 in filename:
         priority = priority + 10
     else:
         priority = priority - 40
-    if codex in episode:
+    if codex in filename:
         priority = priority + 100
-    if container and cont1 in episode:
+    if container and cont1 in filename:
         priority = priority + 10
-    elif container and cont2 in episode:
+    elif container and cont2 in filename:
         priority = priority + 5
-    if 'proper' or 'repack' in episode:
+    if 'proper' or 'repack' in filename:
         priority = priority + 20
+    if showname:
+        if showname not in filename.replace('.', ' ')[:len(showname)]:
+            priority = 0
+        else:
+            if 's' not in filename.replace('.', ' ').lower()[len(showname) + 1]:
+                # print(f'Filename character to compare is {filename.replace(".", " ").lower()[len(showname) + 1]} '
+                #       f'with Showname {showname} and Filename {filename}')
+                priority = 0
     return priority
 
 
@@ -104,7 +112,7 @@ def eztv_download(imdb_id, eztv_epi_name):
         mag_url = eztv_epi['magnet_url']
         size = eztv_epi['size_bytes']
         if eztv_epi_name in filename:
-            result = validate_requirements(filename, True)
+            result = validate_requirements(filename, True, False)
             if result > 100:
                 download_options.append((result[1], size, filename, tor_url, mag_url))
     if len(download_options) > 0:
@@ -147,11 +155,14 @@ def rarbg_download(show, seas):
 
 def piratebay_download(show, seas):
     api = 'https://piratebay.bid/s/?q=' + str(show).replace(' ', '+') + '+' + seas
-    piratebay_data = execute_tvm_request(api=api, timeout=(15, 10))
+    piratebay_data = execute_tvm_request(api=api, timeout=(20, 20))
+    if not piratebay_data:
+        return False, api
     piratebay_page = Soup(piratebay_data.content, 'html.parser')
     piratebay_table = piratebay_page.findAll('table', {'id': 'searchResult'})
     if len(piratebay_table) == 0:
-        quit("No table found")
+        print("No table found")
+        return False, api
     piratebay_table = piratebay_table[0]
     pb_table = piratebay_table.findAll('tr')
     piratebay_titles = []
@@ -193,13 +204,12 @@ def piratebay_download(show, seas):
                     size = float(size[0]) * size_multiplier
                     size = str(size).zfill(8)
         showname = showname.replace('Details for ', '')
-        prio = validate_requirements(showname, False)
-        piratebay_titles.append((showname, magnet_link, size, prio))
+        prio = validate_requirements(showname, False, show)
+        if prio > 100:
+            piratebay_titles.append((showname, magnet_link, size, prio))
     piratebay_titles.sort(key=lambda x: str(x[2]), reverse=True)
-    # for title in piratebay_titles:
-    #     print(title[3], title[2], title[0])
+    print(piratebay_titles)
     if len(piratebay_titles) > 1:
-        # print('Transmisson:', piratebay_titles[1][1])
         command_str = 'open -a transmission ' + piratebay_titles[1][1]
         os.system(command_str)
         return True, api
@@ -371,7 +381,7 @@ def display_status(processed, epi_to_download, do_text, season):
         do_text = f' ---> Show managed by {processed[1][1]}'
     else:
         do_text = do_text + f" ---> {processed[1][1]}"
-    tvmaze = "https://www.tvmaze.com/shows/" + str(epi_to_download[0]) + do_text
+    tvmaze = "https://www.tvmaze.com/shows/" + str(epi_to_download[1]) + do_text
     print("{: <1} {: <50} {: <10} "
           "{: <14} {: <120} {: <30}".format(f'\033[0m',
                                             '"' + str(epi_to_download[11][0:48]) + '"', season,
