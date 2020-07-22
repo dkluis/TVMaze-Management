@@ -2,7 +2,6 @@ from db_lib import *
 from tvm_api_lib import *
 
 import sys
-import time
 from datetime import date
 
 
@@ -59,7 +58,15 @@ def find_showid(asn):
     result = execute_sql(sqltype='Fetch', sql=f"SELECT showid FROM shows "
                                               f"WHERE alt_showname like '{asn}' AND status = 'Followed'")
     if len(result) < 1:
-        # print("Show not found: ---> ", "'" + showname + "'")
+        print("Show not found: ---> ", "'" + showname + "'")
+        if str(showname[len(showname) - 4:]).isnumeric():
+            result = execute_sql(sqltype='Fetch', sql=f"SELECT showid FROM shows "
+                                                      f"WHERE alt_showname like '{asn[:-5]}' AND status = 'Followed'")
+            if len(result) < 1:
+                print("Show without last 4 characters not found: ---> ", "'" + showname[:-5] + "'")
+            else:
+                print("Show without last 4 characters found: ---> ", "'" + showname[:-5] + "'")
+                return result[0][0]
         return False
     return result[0][0]
 
@@ -96,7 +103,7 @@ Main Program start
 download = get_cli_args()
 # print(f'Download {download}')
 showinfo = find_showname(download)
-print(f'Showinfo {showinfo}')
+# print(f'Showinfo {showinfo}')
 if not showinfo[0]:
     print(f"This is likely a movie {download}")
     quit()
