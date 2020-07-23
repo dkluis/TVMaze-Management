@@ -8,6 +8,15 @@ from tvm_api_lib import execute_tvm_request
 
 from datetime import datetime, timedelta
 
+results = execute_sql(sqltype='Fetch', sql="SELECT * from download_options")
+print(results)
+if not results:
+    print(f'Error getting the download_options {results}')
+results
+
+quit()
+
+
 from sqlalchemy import create_engine
 
 mdbe = create_engine('mysql://dick:Sandy3942@127.0.0.1/TVMazeDB')
@@ -83,7 +92,7 @@ print(find_via_showname('LOST girl'))
 '''SQL Stuff (Tests)'''
 print(execute_sql(sqltype='Fetch', sql=tvm_views.shows_to_review))
 print(execute_df(sql=tvm_views.shows_to_review))
-print(execute_df(sql=stat_views.downloaders))
+print(execute_df(sql=stat_views.download_options))
 print(execute_df(sql=stat_views.shows))
 print(execute_df(sql=stat_views.episodes))
 print(execute_df(sql=stat_views.count))

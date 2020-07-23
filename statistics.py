@@ -1,5 +1,5 @@
 from terminal_lib import *
-from tvm_lib import get_today, count_by_downloaders
+from tvm_lib import get_today, count_by_download_options
 from db_lib import stat_views, execute_sql, connect_mdb, close_mdb
 import pandas as pd
 from sqlalchemy import create_engine
@@ -51,8 +51,8 @@ def go_store_statistics(f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12):
     return True
 
 
-def go_store_downloaders(dls):
-    stats = execute_sql(sql='SELECT * from statistics where statrecind = "Downloaders" order by statdate desc ',
+def go_store_download_options(dls):
+    stats = execute_sql(sql='SELECT * from statistics where statrecind = "download_options" order by statdate desc ',
                         sqltype='Fetch')
     if len(stats) != 0:
         stats = stats[0]
@@ -67,13 +67,13 @@ def go_store_downloaders(dls):
                 str(dls[8]) == str(stats[23]) and
                 str(dls[9]) == str(stats[24]) and
                 str(dls[10]) == str(stats[25])):
-            print("No Update for Downloaders: ", stats)
+            print("No Update for download_options: ", stats)
         else:
             time.sleep(1)
             today_epoch = int(get_today('system'))
             today_human = f"'{str(get_today('human'))[:-7]}'"
             sql = f"INSERT INTO statistics VALUES ({today_epoch}, {today_human}, " \
-                  f"None, None, None, None, None, None, None, None, None, None, None, None, 'Downloaders', " \
+                  f"None, None, None, None, None, None, None, None, None, None, None, None, 'download_options', " \
                   f"{dls[0]}, {dls[1]}, {dls[2]}, {dls[3]}, {dls[4]}, {dls[5]}, " \
                   f"{dls[6]}, {dls[7]}, {dls[8]}, {dls[9]}, {dls[10]});"
             sql = sql.replace('None', 'NULL')
@@ -122,7 +122,7 @@ myskippedeps = execute_sql(sql=stat_views.count_my_episodes_skipped, sqltype='Fe
 mytodownloadeps = execute_sql(sql=stat_views.count_my_episodes_to_download, sqltype='Fetch')[0][0]
 myfutureeps = execute_sql(sql=stat_views.count_my_episodes_future, sqltype='Fetch')[0][0] - mytodownloadeps
 
-dls = count_by_downloaders()
+dls = count_by_download_options()
 
 prog_option = get_cli_args()
 if prog_option == "Display":
@@ -155,7 +155,7 @@ elif prog_option == "Store":
     print("TVMaze Statistics Update")
     go_store_statistics(tvmshows, myshows, myshowsrunning, myshowsended, myshowstbd, myshowsid,
                         myeps, mywatchedeps, mytowatcheps, myskippedeps, mytodownloadeps, myfutureeps)
-    go_store_downloaders(dls)
+    go_store_download_options(dls)
     print()
 else:
     print()

@@ -74,7 +74,7 @@ def display_menu(clear):
     '''
     print(
         term_pos(menu_pos.top + 8, menu_pos.menu_3y) + term_codes.bold + term_codes.yellow + "F (or f). " +
-        term_codes.normal + "Find a Shows on all downloaders")
+        term_codes.normal + "Find a Shows on all download_options")
     
     if clear:
         print(term_pos(menu_pos.status_x, menu_pos.menu_y) + term_codes.red + term_codes.bold + "Status:",
@@ -115,7 +115,7 @@ def display_ou_menu(clear):
     print(
         term_pos(menu_pos.top + 5,
                  menu_pos.menu_3y) + term_codes.bold + term_codes.yellow + "D. (or d) " + term_codes.normal +
-        "View Shows # by Downloaders")
+        "View Shows # by download_options")
     
     if clear:
         print(term_pos(menu_pos.status_x, menu_pos.menu_y) + term_codes.red + term_codes.bold + "Status:",
@@ -146,7 +146,7 @@ def get_show_input(x, y):
 
 def display_recs(records, header, extra=0):
     print(term_pos(menu_pos.status_x, menu_pos.status_y) + header + term_codes.cl_eol)
-    if header == "Downloaders Available":
+    if header == "download_options Available":
         y = menu_pos.menu_2y
     else:
         y = menu_pos.menu_y
@@ -204,7 +204,7 @@ def process_ou_menu(inp):
         display_ou_menu(True)
         print(term_pos(menu_pos.status_x, menu_pos.status_y), "Showing the Downloader count of shows" +
               term_codes.cl_eol)
-        counts = count_by_downloaders()
+        counts = count_by_download_options()
         print(term_pos(menu_pos.status_x + 2, menu_pos.menu_2y) + "No Downloader assigned     : " +
               rjust_str(str(counts[0]), 5) + term_codes.cl_eol)
         print(term_pos(menu_pos.status_x + 3, menu_pos.menu_2y) + "rarbgAPI assigned          : " +
@@ -341,7 +341,7 @@ def un_follow_a_show(si):
 
 
 def change_download_for_a_show(si, dled):
-    result = execute_sql(sqltype='Commit', sql=f"UPDATE shows SET download = {dled} WHERE showid = {si}")
+    result = execute_sql(sqltype='Commit', sql=f"UPDATE shows SET download = '{dled}' WHERE showid = {si}")
     if not result:
         print(f'Update to change the download to {dled} for show {si} did not work')
         return False
@@ -401,7 +401,7 @@ def get_show(message):
                 return found_shows[int(which_show)][0], len(found_shows), found_show[18]
 
 
-def get_downloader(dls):
+def get_download_selected(dls):
     recs = len(dls)
     print(term_pos(menu_pos.sub_screen_x, menu_pos.menu_2y - 10) + term_codes.cl_eol)
     print(term_pos(menu_pos.sub_screen_x, menu_pos.menu_2y - 10),
@@ -503,9 +503,9 @@ while loop:
         if shownum != "Quit" and shownum != "Failed":
             print(term_pos(menu_pos.status_x, menu_pos.status_y),
                   "Process the Download Change for show: " + str(shownum) + term_codes.cl_eol)
-            downloaders = get_downloaders()
-            display_recs(downloaders, "Downloaders Available", showcount + 1)
-            downloader = get_downloader(downloaders)
+            download_options = get_download_options()
+            display_recs(download_options, "download_options Available", showcount + 1)
+            downloader = get_download_selected(download_options)
             if downloader != "Quit":
                 success = change_download_for_a_show(shownum, downloader)
             else:
@@ -525,7 +525,7 @@ while loop:
             cl_screen = False
     elif cons_in == "f":
         display_menu(True)
-        print(term_pos(menu_pos.status_x, menu_pos.status_y), "Find a show via all Downloaders" + term_codes.cl_eol)
+        print(term_pos(menu_pos.status_x, menu_pos.status_y), "Find a show via all download_options" + term_codes.cl_eol)
         print()
         showinfo = get_show("Find a Show")
         shownum = showinfo[0]
@@ -533,7 +533,7 @@ while loop:
         if showinfo == 'q':
             shownum = ' Quit'
         if shownum != 'Quit' and shownum != 'Failed':
-            dls = get_downloaders(True)
+            dls = get_download_options(True)
             for dl in dls:
                 if not dl[2]:
                     sfx = ''

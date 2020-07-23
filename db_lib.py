@@ -188,32 +188,32 @@ class create_tb_tvmaze:
 
 
 class create_tb_dls:
-    sql = "CREATE TABLE `downloaders` (`providername` varchar(15) DEFAULT NULL," \
+    sql = "CREATE TABLE `download_options` (`providername` varchar(15) DEFAULT NULL," \
           " `link_prefix` varchar(75) DEFAULT NULL," \
           " `suffixlink` varchar(15) DEFAULT NULL," \
           " `searchchar` varchar(5) DEFAULT NULL," \
-          " UNIQUE KEY `downloaders_UN` (`providername`)" \
+          " UNIQUE KEY `download_options_UN` (`providername`)" \
           ") ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='TVMaze Downloader Info'"
     fill = [
-        "INSERT INTO downloaders (`providername`,link_prefix,suffixlink,searchchar) VALUES "
+        "INSERT INTO download_options (`providername`,link_prefix,suffixlink,searchchar) VALUES "
         "('rarbgAPI','Auto via RARBG API  --> ',NULL,' ');",
-        "INSERT INTO downloaders (`providername`,link_prefix,suffixlink,searchchar) VALUES "
+        "INSERT INTO download_options (`providername`,link_prefix,suffixlink,searchchar) VALUES "
         "('magnetdl','https://www.magnetdl.com/','/','-');",
-        "INSERT INTO downloaders (`providername`,link_prefix,suffixlink,searchchar) VALUES "
+        "INSERT INTO download_options (`providername`,link_prefix,suffixlink,searchchar) VALUES "
         "('torrentfunk','https://www.torrentfunk.com/television/torrents/','.html','-');",
-        "INSERT INTO downloaders (`providername`,link_prefix,suffixlink,searchchar) VALUES "
+        "INSERT INTO download_options (`providername`,link_prefix,suffixlink,searchchar) VALUES "
         "('ShowRSS','Auto via ShowRSS    --> ',NULL,' ');",
-        "INSERT INTO downloaders (`providername`,link_prefix,suffixlink,searchchar) VALUES "
+        "INSERT INTO download_options (`providername`,link_prefix,suffixlink,searchchar) VALUES "
         "('eztvAPI','Auto via Eztv''s API --> ',NULL,' ');",
-        "INSERT INTO downloaders (`providername`,link_prefix,suffixlink,searchchar) VALUES "
+        "INSERT INTO download_options (`providername`,link_prefix,suffixlink,searchchar) VALUES "
         "('rarbg','https://rarbg.to/torrents.php?search=',NULL,'+');",
-        "INSERT INTO downloaders (`providername`,link_prefix,suffixlink,searchchar) VALUES "
+        "INSERT INTO download_options (`providername`,link_prefix,suffixlink,searchchar) VALUES "
         "(NULL,'No Link associated',NULL,' ');",
-        "INSERT INTO downloaders (`providername`,link_prefix,suffixlink,searchchar) VALUES "
+        "INSERT INTO download_options (`providername`,link_prefix,suffixlink,searchchar) VALUES "
         "('rarbgmirror','--https://rarbgmirror.org/torrents.php?search=',NULL,'+');",
-        "INSERT INTO downloaders (`providername`,link_prefix,suffixlink,searchchar) VALUES "
+        "INSERT INTO download_options (`providername`,link_prefix,suffixlink,searchchar) VALUES "
         "('eztv','https://eztv.io/search/',NULL,'-');",
-        "INSERT INTO downloaders (`providername`,link_prefix,suffixlink,searchchar) VALUES "
+        "INSERT INTO download_options (`providername`,link_prefix,suffixlink,searchchar) VALUES "
         "('Skip','Still Following but not downloading',NULL,NULL);"
     ]
 
@@ -313,10 +313,10 @@ class tvm_views:
 
 
 class stat_views:
-    downloaders = "SELECT statdate, nodownloader, rarbg, rarbgapi, rarbgmirror, showrss, skipmode, eztv, " \
+    download_options = "SELECT statdate, nodownloader, rarbg, rarbgapi, rarbgmirror, showrss, skipmode, eztv, " \
                   "eztvapi, magnetdl, torrentfunk " \
                   "FROM statistics " \
-                  "WHERE statrecind = 'Downloaders' " \
+                  "WHERE statrecind = 'download_options' " \
                   "ORDER BY statepoch;"
     stats = "SELECT * FROM statistics " \
             "WHERE statrecind = 'TVMaze' " \

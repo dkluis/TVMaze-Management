@@ -44,13 +44,13 @@ def find_new_shows():
     return info
 
 
-def get_downloaders(html=False):
+def get_download_options(html=False):
     if not html:
-        downloaders = execute_sql(sqltype='Fetch', sql="SELECT * from downloaders ")
+        download_options = execute_sql(sqltype='Fetch', sql="SELECT * from download_options ")
     else:
-        downloaders = execute_sql(sqltype='Fetch', sql="SELECT * from downloaders "
-                                                       "where link_prefix like 'http%' ")
-    return downloaders
+        download_options = execute_sql(sqltype='Fetch', sql="SELECT * from download_options "
+                                                            "where link_prefix like 'http%' ")
+    return download_options
 
 
 class num_list:
@@ -91,7 +91,7 @@ def send_txt_message(message):
     server.quit()
 
 
-def count_by_downloaders():
+def count_by_download_options():
     rarbg_api = execute_sql(sqltype='Fetch',
                             sql="SELECT COUNT(*) from shows WHERE download = 'rarbgAPI' AND status = 'Followed'")
     rarbg = execute_sql(sqltype='Fetch',

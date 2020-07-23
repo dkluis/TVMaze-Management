@@ -93,7 +93,8 @@ def validate_requirements(filename, container, showname):
             priority = 0
         else:
             if 's' not in filename.replace('.', ' ').lower()[len(showname) + 1]:
-                # print(f'Filename character to compare is {filename.replace(".", " ").lower()[len(showname) + 1]} '
+                # print(f'Validate Requirement: Filename character to compare is '
+                #       f'{filename.replace(".", " ").lower()[len(showname) + 1]} '
                 #       f'with Showname {showname} and Filename {filename}')
                 priority = 0
     # print(f'Validate Requirement - Showname: {showname}, Priority: {priority}, Filename: {filename}')
@@ -164,6 +165,7 @@ def piratebay_download(show, seas):
         return False, api
     piratebay_page = Soup(piratebay_data.content, 'html.parser')
     piratebay_table = piratebay_page.findAll('table', {'id': 'searchResult'})
+    # print(f'Piratebay Download: piratebay_table {piratebay_table}')
     if len(piratebay_table) == 0:
         print("No table found")
         return False, api
@@ -173,12 +175,14 @@ def piratebay_download(show, seas):
     magnet_link = ''
     size = 0
     for pb_table_rec in pb_table:
+        # print(f'Piratebay Download: pb_table_rec: {pb_table_rec}')
         cl_dl = pb_table_rec.findAll('a', {'class': 'detLink'})
         showname = ''
         showl = ''
         shownamel = ''
         shownamenp = ''
         for cl_dl_rec in cl_dl:
+            # print(f'Piratebay Download: cl-dl_rec: {cl_dl_rec}')
             showname = (cl_dl_rec['title'])
             showl = show.lower().replace(" ", ".")
             shownamel = showname.lower()

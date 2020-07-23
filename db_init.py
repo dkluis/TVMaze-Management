@@ -26,7 +26,7 @@ def get_cli_args():
 def process_create_db_tvmaze():
     print('Create db TVMaze', execute_sql(d='', sqltype='Commit', sql=create_db_sql('TVMazeDB')))
     print('Create tvmaze table', execute_sql(sqltype='Commit', sql=create_tb_tvmaze.sql))
-    print('Create Downloaders table', execute_sql(sqltype='Commit', sql=create_tb_dls.sql))
+    print('Create download_options table', execute_sql(sqltype='Commit', sql=create_tb_dls.sql))
     print('Create Shows table', execute_sql(sqltype='Commit', sql=create_tb_shows.sql))
     # print('Create Alternate Show Names table', execute_sql(sqltype='Commit', sql=create_tb_alt_showname.sql))
     print('Create Episodes table', execute_sql(sqltype='Commit', sql=create_tb_eps_by_show.sql))
@@ -58,7 +58,7 @@ def process_transfer():
     for sql in create_tb_tvmaze.fill:
         execute_sql(sqltype='Commit', sql=sql)
 
-    print('Filling the Downloaders Table')
+    print('Filling the download_options Table')
     print(len(create_tb_dls.fill))
     for sql in create_tb_dls.fill:
         execute_sql(sqltype='Commit', sql=sql)
