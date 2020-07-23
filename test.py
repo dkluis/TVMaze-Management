@@ -5,22 +5,14 @@ from tvm_api_lib import *
 from bs4 import BeautifulSoup as Soup
 import re
 from tvm_api_lib import execute_tvm_request
-
 from datetime import datetime, timedelta
 
-api = f"{tvm_apis.episodes_by_show_pre}49227{tvm_apis.episodes_by_show_suf}"
-episodes = execute_tvm_request(api=api, sleep=0.5)
-print(episodes.content)
+transmissions_to_process = open('/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Logs/Transmisson.log')
+for ttp in transmissions_to_process:
+    if ' Swift ' in ttp:
+        continue
+    print(f'Record: {ttp[:-1]}')
 quit()
-
-
-
-results = execute_sql(sqltype='Fetch', sql="SELECT * from download_options")
-if not results:
-    print(f'Error getting the download_options {results}')
-print(results)
-quit()
-
 
 from sqlalchemy import create_engine
 

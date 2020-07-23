@@ -5,6 +5,16 @@ import sys
 from datetime import date
 
 
+def get_all_episodes_to_update():
+    transmissions_to_process = open('/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Logs/Transmisson.log')
+    ttps = []
+    for ttp in transmissions_to_process:
+        if ' Swift ' in ttp:
+            continue
+        ttps.append(ttp[:-1])
+    return ttps
+
+
 def get_cli_args():
     clis = sys.argv
     if len(clis) < 2:
@@ -107,34 +117,48 @@ def update_tvmaze_episode_status(epiid):
 '''
 Main Program start
 '''
-# print("Start TVM Episode Update")
-download = get_cli_args()
-# print(f'Download {download}')
-showinfo = find_showname(download)
-# print(f'Showinfo {showinfo}')
-if not showinfo[0]:
-    print(f"This is likely a movie {download}")
-    quit()
 
-showname = showinfo[0]
-showepisode = showinfo[1]
-season = showinfo[2]
-is_episode = showinfo[3]
-episode = showinfo[4]
+download = get_all_episodes_to_update()
+plexprefs = execute_sql(sqltype='Fetch', sql="SELECT info FROM key_values WHERE `key` = 'plexprefs'")
+plexprefs = str(plexprefs[0]).split(',')
+ndl = []
 
-# print("Looking for:", showname, season, episode, is_episode)
-found_showid = find_showid(showname)
-if not found_showid:
-    print(f"Did not find {showname} in TVMaze", showname)
-else:
-    found_epiid = find_epiid(found_showid, season, episode, is_episode)
-    if not found_epiid:
-        print(f"Did not find {showname} with episode {showepisode} in TVMaze")
-    elif is_episode and len(found_epiid) == 1:
-        update_tvmaze_episode_status(found_epiid[0][0])
-        print(f"Updated Show {showname}, episode {showepisode} as downloaded in TVMaze")
+for dl in download:
+    for plexpref in plexprefs:
+        plexpref = plexpref.lower()
+        dl = dl.lower()
+        if plexpref in dl:
+            ndl.append(str(dl).replace(plexpref, "").replace(' ', '.'))
+            break
+        else:
+            continue
+
+for dl in ndl:
+    showinfo = find_showname(dl)
+    print(f'Processing Showinfo {showinfo}')
+    if not showinfo[0]:
+        print(f"This is likely a movie {dl}")
+        quit()
+
+    showname = showinfo[0]
+    showepisode = showinfo[1]
+    season = showinfo[2]
+    is_episode = showinfo[3]
+    episode = showinfo[4]
+    
+    # print("Looking for:", showname, season, episode, is_episode)
+    found_showid = find_showid(showname)
+    if not found_showid:
+        print(f"Did not find {showname} in TVMaze", showname)
     else:
-        for epi in found_epiid:
-            update_tvmaze_episode_status(epi[0])
-            print(f"Updated TVMaze as downloaded for {epi[2]}, Season {epi[5]}, Episode {epi[6]}")
-
+        found_epiid = find_epiid(found_showid, season, episode, is_episode)
+        if not found_epiid:
+            print(f"Did not find {showname} with episode {showepisode} in TVMaze")
+        elif is_episode and len(found_epiid) == 1:
+            update_tvmaze_episode_status(found_epiid[0][0])
+            print(f"Updated Show {showname}, episode {showepisode} as downloaded in TVMaze")
+        else:
+            for epi in found_epiid:
+                update_tvmaze_episode_status(epi[0])
+                print(f"Updated TVMaze as downloaded for {epi[2]}, Season {epi[5]}, Episode {epi[6]}")
+    
