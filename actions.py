@@ -67,14 +67,17 @@ def update_tvmaze_episode_status(epiid):
 def validate_requirements(filename, container, showname):
     res1 = '1080p'
     res2 = '720p'
+    res3 = '480p'
     codex = '264'
     cont1 = "mkv"
     cont2 = "mp4"
-    priority = 0
+    priority = 1
     if res1 in filename:
-        priority = priority + 30
+        priority = priority + 40
     elif res2 in filename:
-        priority = priority + 10
+        priority = priority + 30
+    elif res3 in filename:
+        priority += 20
     else:
         priority = priority - 40
     if codex in filename:
@@ -84,7 +87,7 @@ def validate_requirements(filename, container, showname):
     elif container and cont2 in filename:
         priority = priority + 5
     if 'proper' or 'repack' in filename:
-        priority = priority + 20
+        priority = priority + 10
     if showname:
         if showname not in filename.replace('.', ' ')[:len(showname)]:
             priority = 0
@@ -93,6 +96,7 @@ def validate_requirements(filename, container, showname):
                 # print(f'Filename character to compare is {filename.replace(".", " ").lower()[len(showname) + 1]} '
                 #       f'with Showname {showname} and Filename {filename}')
                 priority = 0
+    # print(f'Validate Requirement - Showname: {showname}, Priority: {priority}, Filename: {filename}')
     return priority
 
 
@@ -179,12 +183,15 @@ def piratebay_download(show, seas):
             showl = show.lower().replace(" ", ".")
             shownamel = showname.lower()
             shownamenp = shownamel.replace('+', '.')
-            # print(f'showl ---> {showl}, shownamel ---> {shownamel}, shownamenp --> {shownamenp}')
-        if showl in shownamel or showl in shownamenp:
+            # print(f'Piratebay Download: showl ---> {showl}, shownamel ---> {shownamel}, shownamenp --> {shownamenp}')
+        if showl.replace('.', ' ') in shownamel or showl in shownamenp:
             show_refs = pb_table_rec.findAll('a', {'href': re.compile("^magnet:")})
             for ref in show_refs:
+                # print(f'Piratebay Download: ref: {ref}')
                 magnet_link = str(ref['href']).split("&dn")
+                # print(f'Piratebay Download: magnet_link: {magnet_link}')
                 magnet_link = magnet_link[0]
+                # print(f'Piratebay Download: magnet_link[0]: {magnet_link}')
                 infos = pb_table_rec.findAll('font', {'class': 'detDesc'})
                 for info in infos:
                     sub_info = str(info).split('<font class="detDesc">')
@@ -207,10 +214,10 @@ def piratebay_download(show, seas):
         prio = validate_requirements(showname, False, show)
         if prio > 100:
             piratebay_titles.append((showname, magnet_link, size, prio))
-    piratebay_titles.sort(key=lambda x: str(x[2]), reverse=True)
-    print(piratebay_titles)
-    if len(piratebay_titles) > 1:
-        command_str = 'open -a transmission ' + piratebay_titles[1][1]
+    piratebay_titles.sort(key=lambda x: str(x[3]), reverse=True)
+    # print(f'Piratebay Download: Titles: {piratebay_titles}')
+    if len(piratebay_titles) > 0:
+        command_str = 'open -a transmission ' + piratebay_titles[0][1]
         os.system(command_str)
         return True, api
     else:
@@ -419,9 +426,9 @@ def process_the_episodes_to_download():
                 season = season_info[0]
                 season_dled = True
                 display_status(processed, epi_to_download, do_text, season)
-                epis = execute_sql(sqltype='Commit', sql=f'SELECT epiid '
-                                                         f'FROM episodes '
-                                                         f'WHERE showid = {epi_to_download[1]}')
+                epis = execute_sql(sqltype='Fetch', sql=f'SELECT epiid '
+                                                        f'FROM episodes '
+                                                        f'WHERE showid = {epi_to_download[1]}')
                 if len(epis) == 0:
                     print(f'No episodes found while they should exist for show {epi_to_download[1]}')
                 for epi in epis:
