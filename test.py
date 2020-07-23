@@ -9,11 +9,9 @@ from tvm_api_lib import execute_tvm_request
 from datetime import datetime, timedelta
 
 results = execute_sql(sqltype='Fetch', sql="SELECT * from download_options")
-print(results)
 if not results:
     print(f'Error getting the download_options {results}')
-results
-
+print(results)
 quit()
 
 

@@ -259,14 +259,14 @@ def magnetdl_download(show, seas):
 def get_episodes_to_download():
     todownload = execute_sql(sqltype='Fetch', sql=tvm_views.eps_to_download)
     if not todownload:
-        print(f'Error trying to get the episodes to download {todownload}')
+        print(f'No episodes to download {todownload}')
     return todownload
 
 
 def get_downloadAPIs():
-    results = execute_sql(sqltype='Fetch', sql="SELECT * from downloaders")
+    results = execute_sql(sqltype='Fetch', sql="SELECT * from download_options")
     if not results:
-        print(f'Error getting the downloaders {results}')
+        print(f'Error getting the download_options {results}')
     return results
 
 
@@ -401,8 +401,8 @@ def display_status(processed, epi_to_download, do_text, season):
 
 def process_the_episodes_to_download():
     episodes_to_download = get_episodes_to_download()
-    if not episodes_to_download:
-        print(f'Error getting Episodes to download: {episodes_to_download}')
+    # if not episodes_to_download:
+        # print(f'Error getting Episodes to download: {episodes_to_download}')
     
     print("TVM_Action_List ---> Episodes to Download:", len(episodes_to_download))
     # process the episodes that need to be downloading
@@ -473,7 +473,7 @@ def process_the_episodes_to_download():
 '''
 downloadAPIs = get_downloadAPIs()
 if not downloadAPIs:
-    print(f"Error getting Downloaders: {downloadAPIs}")
+    print(f"Error getting Download Options: {downloadAPIs}")
     quit()
 process = get_cli_args()
 print(term_codes.cl_scr)
