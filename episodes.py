@@ -24,8 +24,6 @@ updated = 0
 inserted = 0
 for show in shows:
     api = f"{tvm_apis.episodes_by_show_pre}{show[0]}{tvm_apis.episodes_by_show_suf}"
-    if not api:
-        quit()
     episodes = execute_tvm_request(api=api, sleep=0.5)
     if not episodes:
         continue

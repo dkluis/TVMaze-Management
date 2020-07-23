@@ -26,7 +26,7 @@ def connect_mdb(h=mdb_info.host, d='', err=True):
                 database=d)
     except mariadb.Error as e:
         if err:
-            print(f"Error connecting to MariaDB Platform (with test DB): {e}")
+            print(f"Connect MDB: Error connecting to MariaDB Platform (with test DB): {e}")
             print('--------------------------------------------------------------------------')
             sys.exit(1)
         else:
@@ -66,7 +66,7 @@ def execute_sql(con='', db='', cur='', batch='', h=mdb_info.host, d=mdb_info.db,
                 # print('Committing: ', sql)
                 tvmdb.commit()
         except mariadb.Error as er:
-            print('Execute SQL Database Error: ', d, er, sql)
+            print('Execute SQL (Commit) Database Error: ', d, er, sql)
             print('----------------------------------------------------------------------')
             if con != 'Y':
                 close_mdb(tvmdb)
@@ -79,7 +79,7 @@ def execute_sql(con='', db='', cur='', batch='', h=mdb_info.host, d=mdb_info.db,
             tvmcur.execute(sql)
             result = tvmcur.fetchall()
         except mariadb.Error as er:
-            print('Execute SQL Database Error: ', d, er, sql)
+            print('Execute SQL (Fetch) Database Error: ', d, er, sql)
             print('----------------------------------------------------------------------')
             if con != 'Y':
                 close_mdb(tvmdb)

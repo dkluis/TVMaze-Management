@@ -8,6 +8,13 @@ from tvm_api_lib import execute_tvm_request
 
 from datetime import datetime, timedelta
 
+api = f"{tvm_apis.episodes_by_show_pre}49227{tvm_apis.episodes_by_show_suf}"
+episodes = execute_tvm_request(api=api, sleep=0.5)
+print(episodes.content)
+quit()
+
+
+
 results = execute_sql(sqltype='Fetch', sql="SELECT * from download_options")
 if not results:
     print(f'Error getting the download_options {results}')
