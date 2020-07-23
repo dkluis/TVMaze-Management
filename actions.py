@@ -59,9 +59,9 @@ def update_tvmaze_episode_status(epiid):
     data = {"marked_at": epoch_date, "type": 1}
     response = requests.put(api, headers=headers, data=data)
     if response.status_code != 200:
-        print("Error: ", response)
-        quit()
-    return
+        print(f"Update TVMaze Episode Status: Error: {response} for episode: {api}")
+        return False
+    return True
 
 
 def validate_requirements(filename, container, showname):
@@ -434,9 +434,10 @@ def process_the_episodes_to_download():
                                                         f'FROM episodes '
                                                         f'WHERE showid = {epi_to_download[1]}')
                 if len(epis) == 0:
-                    print(f'No episodes found while they should exist for show {epi_to_download[1]}')
+                    print(f'Process the Epi(s) to Download: '
+                          f'No episodes found while they should exist for show {epi_to_download[1]}')
                 for epi in epis:
-                    print(epi)
+                    # print(f'Process The Epi(s) to download: {epi[0]}')
                     update_tvmaze_episode_status(epis[0])
                 continue
             else:
@@ -473,7 +474,7 @@ def process_the_episodes_to_download():
 '''
 downloadAPIs = get_downloadAPIs()
 if not downloadAPIs:
-    print(f"Error getting Download Options: {downloadAPIs}")
+    print(f"Main Program: Error getting Download Options: {downloadAPIs}")
     quit()
 process = get_cli_args()
 print(term_codes.cl_scr)
