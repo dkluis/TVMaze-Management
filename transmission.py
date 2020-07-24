@@ -9,11 +9,10 @@ from time import strftime
 
 def get_all_episodes_to_update():
     ttps = []
-    
     try:
         transmissions = open('/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Logs/Transmission.log')
     except IOError as err:
-        print(f'Transmission file did not exist: {err}')
+        # print(f'Transmission file did not exist: {err}')
         return ttps
     
     for ttp in transmissions:
@@ -132,7 +131,7 @@ Main Program start
 download = get_cli_args()
 cli = True
 if not download:
-    print(f'Now processing the transmission log')
+    # print(f'Now processing the transmission log')
     cli = False
     download = get_all_episodes_to_update()
     if len(download) == 0:
@@ -164,7 +163,7 @@ else:
 
 for dl in ndl:
     showinfo = find_showname(dl)
-    print(f'Processing Showinfo {showinfo}')
+    # print(f'Processing Showinfo {showinfo}')
     if not showinfo[0]:
         print(f"This is likely a movie {dl}")
     else:
@@ -176,15 +175,13 @@ for dl in ndl:
         
         # print("Looking for:", showname, season, episode, is_episode)
         found_showid = find_showid(showname)
-        if not found_showid:
-            print(f"Did not find {showname} in TVMaze", showname)
-        else:
+        if found_showid:
             found_epiid = find_epiid(found_showid, season, episode, is_episode)
             if not found_epiid:
-                print(f"Did not find {showname} with episode {showepisode} in TVMaze")
+                print(f"Did not find '{str(showname).title()}' with episode {showepisode} in TVMaze")
             elif is_episode and len(found_epiid) == 1:
                 update_tvmaze_episode_status(found_epiid[0][0])
-                print(f"Updated Show {showname}, episode {showepisode} as downloaded in TVMaze")
+                print(f"Updated Show '{str(showname).title()}', episode {showepisode} as downloaded in TVMaze")
             else:
                 for epi in found_epiid:
                     update_tvmaze_episode_status(epi[0])
