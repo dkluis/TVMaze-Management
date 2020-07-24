@@ -11,6 +11,8 @@ def get_all_episodes_to_update():
     for ttp in transmissions_to_process:
         if ' Swift ' in ttp:
             continue
+        if len(ttp) < 5:
+            continue
         ttps.append(ttp[:-1])
     return ttps
 
@@ -18,8 +20,8 @@ def get_all_episodes_to_update():
 def get_cli_args():
     clis = sys.argv
     if len(clis) < 2:
-        print('Need to get the download input')
-        quit()
+        # print('No download info provided in the command line')
+        return False
     return clis[1]
 
 
@@ -65,6 +67,7 @@ def find_showname(download):
 
 
 def find_showid(asn):
+    # print(f'Find Show ID via alt_showname: {asn}')
     result = execute_sql(sqltype='Fetch', sql=f"SELECT showid FROM shows "
                                               f"WHERE alt_showname like '{asn}' AND status = 'Followed'")
     if len(result) < 1:
@@ -117,21 +120,39 @@ def update_tvmaze_episode_status(epiid):
 '''
 Main Program start
 '''
+# print(f'Main Program started')
+download = get_cli_args()
+cli = True
+if not download:
+    print(f'Now processing the transmission log')
+    cli = False
+    download = get_all_episodes_to_update()
+    if len(download) == 0:
+        print(f'Nothing to Process in the transmission log')
+        quit()
 
-download = get_all_episodes_to_update()
+
 plexprefs = execute_sql(sqltype='Fetch', sql="SELECT info FROM key_values WHERE `key` = 'plexprefs'")
 plexprefs = str(plexprefs[0]).split(',')
+
 ndl = []
 
-for dl in download:
-    for plexpref in plexprefs:
-        plexpref = plexpref.lower()
-        dl = dl.lower()
-        if plexpref in dl:
-            ndl.append(str(dl).replace(plexpref, "").replace(' ', '.'))
-            break
-        else:
-            continue
+if cli:
+    ndl.append(download)
+else:
+    for dl in download:
+        for plexpref in plexprefs:
+            plexpref = plexpref.lower()
+            dl = dl.lower()
+            if plexpref in dl:
+                ndl.append(str(dl).replace(plexpref, "").replace(' ', '.'))
+                break
+            else:
+                continue
+        ndl.append(str(dl).replace(' ', '.'))
+        
+    if len(ndl) == 0:
+        print(f'Nothing to process: NDL = {ndl} and downloads are: {download}')
 
 for dl in ndl:
     showinfo = find_showname(dl)
@@ -161,4 +182,3 @@ for dl in ndl:
             for epi in found_epiid:
                 update_tvmaze_episode_status(epi[0])
                 print(f"Updated TVMaze as downloaded for {epi[2]}, Season {epi[5]}, Episode {epi[6]}")
-    
