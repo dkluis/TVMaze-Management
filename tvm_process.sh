@@ -23,6 +23,9 @@ export PATH
 
 echo "$(date) TVMaze Download Episodes Started"
 
+echo "$(data) Episode Download Updates Started"
+python3 transmission.py
+
 echo "$(date) TVMaze Shows"
 python3 shows.py -u 
 

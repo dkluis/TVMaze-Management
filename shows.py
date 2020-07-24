@@ -282,7 +282,7 @@ if options['-s']:
     print('Not fully implemented yet - no insert or update')
     process_all_shows(196, 199, sync=True)
 elif options['-i']:
-    print('Starting to process all tvmaze shows for inserts only')
+    print('Starting to process all tvmaze shows for initialize only')
     print('Not fully implemented yet - no insert or update')
     process_all_shows(0, 198, sync=False)
 elif options['-u']:

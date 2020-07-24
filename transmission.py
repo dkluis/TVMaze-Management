@@ -1,10 +1,10 @@
-from db_lib import *
-from tvm_api_lib import *
+from db_lib import execute_sql
+from tvm_api_lib import execute_tvm_request
 import os
 
 import sys
 from datetime import date
-from time import gmtime, strftime
+from time import strftime
 
 
 def get_all_episodes_to_update():
@@ -191,6 +191,6 @@ for dl in ndl:
                     print(f"Updated TVMaze as downloaded for {epi[2]}, Season {epi[5]}, Episode {epi[6]}")
                     
 if not cli:
-    t = strftime("%U-%a-%X")
-    os.rename(r'/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Logs/Transmission.log',
-              rf'/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Logs/Transmission - {t}.log')
+    t = strftime("%U-%a-at-%X")
+    os.replace(r'/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Logs/Transmission.log',
+               rf'/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Logs/Archived/Transmission - {t}.log')
