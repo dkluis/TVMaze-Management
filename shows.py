@@ -41,7 +41,7 @@ def process_show_info(rec, interest="New"):
         premiered = '2030-12-31'
     else:
         premiered = rec['premiered']
-    # ToDo Change this code to reflect the auto skipping of show that you are not interesting in
+
     my_interest = interest
     if interest == "New":
         my_interest = interest

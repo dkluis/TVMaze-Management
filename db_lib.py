@@ -26,7 +26,7 @@ def connect_mdb(h=mdb_info.host, d='', err=True):
                 database=d)
     except mariadb.Error as e:
         if err:
-            print(f"Connect MDB: Error connecting to MariaDB Platform (with test DB): {e}")
+            print(f"Connect MDB: Error connecting to MariaDB Platform: {e}")
             print('--------------------------------------------------------------------------')
             sys.exit(1)
         else:

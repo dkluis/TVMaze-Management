@@ -99,7 +99,6 @@ def find_epiid(si, s, e, i_s):
             # print("Episode not found: ---> ", "'" + showname + "'")
             return False
         else:
-            # ToDo figure out if this episode has been watched before
             if result[0][7] == 'Watched':
                 print(f'Episode of {si} for season {s} and episde {e} was watched before')
                 return False
