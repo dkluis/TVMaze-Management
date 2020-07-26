@@ -1,6 +1,7 @@
 import mariadb
 import sqlite3
 import pandas as pd
+from sqlalchemy import create_engine
 import sys
 
 
@@ -39,6 +40,12 @@ def connect_mdb(h=mdb_info.host, d='', err=True):
 
 def close_mdb(mdb):
     mdb.close()
+    
+    
+def connect_pd():
+    mdbe = create_engine('mysql://dick:Sandy3942@127.0.0.1/TVMazeDB')
+    # print(f'Connected to TVMazeDB for Pandas DataFrame Connections {mdbe}')
+    return mdbe
 
 
 def execute_df(h=mdb_info.host, d=mdb_info.db, sql=''):

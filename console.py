@@ -45,25 +45,29 @@ def display_menu(clear):
     
     print(
         term_pos(menu_pos.top + 2, menu_pos.menu_2y) + term_codes.bold + term_codes.yellow + "6. " + term_codes.normal +
-        " Process Shows Updates")
+        " Process Transmissions")
     print(
         term_pos(menu_pos.top + 3, menu_pos.menu_2y) + term_codes.bold + term_codes.yellow + "7. " + term_codes.normal +
-        " Process Episodes")
+        " Process Shows Updates")
     print(
         term_pos(menu_pos.top + 4, menu_pos.menu_2y) + term_codes.bold + term_codes.yellow + "8. " + term_codes.normal +
-        " Process Downloads")
+        " Process Episodes")
     print(
         term_pos(menu_pos.top + 5, menu_pos.menu_2y) + term_codes.bold + term_codes.yellow + "9. " + term_codes.normal +
-        " Process Statistics")
-    print(term_pos(menu_pos.top + 6,
-                   menu_pos.menu_2y) + term_codes.bold + term_codes.yellow + "10. " + term_codes.normal +
+        " Process Downloads")
+    print(
+        term_pos(menu_pos.top + 6, menu_pos.menu_2y) + term_codes.bold + term_codes.yellow + "10. " + term_codes.normal +
+        "Process Statistics")
+    print(term_pos(menu_pos.top + 7,
+                   menu_pos.menu_2y) + term_codes.bold + term_codes.yellow + "11. " + term_codes.normal +
           "Process All (complete run)")
     print(term_pos(menu_pos.top + 8,
-                   menu_pos.menu_2y) + term_codes.bold + term_codes.yellow + "11. " + term_codes.normal +
+                   menu_pos.menu_2y) + term_codes.bold + term_codes.yellow + "12. " + term_codes.normal +
           "Clean up Subtitle leftovers in Plex")
+
     print(term_pos(menu_pos.top + 2,
-                   menu_pos.menu_3y) + term_codes.bold + term_codes.yellow + "O (or o). " + term_codes.normal +
-          "Other Utilities")
+                   menu_pos.menu_3y) + term_codes.bold + term_codes.yellow + "C (or c). " + term_codes.normal +
+          "View Logs Files via Console")
     print(term_pos(menu_pos.top + 4,
                    menu_pos.menu_3y) + term_codes.bold + term_codes.yellow + "H (or h). " + term_codes.normal +
           "TVMaze Help")
@@ -73,8 +77,8 @@ def display_menu(clear):
           "Initialize TVMaze")
     '''
     print(
-        term_pos(menu_pos.top + 8, menu_pos.menu_3y) + term_codes.bold + term_codes.yellow + "F (or f). " +
-        term_codes.normal + "Find a Shows on all download_options")
+        term_pos(menu_pos.top + 8, menu_pos.menu_y) + term_codes.bold + term_codes.yellow + "F (or f). " +
+        term_codes.normal + "Find a Shows via all download_options")
     
     if clear:
         print(term_pos(menu_pos.status_x, menu_pos.menu_y) + term_codes.red + term_codes.bold + "Status:",
@@ -546,7 +550,7 @@ while loop:
                 dl_link = dl_str + str(showinfo[2]).replace(' ', dl[3]).lower() + sfx
                 follow_str = 'open -a safari ' + dl_link
                 os.system(follow_str)
-    elif cons_in == "10":
+    elif cons_in == "11":
         display_menu(True)
         print(term_pos(menu_pos.status_x, menu_pos.status_y), "Complete TVMaze Update Run" + term_codes.cl_eol)
         print()
@@ -560,30 +564,36 @@ while loop:
         cl_screen = False
     elif cons_in == "6":
         display_menu(True)
+        print(term_pos(menu_pos.status_x, menu_pos.status_y), "New Shows to Review" + term_codes.cl_eol)
+        print()
+        subprocess.call(" python3 transmission.py", shell=True)
+        cl_screen = False
+    elif cons_in == "7":
+        display_menu(True)
         print(term_pos(menu_pos.status_x, menu_pos.status_y), "Process Shows" + term_codes.cl_eol)
         print()
         subprocess.call(" python3 shows.py -u", shell=True)
         cl_screen = False
-    elif cons_in == "7":
+    elif cons_in == "8":
         display_menu(True)
         print(term_pos(menu_pos.status_x, menu_pos.status_y), "Process Episodes" + term_codes.cl_eol)
         print()
         subprocess.call(" python3 episodes.py", shell=True)
         cl_screen = False
-    elif cons_in == "8":
+    elif cons_in == "9":
         display_menu(True)
         print(term_pos(menu_pos.status_x, menu_pos.status_y), "Process Downloads" + term_codes.cl_eol)
         print()
         subprocess.call(" python3 actions.py -d", shell=True)
         cl_screen = False
-    elif cons_in == "9":
+    elif cons_in == "10":
         display_menu(True)
         print(term_pos(menu_pos.status_x, menu_pos.status_y), "Process Statistics" + term_codes.cl_eol)
         print()
         subprocess.call(" python3 statistics.py -s", shell=True)
         cl_screen = False
         subprocess.call(" python3 tvm_action_list.py -e", shell=True)
-    elif cons_in == "11":
+    elif cons_in == "12":
         display_menu(True)
         print(term_pos(menu_pos.status_x, menu_pos.status_y), "Clean up leftovers in Plex" + term_codes.cl_eol)
         print()
@@ -599,6 +609,21 @@ while loop:
         display_menu(True)
         print(term_pos(menu_pos.status_x, menu_pos.status_y), "Refreshed" + term_codes.cl_eol)
         print()
+    elif cons_in == "c":
+        print(term_pos(menu_pos.status_x, menu_pos.status_y), "Opening Consoles" + term_codes.cl_eol)
+        print()
+        log_file = '/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Logs/30M-Process.log'
+        log_path = 'open -a /System/Applications/Utilities/Console.app ' + log_file
+        os.system(log_path)
+        log_file = '/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Logs/Episodes_Updated.log'
+        log_path = 'open -a /System/Applications/Utilities/Console.app ' + log_file
+        os.system(log_path)
+        log_file = '/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Logs/Plex-Cleanup.log'
+        log_path = 'open -a /System/Applications/Utilities/Console.app ' + log_file
+        os.system(log_path)
+        log_file = '/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Logs/Transmission.log'
+        log_path = 'open -a /System/Applications/Utilities/Console.app ' + log_file
+        os.system(log_path)
     elif cons_in == "o":
         ou_loop = True
         cl_screen = True

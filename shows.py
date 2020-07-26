@@ -56,6 +56,10 @@ def process_show_info(rec, interest="New"):
                 rec['type'] == 'Variety' or \
                 rec['type'] == 'Game Show':
             my_interest = "Skipped"
+        elif network == 'Youtube' or \
+                network == 'Youtube Premium' or \
+                network == 'Facebook Watch':
+            my_interest = 'Skipped'
     
     return {'network': network, 'country': country,
             'runtime': length, 'language': language,

@@ -7,34 +7,8 @@ import re
 from tvm_api_lib import execute_tvm_request
 from datetime import datetime, timedelta
 
-transmissions_to_process = open('/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Logs/Transmisson.log')
-for ttp in transmissions_to_process:
-    if ' Swift ' in ttp:
-        continue
-    print(f'Record: {ttp[:-1]}')
-quit()
-
 from sqlalchemy import create_engine
-
 mdbe = create_engine('mysql://dick:Sandy3942@127.0.0.1/TVMazeDB')
-
-df = pd.read_sql_query('select * from statistics', mdbe)
-print(df)
-quit()
-
-
-print('Filling the Statistics Table')
-statistics = execute_sqlite(sqltype='Fetch', sql='SELECT * from statistics order by statepoch ')
-print(len(statistics))
-for rec in statistics:
-    ins_sql = "INSERT INTO statistics VALUES {0};".format(str(rec).replace('None', 'NULL').replace("''", "NULL"))
-    execute_sql(sqltype="Commit", sql=ins_sql)
-
-quit()
-
-from sqlalchemy import create_engine
-
-mdbe = create_engine('mysql+mysqlconnector://[dick]:[Sandy3942]@localhost/[TVMazeDB]')
 
 df = pd.read_sql_query('select * from statistics', mdbe)
 print(df)
@@ -72,24 +46,8 @@ print(execute_sql(con="Y", db=db, cur=cur, sqltype='Commit', sql='SET autocommit
 print(execute_sql(con="Y", db=db, cur=cur, sqltype='Fetch', sql="select * from information_schema.global_variables "
                                                                 "where variable_name = 'AUTOCOMMIT';"))
 
+# Adding to a tuple
 t = (1, 2, 3)
 t = t + (1,)
 print(t)
-
-
-def find_via_showname(sn):
-    to_download = execute_sql(sqltype='Fetch', sql=f"SELECT * from shows WHERE `showname` = '{sn}';")
-    if len(to_download) == 0:
-        return False
-    return to_download
-
-
-print(find_via_showname('LOST girl'))
-
-'''SQL Stuff (Tests)'''
-print(execute_sql(sqltype='Fetch', sql=tvm_views.shows_to_review))
-print(execute_df(sql=tvm_views.shows_to_review))
-print(execute_df(sql=stat_views.download_options))
-print(execute_df(sql=stat_views.shows))
-print(execute_df(sql=stat_views.episodes))
-print(execute_df(sql=stat_views.count))
+quit()
