@@ -383,7 +383,7 @@ def do_api_process(epi_tdl, req):
     elif formatted_call[1] == 'piratebay':
         result = piratebay_download(epi_tdl[11], req)
     else:
-        result = True, 'No Link Yet'
+        result = False, 'No Link Yet'
     return result, formatted_call
 
 
@@ -424,8 +424,9 @@ def process_the_episodes_to_download():
             # print('First Process the whole season request')
             # print(f'Whole season -> {epi_to_download[2]}, Season Info {season_info}')
             processed = do_api_process(epi_to_download, season_info[0])
+            # print(f'Whole Season Processed is {processed}')
             if processed[0][0]:
-                # ToDo Fix error trying to update TMaze with downloaded if show is Managed by ShowRSS
+                print(f'Whole Season Processed is {processed}')
                 downloaded_show = epi_to_download[11]
                 do_text = f" ---> Whole Season downloading "
                 season = season_info[0]
@@ -433,7 +434,8 @@ def process_the_episodes_to_download():
                 display_status(processed, epi_to_download, do_text, season)
                 epis = execute_sql(sqltype='Fetch', sql=f'SELECT epiid '
                                                         f'FROM episodes '
-                                                        f'WHERE showid = {epi_to_download[1]}')
+                                                        f'WHERE showid = {epi_to_download[1]} AND '
+                                                        f'season = {epi_to_download[4]}')
                 if len(epis) == 0:
                     print(f'Process the Epi(s) to Download: '
                           f'No episodes found while they should exist for show {epi_to_download[1]}')
