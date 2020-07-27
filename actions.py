@@ -425,6 +425,7 @@ def process_the_episodes_to_download():
             # print(f'Whole season -> {epi_to_download[2]}, Season Info {season_info}')
             processed = do_api_process(epi_to_download, season_info[0])
             if processed[0][0]:
+                # ToDo Fix error trying to update TMaze with downloaded if show is Managed by ShowRSS
                 downloaded_show = epi_to_download[11]
                 do_text = f" ---> Whole Season downloading "
                 season = season_info[0]
@@ -437,8 +438,8 @@ def process_the_episodes_to_download():
                     print(f'Process the Epi(s) to Download: '
                           f'No episodes found while they should exist for show {epi_to_download[1]}')
                 for epi in epis:
-                    # print(f'Process The Epi(s) to download: {epi[0]}')
-                    update_tvmaze_episode_status(epis[0])
+                    print(f'Process The Epi(s) to download: {epi[0]}')
+                    update_tvmaze_episode_status(epi[0])
                 continue
             else:
                 display_status(processed, epi_to_download, do_text, season_info[0])

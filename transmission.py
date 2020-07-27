@@ -33,6 +33,7 @@ def get_cli_args():
 
 
 def find_showname(download):
+    
     showinfo = str(download).split(".")
     showname = ""
     seasonfound = False
@@ -100,7 +101,7 @@ def find_epiid(si, s, e, i_s):
             return False
         else:
             if result[0][7] == 'Watched':
-                print(f'Episode of {si} for season {s} and episde {e} was watched before')
+                print(f'Episode of {si} for season {s} and episode {e} was watched before')
                 return False
     else:
         result = execute_sql(sqltype='Fetch', sql=f'SELECT * FROM  episodes '
@@ -126,7 +127,6 @@ def update_tvmaze_episode_status(epiid):
 '''
 Main Program start
 '''
-# print(f'Main Program started')
 download = get_cli_args()
 cli = True
 if not download:
@@ -138,13 +138,24 @@ if not download:
         quit()
 
 
-plexprefs = execute_sql(sqltype='Fetch', sql="SELECT info FROM key_values WHERE `key` = 'plexprefs'")
-plexprefs = str(plexprefs[0]).split(',')
-
+plexprefs = execute_sql(sqltype='Fetch', sql="SELECT info FROM key_values WHERE `key` = 'plexprefs'")[0]
+plexprefs = str(plexprefs).replace('(', '').replace(')', '').replace("'", "")
+plexprefs = str(plexprefs).split(',')
 ndl = []
 
 if cli:
-    ndl.append(download)
+    # print(f'Processing {download}')
+    for plexpref in plexprefs:
+        plexpref = plexpref.lower()
+        dl = download.lower()
+        # print(f'Trying download "{dl}" with string "{plexpref}"')
+        if plexpref in dl:
+            ndl.append(str(dl).replace(plexpref, "").replace(' ', '.'))
+            break
+        else:
+            continue
+        ndl.append(str(dl).replace(' ', '.'))
+    # ndl.append(download)
 else:
     for dl in download:
         for plexpref in plexprefs:
@@ -156,22 +167,22 @@ else:
             else:
                 continue
         ndl.append(str(dl).replace(' ', '.'))
-        
-    if len(ndl) == 0:
-        print(f'Nothing to process: NDL = {ndl} and downloads are: {download}')
+
+if len(ndl) == 0:
+    print(f'Nothing to process: NDL = {ndl} and downloads are: {download}')
 
 for dl in ndl:
+    print(f'Processing Download {dl}')
     showinfo = find_showname(dl)
     # print(f'Processing Showinfo {showinfo}')
     if not showinfo[0]:
-        print(f"This is likely a movie {dl}")
+        print(f"Processing as a movie {dl}")
     else:
         showname = showinfo[0]
         showepisode = showinfo[1]
         season = showinfo[2]
         is_episode = showinfo[3]
         episode = showinfo[4]
-        
         # print("Looking for:", showname, season, episode, is_episode)
         found_showid = find_showid(showname)
         if found_showid:
