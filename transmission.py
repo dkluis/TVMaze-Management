@@ -1,3 +1,5 @@
+'''
+
 from db_lib import execute_sql
 from tvm_api_lib import execute_tvm_request
 import os
@@ -33,7 +35,6 @@ def get_cli_args():
 
 
 def find_showname(download):
-    
     showinfo = str(download).split(".")
     showname = ""
     seasonfound = False
@@ -201,3 +202,5 @@ if not cli:
     t = strftime("%U-%a-at-%X")
     os.replace(r'/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Logs/Transmission.log',
                rf'/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Logs/Archived/Transmission - {t}.log')
+               
+'''
