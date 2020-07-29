@@ -197,6 +197,26 @@ def check_file_ignore(fi):
     return False
 
 
+def update_tvmaze(showinfo, found_showid):
+    print(f'Starting to update TVMaze episodes for {showinfo} with Show ID {found_showid}')
+    showname = showinfo[0]
+    showepisode = showinfo[1]
+    season = showinfo[2]
+    is_episode = showinfo[3]
+    episode = showinfo[4]
+    if found_showid:
+        found_epiid = find_epiid(found_showid, season, episode, is_episode)
+        if not found_epiid:
+            print(f"Did not find '{str(showname).title()}' with episode {showepisode} in TVMaze")
+        elif is_episode and len(found_epiid) == 1:
+            update_tvmaze_episode_status(found_epiid[0][0])
+            print(f"Updated Show '{str(showname).title()}', episode {showepisode} as downloaded in TVMaze")
+        else:
+            for epi in found_epiid:
+                update_tvmaze_episode_status(epi[0])
+                print(f"Updated TVMaze as downloaded for {epi[2]}, Season {epi[5]}, Episode {epi[6]}")
+
+
 '''
 Main Program start
 '''
@@ -343,46 +363,7 @@ for dl in download:
                     shutil.move(d, plex_trash_dir)
             if not movie:
                 print(f'Starting the process to Update TVMaze download statuses for show {d}')
+                update_tvmaze(ds, de)
+
 quit()
-
-for dl in edl:
-    for plex_pref in plex_prefs:
-        plex_pref = plex_pref.lower()
-        dl = dl.lower()
-        if plex_pref in dl:
-            ndl.append(str(dl).replace(plex_pref, "").replace(' ', '.'))
-            break
-        else:
-            continue
-    ndl.append(str(dl).replace(' ', '.'))
-
-if len(ndl) == 0:
-    print(f'Nothing to process: NDL = {ndl} and download via CLI is: {download}')
-
-for dl in ndl:
-    print(f'Processing Download {dl}')
-    showinfo = find_showname(dl)
-    # print(f'Processing Showinfo {showinfo}')
-    if not showinfo[0]:
-        print(f"Processing as a movie {dl}")
-    else:
-        showname = showinfo[0]
-        showepisode = showinfo[1]
-        season = showinfo[2]
-        is_episode = showinfo[3]
-        episode = showinfo[4]
-        # print("Looking for:", showname, season, episode, is_episode)
-        found_showid = find_showid(showname)
-        if found_showid:
-            found_epiid = find_epiid(found_showid, season, episode, is_episode)
-            if not found_epiid:
-                print(f"Did not find '{str(showname).title()}' with episode {showepisode} in TVMaze")
-            elif is_episode and len(found_epiid) == 1:
-                update_tvmaze_episode_status(found_epiid[0][0])
-                print(f"Updated Show '{str(showname).title()}', episode {showepisode} as downloaded in TVMaze")
-            else:
-                for epi in found_epiid:
-                    update_tvmaze_episode_status(epi[0])
-                    print(f"Updated TVMaze as downloaded for {epi[2]}, Season {epi[5]}, Episode {epi[6]}")
-
 
