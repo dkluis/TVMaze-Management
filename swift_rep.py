@@ -32,7 +32,7 @@ def gather_all_key_info():
 def get_all_episodes_to_update():
     ttps = []
     try:
-        transmissions = open('/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Logs/Transmission.log')
+        transmissions = open('/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Logs/TransmissionTest.log')
     except IOError as err:
         # print(f'Transmission file did not exist: {err}')
         return ttps
@@ -214,8 +214,8 @@ if not cli_download:
         quit()
     else:
         t = strftime("%U-%a-at-%X")
-        os.replace(r'/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Logs/Transmission.log',
-                   rf'/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Logs/Archived/Transmission - {t}.log')
+        # os.replace(r'/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Logs/TransmissionTest.log',
+        #           rf'/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Logs/Archived/Transmission - {t}.log')
 else:
     download.append(cli_download)
     
@@ -232,18 +232,18 @@ plex_do_not_move = key_info[7]
 plex_processed_dir = key_info[8]
 plex_trash_dir = key_info[9]
 
-edl = []    # Shows / Movies
-fedl = []   # Files
-ndl = []    #
-
 for dl in download:
+    edl = []  # Shows / Movies
+    fedl = []  # Files
+    ndl = []  #
+    # print(f'Processing download {dl}')
     dl_check = check_exist(dl)
     dl_exist = dl_check[0]
     if dl_exist:
         dl_dir = dl_check[1]
     if not dl_exist:
         print(f'Transmission input "{plex_source_dir + dl}" does not exist ')
-        quit()
+        continue
     else:
         # print(f'Transmission input "{plex_source_dir + dl}" exist and directory is {dl_dir} ')
         dl = plex_source_dir + dl
@@ -266,13 +266,15 @@ for dl in download:
                     ignore = check_file_ignore(df)
                     if not ignore:
                         fedl.append(df)
-    # print(f'Working on edl {edl} \n, with fedl {fedl}')
-    
-    if len(fedl) == 0:
-        print(f'Found no video files to move')
-        quit()
-    else:
-        for d in edl:
+        # print(f'Working on edl {edl} \n, with fedl {fedl}')
+        if len(fedl) == 0:
+            print(f'Found no video files to move for {dl}')
+            if os.path.exists(dl):
+                # print(f'Deleted {dl}')
+                shutil.move(dl, plex_trash_dir)
+            continue
+        else:
+            d = dl
             dc = cleanup_name(d)
             # print(f'Cleaned Name "{dc}"')
             ds = find_showname(dc)
@@ -289,13 +291,19 @@ for dl in download:
                 dest_dir = check_destination(ds, movie)
                 du = dest_dir + str(ds[0]).title() + '/Season ' + str(ds[2]) + '/'
             for f in edl:
+                skip = False
                 # print(f'Processing F: {f}')
                 for e in fedl:
                     # print(f'Processing E: {e}')
                     sf = f + '/' + e
                     if movie:
                         # ToDo add logic to intercept tv shows mis-classified as Movie due to
-                        # not having a s00e00 format in the name like "Season 0" or "Part X'
+                        if "season" in str(sf).lower():
+                            print(f'This might not be a movie it has the string "season" embedded --> {sf}')
+                            skip = True
+                        elif "part" in str(sf).lower():
+                            print(f'This might not be a movie it has the string "part" embedded --> {sf}')
+                            skip = True
                         if dl_dir:
                             # print(f'Movie with Directory working on du {du} and e {e} and f {f}')
                             fn = str(e).split('/')
@@ -305,8 +313,9 @@ for dl in download:
                             fn = str(d).split('/')
                             fn = fn[len(fn) - 1]
                             to = plex_movie_dir + fn
-                        print(f'Move the movie {f} to ------> {to}')
-                        os.rename(rf'{f}', rf'{to}')
+                        if not skip:
+                            print(f'Move the movie {f} to ------> {to}')
+                            os.rename(rf'{f}', rf'{to}')
                         if dl_dir:
                             chd = dl
                         else:
@@ -324,13 +333,15 @@ for dl in download:
             if not chd:
                 pass
             elif os.path.exists(chd):
-                print(f'Move leftover directory to {plex_processed_dir}')
-                shutil.move(d, plex_processed_dir)
-                # ToDo change to Trash once program is proven
-                # shutil.move(d, plex_trash_dir)
+                if skip:
+                    print(f'Moved {d} to {plex_processed_dir}')
+                    shutil.move(d, plex_processed_dir)
+                else:
+                    # print(f'Deleted {d}')
+                    shutil.move(d, plex_trash_dir)
             if not movie:
                 print(f'Starting the process to Update TVMaze download statuses for show {d}')
-    quit()
+quit()
 
 for dl in edl:
     for plex_pref in plex_prefs:
