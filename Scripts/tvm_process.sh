@@ -25,7 +25,7 @@ export PATH
 echo "$(date) TVMaze Half Hourly Update Started"
 echo ""
 echo ""
-echo "$(date) Transmission Move and Episode Download"
+echo "$(date) Downloads Move to Plex and Episode Status Update to TVMaze"
 python3 swift_rep.py
 echo ""
 echo ""
