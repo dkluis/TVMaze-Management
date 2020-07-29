@@ -195,9 +195,9 @@ for dl in ndl:
                 for epi in found_epiid:
                     update_tvmaze_episode_status(epi[0])
                     print(f"Updated TVMaze as downloaded for {epi[2]}, Season {epi[5]}, Episode {epi[6]}")
-                    
+
+quit()
 if not cli:
     t = strftime("%U-%a-at-%X")
     os.replace(r'/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Logs/Transmission.log',
                rf'/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Logs/Archived/Transmission - {t}.log')
-               
