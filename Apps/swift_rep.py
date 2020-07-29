@@ -32,13 +32,13 @@ def gather_all_key_info():
 def get_all_episodes_to_update():
     ttps = []
     try:
-        transmissions = open('/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Logs/TransmissionTest.log')
+        transmissions = open('/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Logs/Transmission.log')
     except IOError as err:
         # print(f'Transmission file did not exist: {err}')
         return ttps
     
     for ttp in transmissions:
-        if ' Swift ' in ttp:
+        if 'Transmission Started' in ttp:
             continue
         if len(ttp) < 5:
             continue
@@ -214,8 +214,8 @@ if not cli_download:
         quit()
     else:
         t = strftime("%U-%a-at-%X")
-        # os.replace(r'/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Logs/TransmissionTest.log',
-        #           rf'/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Logs/Archived/Transmission - {t}.log')
+        os.replace(r'/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Logs/Transmission.log',
+                   rf'/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Logs/Archived/Transmission - {t}.log')
 else:
     download.append(cli_download)
     
@@ -333,6 +333,8 @@ for dl in download:
             if not chd:
                 pass
             elif os.path.exists(chd):
+                # t = strftime("%U-%a-at-%X")
+                # ToDo maybe add time to the filename when being moved to avoid errors
                 if skip:
                     print(f'Moved {d} to {plex_processed_dir}')
                     shutil.move(d, plex_processed_dir)

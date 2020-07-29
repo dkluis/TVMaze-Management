@@ -6,14 +6,15 @@ set -o nounset
 #
 set -o errexit
 
-TVMDir='/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Apps'
+AppDir='/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Apps'
 LogDir='/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Logs'
+
 ### Spawning the next shell script, so that it can be tested and run by cron
 ##
 #
 
 # Position in the temp directory
-cd $TVMDir
+cd $AppDir
 
 PYTHONPATH=/Library/Frameworks/Python.framework/Versions/3.8/lib/python3.8/site-packages
 export PYTHONPATH
@@ -21,23 +22,29 @@ PATH=/Library/Frameworks/Python.framework/Versions/3.8/bin:/usr/local/bin:/usr/b
 export PATH
 # printenv
 
-echo "$(date) TVMaze Download Episodes Started"
-
-echo "$(date) Episode Download Updates Started"
+echo "$(date) TVMaze Half Hourly Update Started"
+echo ""
+echo ""
+echo "$(date) Transmission Move and Episode Download"
 python3 swift_rep.py
-
+echo ""
+echo ""
 echo "$(date) TVMaze Shows"
 python3 shows.py -u 
-
+echo ""
+echo ""
 echo "$(date) TVMaze Episodes"
 python3 episodes.py 
-
+echo ""
+echo ""
 echo "$(date) TVMaze Downloads"
 python3 actions.py -d 
-
+echo ""
+echo ""
 echo "$(date) TVMaze Statistics Update"
 python3 statistics.py -s
-
-echo "$(Date) TVMaze Download Episodes Finished"
+echo ""
+echo ""
+echo "$(Date) TVMaze TVMaze Half Hourly Update Finished"
 echo ""
 echo ""

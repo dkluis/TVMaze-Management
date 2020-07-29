@@ -25,6 +25,5 @@ Logfile="/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Logs/Transmi
 # Position in the temp diretory
 # cd $AppDir
 
-echo $(date) "Swift Transmission started" >>$Logfile
-echo "$TR_TORRENT_NAME" >>$logfile
-
+echo $(date) "Transmission Started" >>$Logfile
+echo $TR_TORRENT_NAME >>$Logfile
