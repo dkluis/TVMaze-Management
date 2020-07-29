@@ -554,7 +554,8 @@ while loop:
         display_menu(True)
         print(term_pos(menu_pos.status_x, menu_pos.status_y), "Complete TVMaze Update Run" + term_codes.cl_eol)
         print()
-        subprocess.call(" /Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/tvm_process.sh", shell=True)
+        subprocess.call(" /Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Scripts/tvm_process.sh",
+                        shell=True)
         cl_screen = False
     elif cons_in == "5":
         display_menu(True)

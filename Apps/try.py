@@ -1,3 +1,8 @@
+import sys
+for p in sys.path:
+    print(p)
+
+
 from db_lib import *
 from datetime import date
 from tvm_lib import *
@@ -6,6 +11,8 @@ from bs4 import BeautifulSoup as Soup
 import re
 from tvm_api_lib import execute_tvm_request
 from datetime import datetime, timedelta
+
+quit()
 
 from sqlalchemy import create_engine
 mdbe = create_engine('mysql://dick:Sandy3942@127.0.0.1/TVMazeDB')

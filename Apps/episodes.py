@@ -5,10 +5,6 @@ from terminal_lib import *
 from timeit import default_timer as timer
 from datetime import datetime, date
 
-res = connect_sdb()
-tvm_cur = res['scursor']
-tvm_db = res['sdb']
-
 '''Main Program'''
 print(term_codes.cl_scr)
 
