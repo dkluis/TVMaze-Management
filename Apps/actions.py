@@ -275,8 +275,8 @@ def get_shows_to_review():
     return showstoreview
 
 
-def find_dl_info(dl, downloadAPIs):
-    for find_dl in downloadAPIs:
+def find_dl_info(dl, dlapis):
+    for find_dl in dlapis:
         if find_dl[0] == dl:
             return find_dl
     return False
@@ -324,10 +324,10 @@ def process_new_shows():
                   "{: <50} {: <80} {: <12} {: <16} {: <12} "
                   "{: <15} {: <12} {: <24} {: <15} {: <1} {: <6}  "
                   "{: <1}".format(
-                f'\033[0m',
-                newshow[1], newshow[2], newshow[3], newshow[4], premiered,
-                language, length, network, country, f'\033[1m', request,
-                f'\033[0m'), end=":")
+                   f'\033[0m',
+                   newshow[1], newshow[2], newshow[3], newshow[4], premiered,
+                   language, length, network, country, f'\033[1m', request,
+                   f'\033[0m'), end=":")
             command_str = 'open -a safari ' + newshow[2]
             os.system(command_str)
             ans = input(" ").lower()
@@ -402,7 +402,7 @@ def display_status(processed, epi_to_download, do_text, season):
 def process_the_episodes_to_download():
     episodes_to_download = get_episodes_to_download()
     # if not episodes_to_download:
-        # print(f'Error getting Episodes to download: {episodes_to_download}')
+    # print(f'Error getting Episodes to download: {episodes_to_download}')
     
     print("TVM_Action_List ---> Episodes to Download:", len(episodes_to_download))
     # process the episodes that need to be downloading
@@ -413,7 +413,7 @@ def process_the_episodes_to_download():
           "{: <120} {: <30} {: <1}".format(f'\033[1m',
                                            "Shown Name: ", "Season:", "Airdate:",
                                            "Torrent Link:", "TVMaze Link:", f'\033[0m'))
-    message_txt = "TVM "
+    # message_txt = "TVM "
     downloaded_show = ''
     season_dled = False
     for epi_to_download in episodes_to_download:
