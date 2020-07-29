@@ -1,5 +1,3 @@
-'''
-
 from db_lib import execute_sql
 from tvm_api_lib import execute_tvm_request
 import os
@@ -203,4 +201,3 @@ if not cli:
     os.replace(r'/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Logs/Transmission.log',
                rf'/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Logs/Archived/Transmission - {t}.log')
                
-'''

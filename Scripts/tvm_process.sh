@@ -6,8 +6,8 @@ set -o nounset
 #
 set -o errexit
 
-TVMDir='/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze'
-
+TVMDir='/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Apps'
+LogDir='/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Logs'
 ### Spawning the next shell script, so that it can be tested and run by cron
 ##
 #
@@ -24,7 +24,7 @@ export PATH
 echo "$(date) TVMaze Download Episodes Started"
 
 echo "$(date) Episode Download Updates Started"
-python3 transmission.py
+python3 swift_rep.py
 
 echo "$(date) TVMaze Shows"
 python3 shows.py -u 

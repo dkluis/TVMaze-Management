@@ -6,7 +6,7 @@ set -o nounset
 #
 set -o errexit
 
-TVMDir='/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze'
+TVMDir='/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaz/Apps'
 
 
 ### Spawning the next shell script, so that it can be tested and run by cron
