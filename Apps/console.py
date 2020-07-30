@@ -287,7 +287,7 @@ def find_via_showid(si):
 
 
 def find_via_showname(sn):
-    to_download = execute_sql(sqltype='Fetch', sql=f"SELECT * from shows WHERE `showname` = '{sn}';")
+    to_download = execute_sql(sqltype='Fetch', sql=f"SELECT * from shows WHERE `showname` like '{sn}';")
     if not to_download:
         return False
     if len(to_download) == 0:
@@ -296,7 +296,7 @@ def find_via_showname(sn):
 
 
 def get_alt_showname(si):
-    alt_showname = execute_sql(sqltype='Fetch', sql=f"SELECT * from shows WHERE `showid` = {si};")
+    alt_showname = execute_sql(sqltype='Fetch', sql=f"SELECT * from shows WHERE `showid` like {si};")
     if not alt_showname:
         return False
     if len(alt_showname) == 0:
