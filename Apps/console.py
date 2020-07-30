@@ -610,7 +610,8 @@ while loop:
         print(term_pos(menu_pos.status_x, menu_pos.status_y),
               "Started Safari with the TVMaze Help Documentation" +
               term_codes.cl_eol)
-        subprocess.call(" open -a safari  /Users/dick/PycharmProjects/TVM-Management/README.pdf", shell=True)
+        subprocess.call(" open -a safari  /Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/README.pdf",
+                        shell=True)
     elif cons_in == "r" or cons_in == "":
         display_menu(True)
         print(term_pos(menu_pos.status_x, menu_pos.status_y), "Refreshed" + term_codes.cl_eol)
