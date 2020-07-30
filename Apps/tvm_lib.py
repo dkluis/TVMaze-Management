@@ -1,7 +1,7 @@
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-from datetime import datetime
+from datetime import datetime, timedelta, date
 import time
 
 from db_lib import *
@@ -27,6 +27,18 @@ def get_today(tp='human', fmt='full'):
         return time.mktime(now.timetuple())
     else:
         return False
+    
+    
+def date_delta(d='Now', delta=0):
+    if d == 'Now':
+        dn = get_today(tp='human', fmt='')
+    else:
+        if type(d) is datetime:
+            dn = d
+        else:
+            dn = date(int(d[:4]), int(d[5:7]), int(d[8:]))
+    nd = dn + timedelta(days=delta)
+    return str(nd)[:10]
 
 
 def get_tvmaze_info(key):

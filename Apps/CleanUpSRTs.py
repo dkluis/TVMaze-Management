@@ -1,6 +1,6 @@
 import os
 
-allMediaFiles = open("/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/Apps/TempFiles/allfiles.txt")
+allMediaFiles = open("/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Apps/TempFiles/allfiles.txt")
 files = allMediaFiles.read()
 allMediaFiles.close()
 

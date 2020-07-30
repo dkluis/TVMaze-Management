@@ -5,7 +5,7 @@ import re
 
 from terminal_lib import check_cli_args, term_codes
 from db_lib import *
-from tvm_lib import def_downloader
+from tvm_lib import def_downloader, get_today
 from tvm_api_lib import *
 
 
@@ -401,8 +401,6 @@ def display_status(processed, epi_to_download, do_text, season):
 
 def process_the_episodes_to_download():
     episodes_to_download = get_episodes_to_download()
-    # if not episodes_to_download:
-    # print(f'Error getting Episodes to download: {episodes_to_download}')
     
     print("TVM_Action_List ---> Episodes to Download:", len(episodes_to_download))
     # process the episodes that need to be downloading
@@ -417,6 +415,13 @@ def process_the_episodes_to_download():
     downloaded_show = ''
     season_dled = False
     for epi_to_download in episodes_to_download:
+        # ToDo add time check and date check to not try to download until 6am for episode that ran yesterday
+        hour_now = int(str(datetime.now())[11:13])
+        # print(f'Episode {episodes_to_download}, with time {hour_now} and date {get_today("human", " ")}')
+        if episodes_to_download[0][6] == get_today('human', ' ') and hour_now < 6:
+            print(f'Skipping {episodes_to_download} because of air date is {episodes_to_download[6]} '
+                  f'and time {hour_now} is before 6am')
+            continue
         season_info = do_season_process(epi_to_download)
         do_text = " ---> Not Downloading"
         season = season_info[1]

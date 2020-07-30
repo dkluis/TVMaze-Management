@@ -599,7 +599,8 @@ while loop:
         print(term_pos(menu_pos.status_x, menu_pos.status_y), "Clean up leftovers in Plex" + term_codes.cl_eol)
         print()
         cl_screen = False
-        subprocess.call(" /Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/getSRTs.sh >/dev/null ", shell=True)
+        subprocess.call(" /Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Scripts/plex_cleanup.sh ",
+                        shell=True)
     elif cons_in == "h":
         cl_screen = False
         print(term_pos(menu_pos.status_x, menu_pos.status_y),
@@ -616,7 +617,7 @@ while loop:
         log_file = '/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Logs/30M-Process.log'
         log_path = 'open -a /System/Applications/Utilities/Console.app ' + log_file
         os.system(log_path)
-        log_file = '/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Logs/Episodes_Updated.log'
+        log_file = '/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Logs/Swift_Rep.log'
         log_path = 'open -a /System/Applications/Utilities/Console.app ' + log_file
         os.system(log_path)
         log_file = '/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Logs/Plex-Cleanup.log'

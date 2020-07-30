@@ -314,7 +314,7 @@ class tvm_views:
                       "(status = 'Undecided' and download <= CURRENT_DATE);"
     eps_to_download = "SELECT e.*, s.download, s.alt_showname, s.imdb FROM episodes e " \
                       "JOIN shows s on e.showid = s.showid " \
-                      "WHERE mystatus is NULL and airdate is not NULL and airdate <= current_date " \
+                      "WHERE mystatus is NULL and airdate is not NULL and airdate <= subdate(current_date, 1) " \
                       "and download != 'Skip' " \
                       "ORDER BY showid asc, season asc, episode asc;"
 
