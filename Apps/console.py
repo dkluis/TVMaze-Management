@@ -68,6 +68,10 @@ def display_menu(clear):
     print(term_pos(menu_pos.top + 2,
                    menu_pos.menu_3y) + term_codes.bold + term_codes.yellow + "C (or c). " + term_codes.normal +
           "View Logs Files via Console")
+    print(
+        term_pos(menu_pos.top + 3,
+                 menu_pos.menu_3y) + term_codes.bold + term_codes.yellow + "D (or d). " + term_codes.normal +
+        "View Statistics Dashboard Webpage")
     print(term_pos(menu_pos.top + 4,
                    menu_pos.menu_3y) + term_codes.bold + term_codes.yellow + "H (or h). " + term_codes.normal +
           "TVMaze Help")
@@ -604,9 +608,9 @@ while loop:
     elif cons_in == "h":
         cl_screen = False
         print(term_pos(menu_pos.status_x, menu_pos.status_y),
-              "Started Safari with the TVMaze Help Documentation (HTML)" +
+              "Started Safari with the TVMaze Help Documentation" +
               term_codes.cl_eol)
-        subprocess.call(" cat out.txt", shell=True)
+        subprocess.call(" open -a safari  /Users/dick/PycharmProjects/TVM-Management/README.pdf", shell=True)
     elif cons_in == "r" or cons_in == "":
         display_menu(True)
         print(term_pos(menu_pos.status_x, menu_pos.status_y), "Refreshed" + term_codes.cl_eol)
@@ -626,6 +630,18 @@ while loop:
         log_file = '/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Logs/Transmission.log'
         log_path = 'open -a /System/Applications/Utilities/Console.app ' + log_file
         os.system(log_path)
+    elif cons_in == "d":
+        display_menu(True)
+        print(term_pos(menu_pos.status_x, menu_pos.status_y), "Starting Statistics Webserver (use CTLR-C to stop"
+              + term_codes.cl_eol)
+        print()
+        follow_str = 'open -a safari http://127.0.0.1:8050'
+        os.system(follow_str)
+        try:
+            subprocess.call(" python3 visualize.py", shell=True)
+        except KeyboardInterrupt:
+            pass
+        cl_screen = False
     elif cons_in == "o":
         ou_loop = True
         cl_screen = True

@@ -30,7 +30,9 @@
         plotly.subplots, plotly.graph.objects
 	
 ## Scheduling of Apps
-For scheduling standard crontab is used.  The following shell scripts are scheduled:
+For scheduling standard crontab is used.  
+The following shell scripts are scheduled:
+
 * every 30 minutes a complete run of the apps to interface with TVMaze, Plex and the internet to find and acquire episodes
     * zsh script: tvm_process
 * 4 times a day (6am, 9am, 8pm and 10pm the plex cleaned app
@@ -43,6 +45,7 @@ _Don't forget to include the PYTHONPATH and PATH info in crontab_
 The console app is a terminal based app to manage a lot of different things!
 
 Main Functions are:
+
 * Review New Shows to follow, skip or leave undecided for 7 days
 * Manage Shows:
     * Start Following a show
