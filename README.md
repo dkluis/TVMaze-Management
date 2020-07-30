@@ -18,7 +18,16 @@
 * **Plex:**
 	* Automatically move acquired shows into Plex and notify TVMaze that the show is acquired
 * **Technology**
-	* Build using Python 3, MariaDB and a little zsh
+	* Build using Python 3, MariaDB and a little zsh scripting
+	* Non Standard Python Libs used:
+	    * TVMaze specific created libs:
+	        * db_lib
+	        * tvm_api.lib
+	        * tvm_lib
+	        * terminal_lib
+        * bs4, re, requests, mariadb, pandas, sqlalchemy, 
+        dash, dash_core_components, dash.dependencies, 
+        plotly.subplots, plotly.graph.objects
 	
 ## Scheduling of Apps
 For scheduling standard crontab is used.  The following shell scripts are scheduled:
