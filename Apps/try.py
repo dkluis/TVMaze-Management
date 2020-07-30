@@ -7,7 +7,6 @@ from tvm_api_lib import execute_tvm_request
 from sqlalchemy import create_engine
 from datetime import datetime, timedelta, date
 
-print(int(str(datetime.now())[11:13]))
 
 quit()
 
