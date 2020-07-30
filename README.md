@@ -51,5 +51,6 @@ Main Functions are:
 ## Screenshots
 
 * Dashboard
+    * [Console Menu](console_shot1.jpg)
     * [Dashboard Top of the page](dashboard_part1.jpg)
     * [Dashboard Bottom of the page](dashboard_part2.jpg)
