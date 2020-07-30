@@ -7,7 +7,8 @@
 
 * **Shows:**
 	* Track all shows available everywhere in the world
-		* Automatically "Skip" shows based on rules 			* Language,
+		* Automatically "Skip" shows based on rules 			
+			* Language,
 			* Network,
 			* Runtime,
 			* Genres,
