@@ -45,5 +45,11 @@ Main Functions are:
     * Run the whole process
 * View all the logs
 
-## View the Statistis
+## View the Statistics
 * Start a Dashboard webpage with 15+ graphs
+
+## Screenshots
+
+* Dashboard
+    * [Dashboard Top of the page](dashboard_part1.jpg)
+    * [Dashboard Bottom of the page](dashboard_part2.jpg)
