@@ -6,7 +6,7 @@
 	* Using tvmaze.com APIs and standard functionality 
 
 * **Shows:**
-	* Track all shows available everywhere in the world
+	* Track all shows available everywhere in the world (47K+)
 		* Automatically "Skip" shows based on rules for 			
 			* Language,
 			* Network,
@@ -15,7 +15,7 @@
 			* Types	
 		* Decide the Follow or Skip all remaining shows as they are presented automatically in the console
 
-* **Episodes:** 
+* **Episodes: (For followed shows only)** 
 	* Automatically get all episode information 
 	* Acquire all episodes for viewing as soon as they are available after their airdate
 	* Automatically track episodes as watched or skipped
