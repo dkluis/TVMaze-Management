@@ -415,7 +415,6 @@ def process_the_episodes_to_download():
     downloaded_show = ''
     season_dled = False
     for epi_to_download in episodes_to_download:
-        # ToDo add time check and date check to not try to download until 6am for episode that ran yesterday
         hour_now = int(str(datetime.now())[11:13])
         # print(f'Episode {episodes_to_download}, with time {hour_now} and date {get_today("human", " ")}')
         if episodes_to_download[0][6] == get_today('human', ' ') and hour_now < 6:
