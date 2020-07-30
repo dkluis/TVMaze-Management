@@ -317,7 +317,7 @@ for dl in download:
                     # print(f'Processing E: {e}')
                     sf = f + '/' + e
                     if movie:
-                        # ToDo add logic to intercept tv shows mis-classified as Movie due to
+                        # ToDo finetune logic to intercept tv shows mis-classified as Movie due to
                         if "season" in str(sf).lower():
                             print(f'This might not be a movie it has the string "season" embedded --> {sf}')
                             skip = True
@@ -354,13 +354,16 @@ for dl in download:
                 pass
             elif os.path.exists(chd):
                 # t = strftime("%U-%a-at-%X")
-                # ToDo maybe add time to the filename when being moved to avoid errors
                 if skip:
                     print(f'Moved {d} to {plex_processed_dir}')
                     shutil.move(d, plex_processed_dir)
                 else:
-                    # print(f'Deleted {d}')
-                    shutil.move(d, plex_trash_dir)
+                    print(f'Moved to Trash {d}')
+                    try:
+                        shutil.move(d, plex_trash_dir)
+                    except OSError as err:
+                        print(f'Deleted directly instead {d}')
+                        shutil.rmtree(d)
             if not movie:
                 print(f'Starting the process to Update TVMaze download statuses for show {d}')
                 update_tvmaze(ds, de)
