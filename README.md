@@ -1,8 +1,6 @@
 # TVMaze-Management
 
-TVMaze Management (by Dick Kluis)
-
-Purpose:
+### Purpose:
 
 * **Keep track off and manage TV Shows**
 	* Using tvmaze.com APIs and standard functionality 
@@ -26,4 +24,4 @@ Purpose:
 
 
 * **Technology**
-	* Build in Python 3 and MariaDB 
+	* Build using Python 3, MariaDB and a little zsh
