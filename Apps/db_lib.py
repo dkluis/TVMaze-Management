@@ -49,7 +49,7 @@ class mdbi:
 
 def connect_mdb(h='', d='', err=True):
     mdb_info = mdbi(h, d)
-    print(f'Connecting to {mdb_info.db}')
+    # print(f'Connecting to {mdb_info.db}')
     try:
         mdb = mariadb.connect(
             host=mdb_info.host,
