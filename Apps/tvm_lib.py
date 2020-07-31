@@ -8,7 +8,7 @@ from db_lib import *
 
 
 class release:
-    console_version = 'Version: In Development - V1.3 - July 30 at 7:00:00 AM'
+    console_version = 'Version: In Development - V1.4 - July 30 at 5:00:00 PM'
     console_description = "TVMaze Management system"
 
 
