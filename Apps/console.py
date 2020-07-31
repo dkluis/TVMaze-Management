@@ -468,7 +468,8 @@ while loop:
         showcount = showinfo[1]
         if shownum != "Quit" and shownum != "Failed":
             print(term_pos(menu_pos.status_x, menu_pos.status_y),
-                  "Process the Skipping a show: " + str(shownum) + term_codes.cl_eol)
+                  "Process the Skipping for show: " + str(shownum) + term_codes.cl_eol)
+            execute_sql(sqltype='Commit', sql=f'UPDATE shows SET download = "Skip" WHERE `showid` = {shownum}')
             cl_screen = False
         else:
             print(term_pos(menu_pos.status_x, menu_pos.status_y), "No Show selected to skip " + term_codes.cl_eol)
