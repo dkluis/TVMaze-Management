@@ -31,7 +31,7 @@ def get_today(tp='human', fmt='full'):
     
 def date_delta(d='Now', delta=0):
     if d == 'Now':
-        dn = get_today(tp='human', fmt='')
+        dn = date.today()
     else:
         if type(d) is datetime:
             dn = d

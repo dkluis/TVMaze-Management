@@ -7,7 +7,8 @@ from tvm_api_lib import execute_tvm_request
 from sqlalchemy import create_engine
 from datetime import datetime, timedelta, date
 
-
+a = date_delta('Now', -1)
+print(a, type(a))
 quit()
 
 mdbe = create_engine('mysql://dick:Sandy3942@127.0.0.1/TVMazeDB')
