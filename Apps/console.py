@@ -633,6 +633,7 @@ while loop:
         os.system(log_path)
     elif cons_in == "d":
         display_menu(True)
+        cl_screen = True
         print(term_pos(menu_pos.status_x, menu_pos.status_y), "Starting Statistics Webserver (use CTLR-C to stop"
               + term_codes.cl_eol)
         print()
@@ -641,8 +642,8 @@ while loop:
         try:
             subprocess.call(" python3 visualize.py", shell=True)
         except KeyboardInterrupt:
+            display_menu(True)
             pass
-        cl_screen = False
     elif cons_in == "o":
         ou_loop = True
         cl_screen = True
