@@ -28,7 +28,12 @@
         * bs4, re, requests, mariadb, pandas, sqlalchemy, 
         dash, dash_core_components, dash.dependencies, 
         plotly.subplots, plotly.graph.objects
-	
+* **Tools**
+    * DBeaver - Database Management tool
+    * PyCharm - IDE
+    * MacOS Catalina (not tested on any other OS)
+    * Crontab 
+    
 ## Scheduling of Apps
 For scheduling standard crontab is used.  
 The following shell scripts are scheduled:
@@ -66,3 +71,15 @@ Main Functions are:
     * [Console Menu](console_shot1.jpg)
     * [Dashboard Top of the page](dashboard_part1.jpg)
     * [Dashboard Bottom of the page](dashboard_part2.jpg)
+    
+# _Functions & Features:_
+
+### Database
+* Detection of the environment (Production or Development) will automatically point access to the right Database
+* Console App includes an option to refresh the Development DB with the Production DB data of yesterday
+    * Only works if the auto backup is enable in crontab (see crontab example)
+* Note:  
+DB definition and access is well contained in db_lib.py so changing your implementation to use 
+something else than mariaDB will not be hard to accomplish.  SQLite code is commented out but is an example.    
+
+    
