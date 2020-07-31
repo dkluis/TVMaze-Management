@@ -3,35 +3,64 @@ import sqlite3
 import pandas as pd
 from sqlalchemy import create_engine
 import sys
+import os
 
 
-class mdb_info:
+class mdb_info_old:
     host = 'localhost'
     db = 'TVMazeDB'
     user = 'dick'
     password = 'Sandy3942'
 
 
-def connect_mdb(h=mdb_info.host, d='', err=True):
-    try:
-        if d == '':
-            mdb = mariadb.connect(
-                host=h,
-                user=mdb_info.user,
-                password=mdb_info.password)
+class mdbi:
+    def __init__(self, h, d):
+        check = os.getcwd()
+        if 'Pycharm' in check:
+            prod = False
         else:
-            mdb = mariadb.connect(
-                host=h,
-                user="dick",
-                password="Sandy3942",
-                database=d)
+            prod = True
+        if h == '':
+            self.host = 'localhost'
+        else:
+            self.host = h
+        self.user = 'dick'
+        self.password = 'Sandy3942'
+        if d == '':
+            if prod:
+                self.db = 'TVMazeDB'
+            else:
+                self.db = 'Test-TVM-DB'
+        else:
+            self.db = d
+            
+    def db(self):
+        return self.db
+    
+    def host(self):
+        return self.host
+    
+    def user(self):
+        return self.user
+    
+    def password(self):
+        return self.password
+
+
+def connect_mdb(h='', d='', err=True):
+    mdb_info = mdbi(h, d)
+    print(f'Connecting to {mdb_info.db}')
+    try:
+        mdb = mariadb.connect(
+            host=mdb_info.host,
+            user=mdb_info.user,
+            password=mdb_info.password,
+            database=mdb_info.db)
     except mariadb.Error as e:
         if err:
             print(f"Connect MDB: Error connecting to MariaDB Platform: {e}")
             print('--------------------------------------------------------------------------')
             sys.exit(1)
-        else:
-            return False
     mcur = mdb.cursor()
     mdict = {'mdb': mdb,
              'mcursor': mcur}
@@ -43,23 +72,32 @@ def close_mdb(mdb):
     
     
 def connect_pd():
-    mdbe = create_engine('mysql://dick:Sandy3942@127.0.0.1/TVMazeDB')
+    mdb_info = mdbi('', '')
+    sql_alch = f'mysql://{mdb_info.user}:{mdb_info.password}@{mdb_info.host}/{mdb_info.db}'
+    # mdbe = create_engine('mysql://dick:Sandy3942@127.0.0.1/TVMazeDB')
+    mdbe = create_engine(sql_alch)
     # print(f'Connected to TVMazeDB for Pandas DataFrame Connections {mdbe}')
     return mdbe
 
-
-def execute_df(h=mdb_info.host, d=mdb_info.db, sql=''):
+'''
+def execute_df(h='', d='', sql=''):
+    mdb_info = mdbi(h, d)
     # print('exec df data:', h, d, sql)
-    tvm = connect_mdb(h, d)
+    tvm = connect_mdb(mdb_info.host(), mdb_info.db)
     tvmdb = tvm['mdb']
     df = pd.read_sql_query(sql, tvmdb)
     close_mdb(tvmdb)
     return df
+'''
 
-
-def execute_sql(con='', db='', cur='', batch='', h=mdb_info.host, d=mdb_info.db, sqltype='', sql=''):
+def execute_sql(con='', db='', cur='', batch='', h='', d='', sqltype='', sql=''):
+    mdb_info = mdbi(h, d)
+    if h == '':
+        h = mdb_info.host
+    if d == '':
+        d = mdb_info.db
     if con != "Y":
-        tvm = connect_mdb(h, d)
+        tvm = connect_mdb(mdb_info.host, mdb_info.db)
         tvmcur = tvm['mcursor']
         tvmdb = tvm['mdb']
     else:
@@ -98,6 +136,7 @@ def execute_sql(con='', db='', cur='', batch='', h=mdb_info.host, d=mdb_info.db,
         return False, 'Not implemented yet'
 
 
+''' Old SQLite Stuff
 class sdb_info:
     data = '/Users/dick/PycharmProjects/TVMaze/Data/TVMaze.db'
 
@@ -142,6 +181,7 @@ def execute_sqlite(sqltype='', sql=''):
         return result
     else:
         return False, 'Not implemented yet'
+'''
 
 
 def create_db_sql(db):

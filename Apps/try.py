@@ -1,14 +1,32 @@
 from db_lib import *
-from tvm_lib import *
+# from tvm_lib import *
 from tvm_api_lib import *
 from bs4 import BeautifulSoup as Soup
 import re
 from tvm_api_lib import execute_tvm_request
 from sqlalchemy import create_engine
 from datetime import datetime, timedelta, date
+import mariadb
+import os
 
-a = date_delta('Now', -1)
-print(a, type(a))
+print(sys.getdefaultencoding())
+quit()
+        
+mdb_info = mdbi('', '')
+print(mdb_info)
+print(mdb_info.db)
+print(mdb_info.host)
+print(mdb_info.password)
+print(mdb_info.user)
+connect = connect_mdb()
+print(connect)
+print(execute_sql(sqltype='Fetch', sql=f'select * from download_options'))
+print(execute_sql(sqltype='Fetch', sql=f'select count(*) from download_options'))
+cdb = connect['mdb']
+
+
+close_mdb(cdb)
+
 quit()
 
 mdbe = create_engine('mysql://dick:Sandy3942@127.0.0.1/TVMazeDB')
