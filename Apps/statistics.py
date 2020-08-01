@@ -52,7 +52,7 @@ def go_store_statistics(f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12):
 
 
 def go_store_download_options(dls):
-    stats = execute_sql(sql='SELECT * from statistics where statrecind = "download_options" order by statdate desc ',
+    stats = execute_sql(sql='SELECT * from statistics where statrecind = "Downloaders" order by statdate desc ',
                         sqltype='Fetch')
     if len(stats) != 0:
         stats = stats[0]
@@ -73,7 +73,7 @@ def go_store_download_options(dls):
             today_epoch = int(get_today('system'))
             today_human = f"'{str(get_today('human'))[:-7]}'"
             sql = f"INSERT INTO statistics VALUES ({today_epoch}, {today_human}, " \
-                  f"None, None, None, None, None, None, None, None, None, None, None, None, 'download_options', " \
+                  f"None, None, None, None, None, None, None, None, None, None, None, None, 'Downloaders', " \
                   f"{dls[0]}, {dls[1]}, {dls[2]}, {dls[3]}, {dls[4]}, {dls[5]}, " \
                   f"{dls[6]}, {dls[7]}, {dls[8]}, {dls[9]}, {dls[10]});"
             sql = sql.replace('None', 'NULL')

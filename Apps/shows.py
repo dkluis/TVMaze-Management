@@ -276,6 +276,7 @@ def process_followed_shows():
 print(term_codes.cl_scr)
 options = get_cli_args()
 
+mdb_info = mdbi('', '')
 tvmaze = connect_mdb(d=mdb_info.db)
 db = tvmaze['mdb']
 cur = tvmaze['mcursor']

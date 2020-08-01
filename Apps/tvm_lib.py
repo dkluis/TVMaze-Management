@@ -8,9 +8,9 @@ from db_lib import *
 
 
 class release:
-    console_version = 'Version: In Development - V1.3 - July 30 at 7:00:00 AM'
+    console_version = 'Version: In Development - V1.5 - July 31 at 2:00:00 PM'
     console_description = "TVMaze Management system"
-
+    
 
 class def_downloader:
     dl = 'piratebay'
@@ -31,7 +31,7 @@ def get_today(tp='human', fmt='full'):
     
 def date_delta(d='Now', delta=0):
     if d == 'Now':
-        dn = get_today(tp='human', fmt='')
+        dn = date.today()
     else:
         if type(d) is datetime:
             dn = d
@@ -129,3 +129,11 @@ def count_by_download_options():
     value = (no_dl[0][0], rarbg_api[0][0], rarbg[0][0], rarbgmirror[0][0], showrss[0][0], skip[0][0],
              eztv_api[0][0], eztv[0][0], magnetdl[0][0], torrentfunk[0][0], piratebay[0][0])
     return value
+
+
+'''
+class dir_paths:
+    base_path = execute_sql(sqltype='Fetch', sql=f'SELECT info FROM key_values WHERE `key` = "base_path"')[0]
+    process = execute_sql(sqltype='Fetch', sql=f'SELECT info FROM key_values WHERE `key` = "process"')[0]
+    transmission = execute_sql(sqltype='Fetch', sql=f'SELECT info FROM key_values WHERE `key` = "transmission"')[0]
+'''

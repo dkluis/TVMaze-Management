@@ -5,7 +5,7 @@ import re
 
 from terminal_lib import check_cli_args, term_codes
 from db_lib import *
-from tvm_lib import def_downloader, get_today
+from tvm_lib import def_downloader, date_delta
 from tvm_api_lib import *
 
 
@@ -103,7 +103,10 @@ def validate_requirements(filename, container, showname):
 
 def eztv_download(imdb_id, eztv_epi_name):
     eztv_show = imdb_id
-    eztv_url = 'https://eztv.io/api/get-torrents?imdb_id=' + str(eztv_show)
+    eztv_url = execute_sql(sqltype='Fetch',
+                           sql='SELECT link_prefix FROM download_options where `providername` = "eztvAPI"')[0][0] \
+               + eztv_show
+    # eztv_url = 'https://eztv.io/api/get-torrents?imdb_id=' + str(eztv_show)
     time.sleep(1)
     eztv_data = requests.get(eztv_url).json()
     eztv_count = eztv_data['torrents_count']
@@ -119,7 +122,7 @@ def eztv_download(imdb_id, eztv_epi_name):
         if eztv_epi_name in filename:
             result = validate_requirements(filename, True, False)
             if result > 100:
-                download_options.append((result[1], size, filename, tor_url, mag_url))
+                download_options.append((result, size, filename, tor_url, mag_url))
     if len(download_options) > 0:
         download_options.sort(reverse=True)
         for do in download_options:
@@ -324,10 +327,10 @@ def process_new_shows():
                   "{: <50} {: <80} {: <12} {: <16} {: <12} "
                   "{: <15} {: <12} {: <24} {: <15} {: <1} {: <6}  "
                   "{: <1}".format(
-                   f'\033[0m',
-                   newshow[1], newshow[2], newshow[3], newshow[4], premiered,
-                   language, length, network, country, f'\033[1m', request,
-                   f'\033[0m'), end=":")
+                f'\033[0m',
+                newshow[1], newshow[2], newshow[3], newshow[4], premiered,
+                language, length, network, country, f'\033[1m', request,
+                f'\033[0m'), end=":")
             command_str = 'open -a safari ' + newshow[2]
             os.system(command_str)
             ans = input(" ").lower()
@@ -416,10 +419,10 @@ def process_the_episodes_to_download():
     season_dled = False
     for epi_to_download in episodes_to_download:
         hour_now = int(str(datetime.now())[11:13])
-        # print(f'Episode {episodes_to_download}, with time {hour_now} and date {get_today("human", " ")}')
-        if episodes_to_download[0][6] == get_today('human', ' ') and hour_now < 6:
-            print(f'Skipping {episodes_to_download} because of air date is {episodes_to_download[6]} '
-                  f'and time {hour_now} is before 6am')
+        print(f'Episode {epi_to_download[3]}, with time {hour_now} and date {date_delta("Now", -1)}')
+        if epi_to_download[6] == date_delta('Now', -1) and hour_now < 6:
+            print(f'Skipping {epi_to_download[3]} because of air date is {epi_to_download[6]} '
+                  f'and time {str(hour_now)} is before 6am')
             continue
         season_info = do_season_process(epi_to_download)
         do_text = " ---> Not Downloading"

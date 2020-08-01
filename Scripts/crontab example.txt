@@ -2,3 +2,5 @@ PYTHONPATH=/Library/Frameworks/Python.framework/Versions/3.8/lib/python3.8/site-
 PATH=/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Library/Apple/usr/bin:/Library/Frameworks/Python.framework/Versions/3.8/bin
 30 6,9,20,23 * * * /usr/local/bin/plex_cleanup >>/Volumes/HD-Data-CA-Server/Plexmedia/plexprocessing/TVMAZE/Logs/Plex-Cleanup.log 2>>/Volumes/HD-Data-CA-Server/Plexmedia/plexprocessing/TVMAZE/Logs/Plex-Cleanup.log
 15,45 0/1 * * * /usr/local/bin/tvm_process >/Volumes/HD-Data-CA-Server/Plexmedia/plexprocessing/TVMaze/Logs/30M-Process.log 2>>/Volumes/HD-Data-CA-Server/Plexmedia/plexprocessing/TVMaze/Logs/30M-Process.log
+0 0 * * * /usr/local/bin/mysqldump -u dick -pSandy3942 TVMazeDB >/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Dumps/TVMazeDB-Daily-Dump.sql
+5 0 * * * /usr/local/bin/mysqldump -u dick -pSandy3942 Test-TVM-DB >/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Dumps/Test-TVM-DB-Daily-Dump.sql

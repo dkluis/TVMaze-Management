@@ -1,4 +1,3 @@
-import os
 import subprocess
 import requests
 from terminal_lib import *
@@ -63,11 +62,15 @@ def display_menu(clear):
           "Process All (complete run)")
     print(term_pos(menu_pos.top + 8,
                    menu_pos.menu_2y) + term_codes.bold + term_codes.yellow + "12. " + term_codes.normal +
-          "Clean up Subtitle leftovers in Plex")
+          "Clean up Plex directory structures")
 
     print(term_pos(menu_pos.top + 2,
                    menu_pos.menu_3y) + term_codes.bold + term_codes.yellow + "C (or c). " + term_codes.normal +
           "View Logs Files via Console")
+    print(
+        term_pos(menu_pos.top + 3,
+                 menu_pos.menu_3y) + term_codes.bold + term_codes.yellow + "D (or d). " + term_codes.normal +
+        "View Statistics Dashboard Webpage")
     print(term_pos(menu_pos.top + 4,
                    menu_pos.menu_3y) + term_codes.bold + term_codes.yellow + "H (or h). " + term_codes.normal +
           "TVMaze Help")
@@ -464,7 +467,8 @@ while loop:
         showcount = showinfo[1]
         if shownum != "Quit" and shownum != "Failed":
             print(term_pos(menu_pos.status_x, menu_pos.status_y),
-                  "Process the Skipping a show: " + str(shownum) + term_codes.cl_eol)
+                  "Process the Skipping for show: " + str(shownum) + term_codes.cl_eol)
+            execute_sql(sqltype='Commit', sql=f'UPDATE shows SET download = "Skip" WHERE `showid` = {shownum}')
             cl_screen = False
         else:
             print(term_pos(menu_pos.status_x, menu_pos.status_y), "No Show selected to skip " + term_codes.cl_eol)
@@ -538,6 +542,7 @@ while loop:
             shownum = ' Quit'
         if shownum != 'Quit' and shownum != 'Failed':
             dls = get_download_options(True)
+            # print(f'Download Options all downloaders {dls}')
             for dl in dls:
                 if not dl[2]:
                     sfx = ''
@@ -547,8 +552,12 @@ while loop:
                     dl_str = dl[1] + str(showinfo[2][0]).lower() + "/"
                 else:
                     dl_str = dl[1]
+                if dl[0] == 'eztvAPI' and not dl[2]:
+                    # print(f'This show has no imdb info, cannot use eztvAPI')
+                    continue
                 dl_link = dl_str + str(showinfo[2]).replace(' ', dl[3]).lower() + sfx
                 follow_str = 'open -a safari ' + dl_link
+                # print(f'safari str is {follow_str}')
                 os.system(follow_str)
     elif cons_in == "11":
         display_menu(True)
@@ -593,7 +602,7 @@ while loop:
         print()
         subprocess.call(" python3 statistics.py -s", shell=True)
         cl_screen = False
-        subprocess.call(" python3 tvm_action_list.py -e", shell=True)
+        subprocess.call(" python3 actions.py -d", shell=True)
     elif cons_in == "12":
         display_menu(True)
         print(term_pos(menu_pos.status_x, menu_pos.status_y), "Clean up leftovers in Plex" + term_codes.cl_eol)
@@ -604,9 +613,10 @@ while loop:
     elif cons_in == "h":
         cl_screen = False
         print(term_pos(menu_pos.status_x, menu_pos.status_y),
-              "Started Safari with the TVMaze Help Documentation (HTML)" +
+              "Started Safari with the TVMaze Help Documentation" +
               term_codes.cl_eol)
-        subprocess.call(" cat out.txt", shell=True)
+        subprocess.call(" open -a safari  /Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/README.pdf",
+                        shell=True)
     elif cons_in == "r" or cons_in == "":
         display_menu(True)
         print(term_pos(menu_pos.status_x, menu_pos.status_y), "Refreshed" + term_codes.cl_eol)
@@ -626,6 +636,19 @@ while loop:
         log_file = '/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Logs/Transmission.log'
         log_path = 'open -a /System/Applications/Utilities/Console.app ' + log_file
         os.system(log_path)
+    elif cons_in == "d":
+        display_menu(True)
+        cl_screen = True
+        print(term_pos(menu_pos.status_x, menu_pos.status_y), "Starting Statistics Webserver (use CTLR-C to stop"
+              + term_codes.cl_eol)
+        print()
+        follow_str = 'open -a safari http://127.0.0.1:8050'
+        os.system(follow_str)
+        try:
+            subprocess.call(" python3 visualize.py", shell=True)
+        except KeyboardInterrupt:
+            display_menu(True)
+            pass
     elif cons_in == "o":
         ou_loop = True
         cl_screen = True
