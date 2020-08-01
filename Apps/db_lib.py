@@ -79,16 +79,6 @@ def connect_pd():
     # print(f'Connected to TVMazeDB for Pandas DataFrame Connections {mdbe}')
     return mdbe
 
-'''
-def execute_df(h='', d='', sql=''):
-    mdb_info = mdbi(h, d)
-    # print('exec df data:', h, d, sql)
-    tvm = connect_mdb(mdb_info.host(), mdb_info.db)
-    tvmdb = tvm['mdb']
-    df = pd.read_sql_query(sql, tvmdb)
-    close_mdb(tvmdb)
-    return df
-'''
 
 def execute_sql(con='', db='', cur='', batch='', h='', d='', sqltype='', sql=''):
     mdb_info = mdbi(h, d)

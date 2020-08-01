@@ -346,9 +346,9 @@ for dl in download:
                         if not os.path.exists(du):
                             print(f'Creating directory {du}')
                             os.makedirs(du)
-                        du = du + fn
-                        print(f'Move the episode {sf} to ------> {du}')
-                        os.rename(rf'{sf}', rf'{du}')
+                        to = du + fn
+                        print(f'Move the episode {sf} to ------> {to}')
+                        os.rename(rf'{sf}', rf'{to}')
                         chd = d
             if not chd:
                 pass
