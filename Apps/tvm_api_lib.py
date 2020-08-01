@@ -24,10 +24,16 @@ def execute_tvm_request(api, data='', err=True, sleep=1.25, code=False,
             if code:
                 response = session.get(api,
                                        headers={
-                                           'Authorization': 'Basic RGlja0tsdWlzOlRUSFlfQ2hIeUF5SU1fV1ZZRmUwcDhrWTkxTkE1WUNH'},
+                                           'Authorization':
+                                               'Basic RGlja0tsdWlzOlRUSFlfQ2hIeUF5SU1fV1ZZRmUwcDhrWTkxTkE1WUNH'},
                                        timeout=(10, 5))
             else:
-                response = session.get(api, timeout=timeout)
+                response = session.get(api,
+                                       headers={
+                                           'User-Agent':
+                                               'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) '
+                                               'Chrome/41.0.2228.0 Safari/537.36'},
+                                       timeout=timeout)
         elif req_type == 'put':
             if code:
                 response = session.put(api,
