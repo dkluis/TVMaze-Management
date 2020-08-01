@@ -9,46 +9,17 @@ from datetime import datetime, timedelta, date
 import mariadb
 import os
 
+
+quit()
+
+'''
 db_name = "Testing_Init_DB"
 print(f"Create the {db_name} schema {execute_sql(d='', sqltype='Commit', sql=create_db_sql(db_name))}")
 print('Create the key_values table', execute_sql(d=db_name, sqltype='Commit', sql=create_tb_key_values.sql))
 print('Fill the key_values table', execute_sql(d=db_name, sqltype='Commit', sql=create_tb_key_values.fill))
 quit()
+'''
 
-def magnetdl_download(show, seas):
-    main_link_pre = '''http://www.magnetdl.com/search/?m=1&q="'''
-    main_link_suf = '"'
-    main_link = main_link_pre + show.replace(' ', '-') + '-' + seas + main_link_suf
-    main_link = 'https://www.magnetdl.com/t/the-last-narc/'
-    main_link = '''http://www.magnetdl.com/search/?m=1&q="the-last-narc-s01"'''
-    # main_link = '''https://stackoverflow.com/questions/27652543/how-to-use-python-requests-to-fake-a-browser-visit'''
-    main_request = execute_tvm_request(api=main_link, req_type='get')
-    print(main_link, main_request ,main_request.content)
-    if not main_request:
-        return False, main_link
-    titles = main_request['torrent_results']
-    dl_options = []
-    for title in titles:
-        name = title['title']
-        magnet = title['download']
-        seeders = title['seeders']
-        size = title['size']
-        prio = validate_requirements(name, False, show)
-        if prio > 100:
-            dl_options.append((prio, size, seeders, name, magnet))
-    if len(dl_options) > 0:
-        dl_options.sort(reverse=True)
-        for do in dl_options:
-            command_str = 'open -a transmission ' + do[4]
-            os.system(command_str)
-            return True, main_link
-    else:
-        return False, main_link
-    
-result = magnetdl_download('the last narc', 's01')
-print(result)
-
-quit()
 
 mdbe = create_engine('mysql://dick:Sandy3942@127.0.0.1/TVMazeDB')
 df = pd.read_sql_query('select * from statistics', mdbe)

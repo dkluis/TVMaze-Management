@@ -4,13 +4,6 @@ import sys
 import os
 
 
-class mdb_info_old:
-    host = 'localhost'
-    db = 'TVMazeDB'
-    user = 'dick'
-    password = 'Sandy3942'
-
-
 class mdbi:
     def __init__(self, h, d):
         check = os.getcwd()

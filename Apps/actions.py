@@ -89,7 +89,7 @@ def validate_requirements(filename, container, showname):
     if 'proper' or 'repack' in filename:
         priority = priority + 10
     if showname:
-        if showname not in filename.replace('.', ' ')[:len(showname)]:
+        if showname.lower() not in filename.replace('.', ' ')[:len(showname)].lower():
             priority = 0
         else:
             if 's' not in filename.replace('.', ' ').lower()[len(showname) + 1]:
@@ -134,27 +134,27 @@ def eztv_download(imdb_id, eztv_epi_name):
         return False, eztv_url
 
 
-def rarbg_download(show, seas):
-    main_link_pre = 'https://torrentapi.org/pubapi_v2.php?mode=search&search_string='
-    main_link_suf = '&token=lnjzy73ucv&format=json_extended&app_id=lol'
-    main_link = main_link_pre + show.replace(' ', '+') + '+' + seas + main_link_suf
-    main_request = execute_tvm_request(api=main_link, req_type='get')
-    if not main_request:
+def rarbg_api_download(show, seas):
+    dl_info = execute_sql(sqltype='Fetch', sql=f'SELECT * from download_options WHERE `providername` = "rarbgAPI"')[0]
+    main_link = f"{dl_info[1]}{show} {seas}{dl_info[2]}"
+    main_request = execute_tvm_request(api=main_link, req_type='get').json()
+    if 'No results found' in str(main_request):
         return False, main_link
-    titles = main_request['torrent_results']
+    records = main_request['torrent_results']
     dl_options = []
-    for title in titles:
-        name = title['title']
-        magnet = title['download']
-        seeders = title['seeders']
-        size = title['size']
-        prio = validate_requirements(name, False, show)
+    for record in records:
+        name = record['title']
+        magnet = record['download']
+        seeders = record['seeders']
+        size = record['size']
+        prio = validate_requirements(name, True, show)
         if prio > 100:
             dl_options.append((prio, size, seeders, name, magnet))
     if len(dl_options) > 0:
         dl_options.sort(reverse=True)
-        for do in dl_options:
-            command_str = 'open -a transmission ' + do[4]
+        for dlo in dl_options:
+            print(f'First in sort is: {dlo[3]}')
+            command_str = 'open -a transmission ' + dlo[4]
             os.system(command_str)
             return True, main_link
     else:
@@ -378,7 +378,7 @@ def format_download_call(epi_tdl, sore):
 def do_api_process(epi_tdl, req):
     formatted_call = format_download_call(epi_tdl, req)
     if formatted_call[1] == 'rarbgAPI':
-        result = rarbg_download(epi_tdl[11], req)
+        result = rarbg_api_download(epi_tdl[11], req)
     elif formatted_call[1] == 'eztvAPI':
         result = eztv_download(epi_tdl[12], req)
     elif formatted_call[1] == 'magnetdl_new':

@@ -31,8 +31,8 @@ def execute_tvm_request(api, data='', err=True, sleep=1.25, code=False,
                 response = session.get(api,
                                        headers={
                                            'User-Agent':
-                                               'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) '
-                                               'Chrome/41.0.2228.0 Safari/537.36'},
+                                               'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_0) AppleWebKit/537.36 '
+                                               '(KHTML, like Gecko) Chrome/75.0.3770.100 Safari/537.36'},
                                        timeout=timeout)
         elif req_type == 'put':
             if code:
