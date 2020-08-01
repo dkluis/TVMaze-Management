@@ -542,6 +542,7 @@ while loop:
             shownum = ' Quit'
         if shownum != 'Quit' and shownum != 'Failed':
             dls = get_download_options(True)
+            # print(f'Download Options all downloaders {dls}')
             for dl in dls:
                 if not dl[2]:
                     sfx = ''
@@ -551,8 +552,12 @@ while loop:
                     dl_str = dl[1] + str(showinfo[2][0]).lower() + "/"
                 else:
                     dl_str = dl[1]
+                if dl[0] == 'eztvAPI' and not dl[2]:
+                    # print(f'This show has no imdb info, cannot use eztvAPI')
+                    continue
                 dl_link = dl_str + str(showinfo[2]).replace(' ', dl[3]).lower() + sfx
                 follow_str = 'open -a safari ' + dl_link
+                # print(f'safari str is {follow_str}')
                 os.system(follow_str)
     elif cons_in == "11":
         display_menu(True)
