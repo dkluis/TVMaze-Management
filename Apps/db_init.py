@@ -1,5 +1,3 @@
-import os
-
 from db_lib import *
 from terminal_lib import check_cli_args, term_codes
 
@@ -23,15 +21,13 @@ def get_cli_args():
     return flc
 
 
-def process_create_db_tvmaze():
-    print('Create db TVMaze', execute_sql(d='', sqltype='Commit', sql=create_db_sql('TVMazeDB')))
-    print('Create tvmaze table', execute_sql(sqltype='Commit', sql=create_tb_tvmaze.sql))
-    print('Create download_options table', execute_sql(sqltype='Commit', sql=create_tb_dls.sql))
-    print('Create Shows table', execute_sql(sqltype='Commit', sql=create_tb_shows.sql))
-    # print('Create Alternate Show Names table', execute_sql(sqltype='Commit', sql=create_tb_alt_showname.sql))
-    print('Create Episodes table', execute_sql(sqltype='Commit', sql=create_tb_eps_by_show.sql))
-    # print('Create Followed Shows table', execute_sql(sqltype='Commit', sql=create_tb_followed_shows.sql))
-    print('Create Statistics table', execute_sql(sqltype='Commit', sql=create_tb_statistics.sql))
+def process_create_db_tvmaze(db_name):
+    print(f'Create db {db_name}', execute_sql(d='', sqltype='Commit', sql=create_db_sql(db_name)))
+    print('Create key_values table', execute_sql(d=db_name, sqltype='Commit', sql=create_tb_key_values.sql))
+    print('Create download_options table', execute_sql(d=db_name, sqltype='Commit', sql=create_tb_dls.sql))
+    print('Create Shows table', execute_sql(d=db_name, sqltype='Commit', sql=create_tb_shows.sql))
+    print('Create Episodes table', execute_sql(d=db_name, sqltype='Commit', sql=create_tb_eps_by_show.sql))
+    print('Create Statistics table', execute_sql(d=db_name, sqltype='Commit', sql=create_tb_statistics.sql))
 
 
 def process_transfer():

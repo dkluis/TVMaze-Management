@@ -31,7 +31,7 @@ class mdbi:
                 self.db = 'Test-TVM-DB'
         else:
             self.db = d
-            
+    
     def db(self):
         return self.db
     
@@ -67,13 +67,12 @@ def connect_mdb(h='', d='', err=True):
 
 def close_mdb(mdb):
     mdb.close()
-    
-    
+
+
 def connect_pd():
     mdb_info = mdbi('', '')
-    sql_alch = f'mysql://{mdb_info.user}:{mdb_info.password}@{mdb_info.host}/{mdb_info.db}'
-    # mdbe = create_engine('mysql://dick:Sandy3942@127.0.0.1/TVMazeDB')
-    mdbe = create_engine(sql_alch)
+    sql_alchemy = f'mysql://{mdb_info.user}:{mdb_info.password}@{mdb_info.host}/{mdb_info.db}'
+    mdbe = create_engine(sql_alchemy)
     # print(f'Connected to TVMazeDB for Pandas DataFrame Connections {mdbe}')
     return mdbe
 
@@ -176,50 +175,51 @@ def create_db_sql(db):
     return 'CREATE DATABASE ' + db
 
 
-class create_tb_tvmaze:
-    sql = "CREATE TABLE `key_values` (`key` varchar(25) NOT NULL," \
-          " `info` varchar(375) DEFAULT NULL," \
-          " `comments` varchar(125) DEFAULT NULL," \
-          " UNIQUE KEY `tvmaze_UN` (`key`)" \
-          ") ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='TVMaze internal key info'"
-    fill = [
-        "INSERT INTO key_values (`key`,info,comments) VALUES ('sms','8138189195@tmomail.net','You cell phone provider"
-        "s email adress to get you text messages');",
-        "INSERT INTO key_values (`key`,info,comments) VALUES ('emailpas','iu4exCvsNKbzTNDQyGYcutQs','your gmail "
-        "password');",
-        "INSERT INTO key_values (`key`,info,comments) VALUES ('email','dickkluis@gmail.com','your gmail email "
-        "address');",
-        "INSERT INTO key_values (`key`,info,comments) VALUES ('tvmheader','{''Authorization'': "
-        "''Basic RGlja0tsdWlzOlRUSFlfQ2hIeUF5SU1fV1ZZRmUwcDhrWTkxTkE1WUNH''}','tvmaze private key:  "
-        "Use Dashboard to pick up password and use Premiun API testing to login in and get authorization key');",
-        "INSERT INTO key_values (`key`,info,comments) VALUES ('mmenu_y','10','First Column of Menu items');",
-        "INSERT INTO key_values (`key`,info,comments) VALUES ('mtop','2','Top line where the Menu starts');",
-        "INSERT INTO key_values (`key`,info,comments) VALUES ('mmenu_2y','65','Second Column of Menu items');",
-        "INSERT INTO key_values (`key`,info,comments) VALUES ('mmenu_3y','110','Third Column of Menu items');",
-        "INSERT INTO key_values (`key`,info,comments) VALUES ('mstatus_y','18','Column where the status messasges "
-        "are displayed');",
-        "INSERT INTO key_values (`key`,info,comments) VALUES ('minput_x','11','Line where the menu input is displayed: "
-        " Calc is mtop + minput_x');",
-        "INSERT INTO key_values (`key`,info,comments) VALUES ('mstatus_x','2','Line where the Status is displayed:  "
-        "Calc is minput_x + mstatus_x');",
-        "INSERT INTO key_values (`key`,info,comments) VALUES ('msub_screen_x','2','Number of line to skip for sub_"
-        "screen processing');",
-        "INSERT INTO key_values (`key`,info,comments) VALUES ('plexsd',"
-        "'/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TransmissionFiles/','Download Source Directory');",
-        "INSERT INTO key_values (`key`,info,comments) VALUES ('plextvd1',"
-        "'/Volumes/HD-Data-CA-Server/PlexMedia/TV Shows/','TV Shows Main Direcotory');",
-        "INSERT INTO key_values (`key`,info,comments) VALUES ('plexmovd',"
-        "'/Volumes/HD-Data-CA-Server/PlexMedia/Movies/','Movies Main Directory');",
-        "INSERT INTO key_values (`key`,info,comments) VALUES ('plexexts','mkv,mp4,mv4,avi,wmv',"
-        "'Media extension to process');",
-        "INSERT INTO key_values (`key`,info,comments) VALUES ('plexprefs','www.torrenting.org - ,"
-        "from [ www.torrenting.me ] -,[ www.torrenting.com ] -,www.torrenting.com -,www.torrenting.me -,"
-        "www.torrenting.com,www.torrenting.me,www.scenetime.com  -,www.scenetime.com -,www.scenetime.com,"
-        "www.speed.cd - ,www.speed.cd,www.torrenting.org,www.torrenting.org - ,www.Torrenting.org       ,"
-        "xxxxxxxxx','Prefixes to ignore for show or movies names');",
-        "INSERT INTO key_values (`key`,info,comments) VALUES ('plexmovstr','1080p,dvdscr,web-dl,web-,bluray,x264,"
-        "dts-hd,acc-rarbg,solar,h264,hdtv,rarbg,-sparks,-lucidtv','Eliminate these string from the movie name');"
-    ]
+class create_tb_key_values:
+    sql = "CREATE TABLE `key_values` " \
+          "(`key` varchar(25) NOT NULL, " \
+          "`info` varchar(375) DEFAULT NULL, " \
+          "`comments` varchar(125) DEFAULT NULL, " \
+          "UNIQUE KEY `key_values_UN` (`key`)) " \
+          "ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='TVMaze internal key info';"
+    fill = "INSERT INTO key_values (`key`,info,comments) VALUES " \
+           "('def_dl','piratebay','The default downloader to assign to newly followed shows')," \
+           "('email','YOUR GMAIL ADDRESS','your gmail email address')," \
+           "('emailpas','YOUR-EMAIL-PASSWORD','your gmail password')," \
+           "('minput_x','11','Line where the menu input is displayed:  Calc is mtop + minput_x')," \
+           "('mmenu_2y','65','Second Column of Menu items')," \
+           "('mmenu_3y','110','Third Column of Menu items')," \
+           "('mmenu_y','10','First Column of Menu items')," \
+           "('mstatus_x','2','Line where the Status is displayed:  Calc is minput_x + mstatus_x')," \
+           "('mstatus_y','18','Column where the status messasges are displayed')," \
+           "('msub_screen_x','2','Number of line to skip for sub_screen processing')," \
+           "('mtop','2','Top line where the Menu starts')," \
+           "('plexdonotmove','sample.mkv,sample.mp4,sample.avi,sample.wmv,rarbg.mp4,rarbg.mkv,rarbg.avi,rarbg.wmv'," \
+           "'Downloaded files that should not go to Plex')," \
+           "('plexexts','mkv,mp4,mv4,avi,wmv,srt','Media extension to process')," \
+           "('plexmovd','/Volumes/HD-Data-CA-Server/PlexMedia/Movies/','Movies Main Directory')," \
+           "('plexmovstr','720p,1080p,dvdscr,web-dl,web-,bluray,x264,dts-hd,acc-rarbg,solar,h264,hdtv,rarbg,-sparks," \
+           "-lucidtv','Eliminate these string from the movie name')," \
+           "('plexprefs','www.torrenting.org  -  ,www.torrenting.org - ,www.Torrenting.org       ,www.torrenting.org.," \
+           "from [ www.torrenting.me ] -,[ www.torrenting.com ] -,www.Torrenting.com  -  ,www.torrenting.com -," \
+           "www.torrenting.com,www.torrenting.me -,www.torrenting.me,www.scenetime.com  -,www.scenetime.com - ," \
+           "www.scenetime.com -,www.scenetime.com,www.speed.cd - ,www.speed.cd,xxxxxxxxx'," \
+           "'Prefixes to ignore for show or movies names')," \
+           "('plexprocessed','/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/TransmissionFiles/Processed/'" \
+           ",'Directory where the Plex Processor put undetermined downloads')," \
+           "('plexsd','/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/TransmissionFiles/'," \
+           "'Download Source Directory')," \
+           "('plextrash','/Users/dick/.Trash/','The Trash Directory')," \
+           "('plextvd1','/Volumes/HD-Data-CA-Server/PlexMedia/TV Shows/','TV Shows Main Direcotory')," \
+           "('plextvd2','/Volumes/HD-Data-CA-Server/PlexMedia/Kids/TV Shows/','Second directory to store tv shows " \
+           "(for the grandkids)')," \
+           "('plextvd2selections','Doc Mcstuffins,Elena Of Avalor,Mickey And The Roadster Racers,Sofia The First," \
+           "Tangled The Series,Star Wars Resistance,Avengers Assemble,Star Wars The Clone Wars'," \
+           "'The different shows to store separate for the grandkids')," \
+           "('sms','8138189195@tmomail.net','You cell phone providers email adress to get you text messages')," \
+           "('tvmheader','{''Authorization'': ''Basic YOUR-TVMAZE-API-ACCESS-TOKEN''}'," \
+           "'tvmaze private key:  Use Dashboard to pick up password and use Premiun API testing to login in and get " \
+           "authorization key');"
 
 
 class create_tb_dls:
@@ -349,10 +349,10 @@ class tvm_views:
 
 class stat_views:
     download_options = "SELECT statdate, nodownloader, rarbg, rarbgapi, rarbgmirror, showrss, skipmode, eztv, " \
-                  "eztvapi, magnetdl, torrentfunk " \
-                  "FROM statistics " \
-                  "WHERE statrecind = 'download_options' " \
-                  "ORDER BY statepoch;"
+                       "eztvapi, magnetdl, torrentfunk " \
+                       "FROM statistics " \
+                       "WHERE statrecind = 'download_options' " \
+                       "ORDER BY statepoch;"
     stats = "SELECT * FROM statistics " \
             "WHERE statrecind = 'TVMaze' " \
             "ORDER BY statepoch;"
@@ -383,6 +383,7 @@ class stat_views:
                                     "JOIN shows s on e.showid = s.showid " \
                                     "WHERE mystatus is NULL and airdate is not NULL and airdate <= current_date " \
                                     "and s. download != 'Skip';"
+
 
 class std_sql:
     followed_shows = "SELECT showid FROM shows WHERE status = 'Followed' ORDER BY showid"
