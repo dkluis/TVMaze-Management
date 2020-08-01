@@ -26,7 +26,7 @@ def execute_tvm_request(api, data='', err=True, sleep=1.25, code=False,
                                        headers={
                                            'Authorization':
                                                'Basic RGlja0tsdWlzOlRUSFlfQ2hIeUF5SU1fV1ZZRmUwcDhrWTkxTkE1WUNH'},
-                                       timeout=(10, 5))
+                                       timeout=timeout)
             else:
                 response = session.get(api,
                                        headers={
@@ -38,8 +38,9 @@ def execute_tvm_request(api, data='', err=True, sleep=1.25, code=False,
             if code:
                 response = session.put(api,
                                        headers={
-                                           'Authorization': 'Basic RGlja0tsdWlzOlRUSFlfQ2hIeUF5SU1fV1ZZRmUwcDhrWTkxTkE1WUNH'},
-                                       timeout=(10, 5),
+                                           'Authorization':
+                                               'Basic RGlja0tsdWlzOlRUSFlfQ2hIeUF5SU1fV1ZZRmUwcDhrWTkxTkE1WUNH'},
+                                       timeout=timeout,
                                        data=data)
             else:
                 response = session.put(api, timeout=timeout)

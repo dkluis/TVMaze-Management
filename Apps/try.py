@@ -9,6 +9,11 @@ from datetime import datetime, timedelta, date
 import mariadb
 import os
 
+db_name = "Testing_Init_DB"
+print(f"Create the {db_name} schema {execute_sql(d='', sqltype='Commit', sql=create_db_sql(db_name))}")
+print('Create the key_values table', execute_sql(d=db_name, sqltype='Commit', sql=create_tb_key_values.sql))
+print('Fill the key_values table', execute_sql(d=db_name, sqltype='Commit', sql=create_tb_key_values.fill))
+quit()
 
 def magnetdl_download(show, seas):
     main_link_pre = '''http://www.magnetdl.com/search/?m=1&q="'''
