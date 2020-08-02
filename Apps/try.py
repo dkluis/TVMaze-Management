@@ -18,6 +18,7 @@ Options:
   -f             Find download options for Show and Episode (Episode can also be a whole season - S01E05 or S01)
   -s             Show Info (multiple shows can be requested)
   --version      Show version.
+
 """
 
 from docopt import docopt
