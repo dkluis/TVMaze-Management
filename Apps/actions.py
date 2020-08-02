@@ -1,3 +1,24 @@
+"""
+
+action.py   The App that handle all actions for reviewing new shows and for downloading episodes based
+            episode air dates, future will be a manual request for an episode
+
+Usage:
+  action.py [-d] [-r] [-v | --verbose]
+  action.py -f (--show <fshow> --episode <fepisode> | <show> <episode>)
+  action.py -h | --help
+  action.py --version
+
+Options:
+  -h --help      Show this screen
+  -v             Verbose Logging
+  -d             Download all outstanding Episodes
+  -r             Review all newly detected Shows
+  -f             Find downloads for a Show and Episode (Episode can also be a whole season - S01E05 or S01)
+  --version      Show version.
+
+"""
+
 from datetime import datetime, timedelta, date
 from bs4 import BeautifulSoup as Soup
 import re
@@ -7,20 +28,7 @@ from db_lib import *
 from tvm_lib import def_downloader, date_delta
 from tvm_api_lib import *
 
-
-def get_cli_args():
-    tlc = ["-h", "-b", "-d", "-r"]
-    flc = check_cli_args(tlc)
-    if flc['-h']:
-        print("CLI Options are: -h (Help), -r (Review new shows), -d (Download episodes or -b (Both")
-        quit()
-    elif flc['-b']:
-        return "Both"
-    elif flc['-d']:
-        return 'Download'
-    elif flc['-r']:
-        return 'Review'
-    return 'Both'
+from docopt import docopt
 
 
 def update_show_status(showid, status):
@@ -305,10 +313,10 @@ def process_new_shows():
                   "{: <50} {: <80} {: <12} {: <16} {: <12} "
                   "{: <15} {: <12} {: <24} {: <15} {: <1} {: <6}  "
                   "{: <1}".format(
-                   f'\033[0m',
-                   newshow[1], newshow[2], newshow[3], newshow[4], premiered,
-                   language, length, network, country, f'\033[1m', request,
-                   f'\033[0m'), end=":")
+                f'\033[0m',
+                newshow[1], newshow[2], newshow[3], newshow[4], premiered,
+                language, length, network, country, f'\033[1m', request,
+                f'\033[0m'), end=":")
             command_str = 'open -a safari ' + newshow[2]
             os.system(command_str)
             ans = input(" ").lower()
@@ -390,11 +398,11 @@ def do_api_process(epi_tdl, req):
             command_str = 'open -a transmission ' + dlo[2]
             os.system(command_str)
             return True, main_link, dler
-        
-        
+
+
 def display_status(processed, epi_to_download, do_text, season):
     # print(f'Processes = {processed}')
-    if processed[2] not in ('eztvAPI', 'rarbgAPI', 'piratebay', 'Multi' ):
+    if processed[2] not in ('eztvAPI', 'rarbgAPI', 'piratebay', 'Multi'):
         do_text = f' ---> Show managed by {processed[2]}'
     else:
         do_text = do_text + f" ---> {processed[2]}"
@@ -486,18 +494,22 @@ def process_the_episodes_to_download():
     Main program
     First get all the supporting lists we use
 '''
+
+args = docopt(__doc__, version='Try Release 1.0')
+# print(args)
+
 download_apis = get_download_apis()
 if not download_apis:
     print(f"Main Program: Error getting Download Options: {download_apis}")
     quit()
-process = get_cli_args()
+
 print(term_codes.cl_scr)
-# Process the data
-if process == "Both":
+if args['-r']:
     process_new_shows()
+if args['-d']:
     process_the_episodes_to_download()
-elif process == "Review":
+if not args['-d'] and not args['-r']:
     process_new_shows()
-elif process == "Download":
     process_the_episodes_to_download()
 print()
+

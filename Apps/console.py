@@ -602,7 +602,6 @@ while loop:
         print()
         subprocess.call(" python3 statistics.py -s", shell=True)
         cl_screen = False
-        subprocess.call(" python3 actions.py -d", shell=True)
     elif cons_in == "12":
         display_menu(True)
         print(term_pos(menu_pos.status_x, menu_pos.status_y), "Clean up leftovers in Plex" + term_codes.cl_eol)

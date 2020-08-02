@@ -45,7 +45,7 @@ def go_store_statistics(f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12):
             return False
     sql = f"INSERT INTO statistics VALUES ({today_epoch}, {today_human}, {f1}, {f2}, {f3}, {f4}, {f5}, {f6}, {f7}, " \
           f"{f8}, {f9}, {f10}, {f11}, {f12}, " \
-          f"'TVMaze', None, None, None, None, None, None, None, None, None, None, None);"
+          f"'TVMaze', None, None, None, None, None, None, None, None, None, None, None, None);"
     sql = sql.replace('None', 'NULL')
     execute_sql(sqltype='Commit', sql=sql)
     return True
@@ -66,7 +66,8 @@ def go_store_download_options(dls):
                 str(dls[7]) == str(stats[22]) and
                 str(dls[8]) == str(stats[23]) and
                 str(dls[9]) == str(stats[24]) and
-                str(dls[10]) == str(stats[25])):
+                str(dls[10]) == str(stats[25]) and
+                str(dls[11]) == str(stats[26])):
             print("No Update for download_options: ", stats)
         else:
             time.sleep(1)
@@ -75,7 +76,7 @@ def go_store_download_options(dls):
             sql = f"INSERT INTO statistics VALUES ({today_epoch}, {today_human}, " \
                   f"None, None, None, None, None, None, None, None, None, None, None, None, 'Downloaders', " \
                   f"{dls[0]}, {dls[1]}, {dls[2]}, {dls[3]}, {dls[4]}, {dls[5]}, " \
-                  f"{dls[6]}, {dls[7]}, {dls[8]}, {dls[9]}, {dls[10]});"
+                  f"{dls[6]}, {dls[7]}, {dls[8]}, {dls[9]}, {dls[10]}, {dls[11]});"
             sql = sql.replace('None', 'NULL')
             execute_sql(sql=sql, sqltype='Commit')
 
