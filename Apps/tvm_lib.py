@@ -126,8 +126,10 @@ def count_by_download_options():
                               sql="SELECT COUNT(*) from shows WHERE download = 'torrentfunk' AND status = 'Followed'")
     piratebay = execute_sql(sqltype='Fetch',
                             sql="SELECT COUNT(*) from shows WHERE download = 'piratebay' AND status = 'Followed'")
+    multi = execute_sql(sqltype='Fetch',
+                        sql="SELECT COUNT(*) from shows WHERE download = 'Multi' AND status = 'Followed'")
     value = (no_dl[0][0], rarbg_api[0][0], rarbg[0][0], rarbgmirror[0][0], showrss[0][0], skip[0][0],
-             eztv_api[0][0], eztv[0][0], magnetdl[0][0], torrentfunk[0][0], piratebay[0][0])
+             eztv_api[0][0], eztv[0][0], magnetdl[0][0], torrentfunk[0][0], piratebay[0][0], multi[0][0])
     return value
 
 

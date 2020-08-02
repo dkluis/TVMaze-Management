@@ -81,9 +81,9 @@ dwnldfig.update_xaxes(title_text="'eztvAPI'", row=1, col=5)
 dwnldfig.append_trace(go.Scatter(x=df2['statdate'], y=df2['eztv'], name='eztv',
                                  showlegend=False), row=1, col=6)
 dwnldfig.update_xaxes(title_text="'eztv'", row=1, col=6)
-dwnldfig.append_trace(go.Scatter(x=df2['statdate'], y=df2['rarbgmirror'], name='rarbgmirror',
+dwnldfig.append_trace(go.Scatter(x=df2['statdate'], y=df2['multi'], name='multiple providers',
                                  showlegend=False), row=1, col=4)
-dwnldfig.update_xaxes(title_text="'rarbgmirror'", row=1, col=4)
+dwnldfig.update_xaxes(title_text="'Multiple providers'", row=1, col=4)
 dwnldfig.append_trace(go.Scatter(x=df2['statdate'], y=df2['magnetdl'], name='magnetdl',
                                  showlegend=False), row=1, col=7)
 dwnldfig.update_xaxes(title_text="'magnetdl'", row=1, col=7)
