@@ -419,7 +419,7 @@ def process_the_episodes_to_download():
     season_dled = False
     for epi_to_download in episodes_to_download:
         hour_now = int(str(datetime.now())[11:13])
-        print(f'Episode {epi_to_download[3]}, with time {hour_now} and date {date_delta("Now", -1)}')
+        # print(f'Episode {epi_to_download[3]}, with time {hour_now} and date {date_delta("Now", -1)}')
         if epi_to_download[6] == date_delta('Now', -1) and hour_now < 6:
             print(f'Skipping {epi_to_download[3]} because of air date is {epi_to_download[6]} '
                   f'and time {str(hour_now)} is before 6am')
