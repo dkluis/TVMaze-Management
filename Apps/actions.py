@@ -111,7 +111,7 @@ def get_eztv_api_options(imdb_id, seas, showname):
     eztv_show = imdb_id
     eztv_url = execute_sql(sqltype='Fetch',
                            sql='SELECT link_prefix FROM download_options where `providername` = "eztvAPI"')[0][0] \
-               + eztv_show[2:]
+                           + eztv_show[2:]
     # print(eztv_url)
     eztv_data = requests.get(eztv_url).json()
     # print(eztv_data)
@@ -394,7 +394,7 @@ def do_api_process(epi_tdl, req):
         
 def display_status(processed, epi_to_download, do_text, season):
     # print(f'Processes = {processed}')
-    if processed[2] not in ('eztvAPI', 'rarbgAPI', 'piratebay', 'Multi' ):
+    if processed[2] not in ('eztvAPI', 'rarbgAPI', 'piratebay', 'Multi'):
         do_text = f' ---> Show managed by {processed[2]}'
     else:
         do_text = do_text + f" ---> {processed[2]}"
