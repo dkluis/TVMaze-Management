@@ -1,4 +1,3 @@
-import os
 from datetime import datetime, timedelta, date
 from bs4 import BeautifulSoup as Soup
 import re
@@ -25,6 +24,7 @@ def get_cli_args():
 
 
 def update_show_status(showid, status):
+    dl = None
     if status == "Skipped":
         dl = None
     elif status == "Followed":
@@ -32,10 +32,6 @@ def update_show_status(showid, status):
     elif status == 'Undecided':
         d = datetime.today() + timedelta(days=14)
         dl = str(d)[:10]
-    else:
-        status == "SHIT)(^%"
-        dl = "SHIT)(^%"
-        quit("SHIT)(^%")
     if not dl:
         sql = f'UPDATE shows SET status = "{status}", download = NULL WHERE `showid` = {showid}'
     else:
@@ -49,7 +45,7 @@ def update_show_status(showid, status):
 def update_tvmaze_followed_shows(showid):
     api = 'https://api.tvmaze.com/v1/user/follows/shows/' + str(showid)
     response = execute_tvm_request(api=api, code=True, req_type='put')
-    return
+    return response
 
 
 def update_tvmaze_episode_status(epiid):
@@ -64,7 +60,8 @@ def update_tvmaze_episode_status(epiid):
     return True
 
 
-def validate_requirements(filename, container, showname):
+def validate_requirements(filename, extension, epi_no, showname):
+    # print(f'Starting to validate for {filename}, --> {showname}, --> {epi_no}, and {extension}')
     res1 = '1080p'
     res2 = '720p'
     res3 = '480p'
@@ -72,133 +69,119 @@ def validate_requirements(filename, container, showname):
     cont1 = "mkv"
     cont2 = "mp4"
     priority = 1
-    if res1 in filename:
+    if res1 in filename.lower():
         priority = priority + 40
-    elif res2 in filename:
+    elif res2 in filename.lower():
         priority = priority + 30
-    elif res3 in filename:
+    elif res3 in filename.lower():
         priority += 20
     else:
         priority = priority - 40
-    if codex in filename:
+    if codex in filename.lower():
         priority = priority + 100
-    if container and cont1 in filename:
-        priority = priority + 10
-    elif container and cont2 in filename:
+    if extension:
+        if cont1 in filename.lower():
+            priority = priority + 10
+        elif cont2 in filename.lower():
+            priority = priority + 5
+    if 'proper' in filename.lower():
         priority = priority + 5
-    if 'proper' or 'repack' in filename:
-        priority = priority + 10
+    elif 'repack' in filename.lower():
+        priority += 5
     if showname:
-        if showname not in filename.replace('.', ' ')[:len(showname)]:
+        # print(f'''Checking showname with filename {showname.replace(' ', '.').lower()} ---> {filename}.lower()''')
+        if showname.replace(' ', '.').lower() not in filename.lower():
             priority = 0
         else:
-            if 's' not in filename.replace('.', ' ').lower()[len(showname) + 1]:
+            # print(f'''Checking season in filename {seas.lower()} ---> {filename.lower()}''')
+            if str(epi_no.lower() + ".") not in filename.lower():
                 # print(f'Validate Requirement: Filename character to compare is '
                 #       f'{filename.replace(".", " ").lower()[len(showname) + 1]} '
                 #       f'with Showname {showname} and Filename {filename}')
-                priority = 0
-    # print(f'Validate Requirement - Showname: {showname}, Priority: {priority}, Filename: {filename}')
+                priority = 1
+    # print(f'Validated Requirement - Showname: {showname.replace(" ", ".").lower()} and got Priority: {priority}, '
+    #       f'Filename: {filename.lower()} and Season {epi_no}')
     return priority
 
 
-def eztv_download(imdb_id, eztv_epi_name):
+def get_eztv_api_options(imdb_id, seas, showname):
+    download_options = []
+    if not imdb_id:
+        return download_options
     eztv_show = imdb_id
     eztv_url = execute_sql(sqltype='Fetch',
                            sql='SELECT link_prefix FROM download_options where `providername` = "eztvAPI"')[0][0] \
-               + eztv_show
-    # eztv_url = 'https://eztv.io/api/get-torrents?imdb_id=' + str(eztv_show)
-    time.sleep(1)
+               + eztv_show[2:]
+    # print(eztv_url)
     eztv_data = requests.get(eztv_url).json()
+    # print(eztv_data)
     eztv_count = eztv_data['torrents_count']
+    # print(eztv_count)
     if eztv_count == 0:
-        return False, eztv_url
+        return download_options
     eztv_epis = eztv_data['torrents']
-    download_options = []
     for eztv_epi in eztv_epis:
         filename = str(eztv_epi['filename']).lower()
-        tor_url = eztv_epi['torrent_url']
+        # tor_url = eztv_epi['torrent_url']
         mag_url = eztv_epi['magnet_url']
-        size = eztv_epi['size_bytes']
-        if eztv_epi_name in filename:
-            result = validate_requirements(filename, True, False)
-            if result > 100:
-                download_options.append((result, size, filename, tor_url, mag_url))
-    if len(download_options) > 0:
-        download_options.sort(reverse=True)
-        for do in download_options:
-            command_str = 'open -a transmission ' + do[4]
-            os.system(command_str)
-            break
-        return True, eztv_url
-    else:
-        return False, eztv_url
-
-
-def rarbg_download(show, seas):
-    main_link_pre = 'https://torrentapi.org/pubapi_v2.php?mode=search&search_string='
-    main_link_suf = '&token=lnjzy73ucv&format=json_extended&app_id=lol'
-    main_link = main_link_pre + show.replace(' ', '+') + '+' + seas + main_link_suf
-    main_request = execute_tvm_request(api=main_link, req_type='get')
-    if not main_request:
-        return False, main_link
-    titles = main_request['torrent_results']
-    dl_options = []
-    for title in titles:
-        name = title['title']
-        magnet = title['download']
-        seeders = title['seeders']
-        size = title['size']
-        prio = validate_requirements(name, False, show)
+        size = float(eztv_epi['size_bytes']) / 1000000
+        size = int(size)
+        size = str(size).zfill(6)
+        prio = validate_requirements(filename, True, seas, showname)
+        print(f'Checking filename eztvAPI {filename} with {seas} got prio {prio}')
         if prio > 100:
-            dl_options.append((prio, size, seeders, name, magnet))
-    if len(dl_options) > 0:
-        dl_options.sort(reverse=True)
-        for do in dl_options:
-            command_str = 'open -a transmission ' + do[4]
-            os.system(command_str)
-            return True, main_link
-    else:
-        return False, main_link
+            download_options.append((prio, filename, mag_url, size, 'eztvAPI'))
+    return download_options
 
 
-def piratebay_download(show, seas):
+def get_rarbg_api_options(show, seas):
+    dl_options = []
+    dl_info = execute_sql(sqltype='Fetch', sql=f'SELECT * from download_options WHERE `providername` = "rarbgAPI"')[0]
+    main_link = f"{dl_info[1]}{show} {seas}{dl_info[2]}"
+    main_request = execute_tvm_request(api=main_link, req_type='get').json()
+    if 'No results found' in str(main_request):
+        return dl_options
+    records = main_request['torrent_results']
+    for record in records:
+        name = record['title']
+        magnet = record['download']
+        # seeders = record['seeders']
+        size = str(int(record['size'] / 1000000)).zfill(6)
+        prio = validate_requirements(name, True, seas, show)
+        if prio > 100:
+            dl_options.append((prio, name, magnet, size, 'rarbgAPI'))
+    return dl_options
+
+
+def get_piratebay_api_options(show, seas):
+    piratebay_titles = []
     api = 'https://piratebay.bid/s/?q=' + str(show).replace(' ', '+') + '+' + seas
     piratebay_data = execute_tvm_request(api=api, timeout=(20, 20))
     if not piratebay_data:
-        return False, api
+        return piratebay_titles
     piratebay_page = Soup(piratebay_data.content, 'html.parser')
     piratebay_table = piratebay_page.findAll('table', {'id': 'searchResult'})
-    # print(f'Piratebay Download: piratebay_table {piratebay_table}')
     if len(piratebay_table) == 0:
-        print("No table found")
-        return False, api
+        return piratebay_titles
     piratebay_table = piratebay_table[0]
     pb_table = piratebay_table.findAll('tr')
-    piratebay_titles = []
     magnet_link = ''
     size = 0
     for pb_table_rec in pb_table:
-        # print(f'Piratebay Download: pb_table_rec: {pb_table_rec}')
         cl_dl = pb_table_rec.findAll('a', {'class': 'detLink'})
         showname = ''
         showl = ''
         shownamel = ''
         shownamenp = ''
         for cl_dl_rec in cl_dl:
-            # print(f'Piratebay Download: cl-dl_rec: {cl_dl_rec}')
             showname = (cl_dl_rec['title'])
             showl = show.lower().replace(" ", ".")
             shownamel = showname.lower()
             shownamenp = shownamel.replace('+', '.')
-            # print(f'Piratebay Download: showl ---> {showl}, shownamel ---> {shownamel}, shownamenp --> {shownamenp}')
         if showl.replace('.', ' ') in shownamel or showl in shownamenp:
             show_refs = pb_table_rec.findAll('a', {'href': re.compile("^magnet:")})
             for ref in show_refs:
-                # print(f'Piratebay Download: ref: {ref}')
-                magnet_link = str(ref['href']).split("&dn")
-                # print(f'Piratebay Download: magnet_link: {magnet_link}')
-                magnet_link = magnet_link[0]
-                # print(f'Piratebay Download: magnet_link[0]: {magnet_link}')
+                magnet_link = str(ref['href'])
                 infos = pb_table_rec.findAll('font', {'class': 'detDesc'})
                 for info in infos:
                     sub_info = str(info).split('<font class="detDesc">')
@@ -215,20 +198,14 @@ def piratebay_download(show, seas):
                         size_multiplier = 1000
                     else:
                         size_multiplier = 0
-                    size = float(size[0]) * size_multiplier
-                    size = str(size).zfill(8)
+                    sizem = float(size[0]) * size_multiplier
+                    sizem = int(sizem)
+                    size = str(sizem).zfill(6)
         showname = showname.replace('Details for ', '')
-        prio = validate_requirements(showname, False, show)
+        prio = validate_requirements(showname, False, seas, show)
         if prio > 100:
-            piratebay_titles.append((showname, magnet_link, size, prio))
-    piratebay_titles.sort(key=lambda x: str(x[3]), reverse=True)
-    # print(f'Piratebay Download: Titles: {piratebay_titles}')
-    if len(piratebay_titles) > 0:
-        command_str = 'open -a transmission ' + piratebay_titles[0][1]
-        os.system(command_str)
-        return True, api
-    else:
-        return False, api
+            piratebay_titles.append((prio, showname, magnet_link, size, 'piratebay'))
+    return piratebay_titles
 
 
 def magnetdl_download(show, seas):
@@ -252,6 +229,7 @@ def magnetdl_download(show, seas):
     if len(dl_options) > 0:
         dl_options.sort(reverse=True)
         for do in dl_options:
+            print(f'Calling Transmission with {do[4]}')
             command_str = 'open -a transmission ' + do[4]
             os.system(command_str)
             return True, main_link
@@ -266,7 +244,7 @@ def get_episodes_to_download():
     return todownload
 
 
-def get_downloadAPIs():
+def get_download_apis():
     results = execute_sql(sqltype='Fetch', sql="SELECT * from download_options")
     if not results:
         print(f'Error getting the download_options {results}')
@@ -327,10 +305,10 @@ def process_new_shows():
                   "{: <50} {: <80} {: <12} {: <16} {: <12} "
                   "{: <15} {: <12} {: <24} {: <15} {: <1} {: <6}  "
                   "{: <1}".format(
-                f'\033[0m',
-                newshow[1], newshow[2], newshow[3], newshow[4], premiered,
-                language, length, network, country, f'\033[1m', request,
-                f'\033[0m'), end=":")
+                   f'\033[0m',
+                   newshow[1], newshow[2], newshow[3], newshow[4], premiered,
+                   language, length, network, country, f'\033[1m', request,
+                   f'\033[0m'), end=":")
             command_str = 'open -a safari ' + newshow[2]
             os.system(command_str)
             ans = input(" ").lower()
@@ -365,8 +343,8 @@ def do_season_process(epi_tdl):
     return season, episode, whole_season
 
 
-def format_download_call(epi_tdl, sore):
-    downloader = find_dl_info(epi_tdl[10], downloadAPIs)
+def format_download_call(epi_tdl, sore, api):
+    downloader = find_dl_info(api, download_apis)
     showname = str(epi_tdl[11]).replace(" ", downloader[3])
     if downloader[2]:
         link = downloader[1] + showname + downloader[3] + sore + downloader[2]
@@ -376,30 +354,55 @@ def format_download_call(epi_tdl, sore):
 
 
 def do_api_process(epi_tdl, req):
-    formatted_call = format_download_call(epi_tdl, req)
-    if formatted_call[1] == 'rarbgAPI':
-        result = rarbg_download(epi_tdl[11], req)
+    formatted_call = format_download_call(epi_tdl, req, epi_tdl[10])
+    if formatted_call[1] == 'Multi':
+        dler = 'Multi'
+        dl_options_rarbg_api = get_rarbg_api_options(epi_tdl[11], req)
+        dl_options_piratebay = get_piratebay_api_options(epi_tdl[11], req)
+        dl_options_eztv = get_eztv_api_options(epi_tdl[12], req, epi_tdl[11])
+        dl_options = dl_options_rarbg_api + dl_options_piratebay + dl_options_eztv
+    elif formatted_call[1] == 'rarbgAPI':
+        dl_options = get_rarbg_api_options(epi_tdl[11], req)
+        dler = 'rarbgAPI'
     elif formatted_call[1] == 'eztvAPI':
-        result = eztv_download(epi_tdl[12], req)
-    elif formatted_call[1] == 'magnetdl_new':
-        result = magnetdl_download(epi_tdl[11], req)
+        dl_options = get_eztv_api_options(epi_tdl[12], req, epi_tdl[11])
+        dler = 'eztvAPI'
+    # elif formatted_call[1] == 'magnetdl_new':
+    #    dl_options = magnetdl_download(epi_tdl[11], req)
     elif formatted_call[1] == 'piratebay':
-        result = piratebay_download(epi_tdl[11], req)
+        dl_options = get_piratebay_api_options(epi_tdl[11], req)
+        dler = 'piratebay'
     else:
-        result = False, 'No Link Yet'
-    return result, formatted_call
-
-
+        return False, 'No Link Yet', 'No Download Provider'
+    if formatted_call[1] == 'Multi':
+        # print(f'Formatted call is Multi ---> {formatted_call}')
+        main_link = f'Formatted call is Multi ---> {formatted_call[0]}'
+    else:
+        main_link = formatted_call[0]
+    sdl_options = sorted(dl_options, key=lambda x: [x[0], x[3]], reverse=True)
+    if len(sdl_options) == 0:
+        return False, main_link, dler
+    else:
+        for sdl_o in sdl_options:
+            print(f'The Options are {sdl_o[0]}, {sdl_o[3]}, {sdl_o[1]}, {sdl_o[4]}')
+        for dlo in sdl_options:
+            print(f'Selected Option = {dlo[0]}, {dlo[3]}, {dlo[1]}, {dlo[4]}')
+            command_str = 'open -a transmission ' + dlo[2]
+            os.system(command_str)
+            return True, main_link, dler
+        
+        
 def display_status(processed, epi_to_download, do_text, season):
-    if processed[1][1] not in ('eztvAPI', 'rarbgAPI', 'piratebay'):
-        do_text = f' ---> Show managed by {processed[1][1]}'
+    # print(f'Processes = {processed}')
+    if processed[2] not in ('eztvAPI', 'rarbgAPI', 'piratebay', 'Multi' ):
+        do_text = f' ---> Show managed by {processed[2]}'
     else:
-        do_text = do_text + f" ---> {processed[1][1]}"
+        do_text = do_text + f" ---> {processed[2]}"
     tvmaze = "https://www.tvmaze.com/shows/" + str(epi_to_download[1]) + do_text
     print("{: <1} {: <50} {: <10} "
           "{: <14} {: <120} {: <30}".format(f'\033[0m',
                                             '"' + str(epi_to_download[11][0:48]) + '"', season,
-                                            str(epi_to_download[6]), str(processed[1][0]), tvmaze))
+                                            str(epi_to_download[6]), str(processed[1]), tvmaze))
 
 
 def process_the_episodes_to_download():
@@ -419,7 +422,7 @@ def process_the_episodes_to_download():
     season_dled = False
     for epi_to_download in episodes_to_download:
         hour_now = int(str(datetime.now())[11:13])
-        print(f'Episode {epi_to_download[3]}, with time {hour_now} and date {date_delta("Now", -1)}')
+        # print(f'Episode {epi_to_download[3]}, with time {hour_now} and date {date_delta("Now", -1)}')
         if epi_to_download[6] == date_delta('Now', -1) and hour_now < 6:
             print(f'Skipping {epi_to_download[3]} because of air date is {epi_to_download[6]} '
                   f'and time {str(hour_now)} is before 6am')
@@ -470,7 +473,8 @@ def process_the_episodes_to_download():
             continue
         # print('Otherwise do a normal episode download try')
         processed = do_api_process(epi_to_download, season_info[1])
-        if processed[0][0]:
+        # print(f'Processed is {processed}')
+        if processed[0]:
             do_text = " ---> Episode now downloading "
             season = season_info[1]
             update_tvmaze_episode_status(epi_to_download[0])
@@ -482,9 +486,9 @@ def process_the_episodes_to_download():
     Main program
     First get all the supporting lists we use
 '''
-downloadAPIs = get_downloadAPIs()
-if not downloadAPIs:
-    print(f"Main Program: Error getting Download Options: {downloadAPIs}")
+download_apis = get_download_apis()
+if not download_apis:
+    print(f"Main Program: Error getting Download Options: {download_apis}")
     quit()
 process = get_cli_args()
 print(term_codes.cl_scr)

@@ -4,13 +4,6 @@ import sys
 import os
 
 
-class mdb_info_old:
-    host = 'localhost'
-    db = 'TVMazeDB'
-    user = 'dick'
-    password = 'Sandy3942'
-
-
 class mdbi:
     def __init__(self, h, d):
         check = os.getcwd()
@@ -225,7 +218,7 @@ class create_tb_key_values:
 class create_tb_dls:
     sql = "CREATE TABLE `download_options` (`providername` varchar(15) DEFAULT NULL," \
           " `link_prefix` varchar(75) DEFAULT NULL," \
-          " `suffixlink` varchar(15) DEFAULT NULL," \
+          " `suffixlink` varchar(50) DEFAULT NULL," \
           " `searchchar` varchar(5) DEFAULT NULL," \
           " UNIQUE KEY `download_options_UN` (`providername`)" \
           ") ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='TVMaze Downloader Info'"
