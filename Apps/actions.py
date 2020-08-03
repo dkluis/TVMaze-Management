@@ -97,7 +97,8 @@ def validate_requirements(filename, extension, epi_no, showname):
     elif 'repack' in filename.lower():
         priority += 5
     if showname:
-        # print(f'''Checking showname with filename {showname.replace(' ', '.').lower()} ---> {filename}.lower()''')
+        if verbose:
+            print(f'''Checking showname with filename {showname.replace(' ', '.').lower()} ---> {filename}.lower()''')
         if showname.replace(' ', '.').lower() not in filename.lower():
             priority = 0
         else:
@@ -288,10 +289,9 @@ def process_new_shows():
         return
     print(f'{"Shows To Evaluate".rjust(135)}')
     request = "[s,S,u,D,f,F]"
-    print("{: <1} {: <50} {: <80} {: <12} {: <16} "
-          "{: <12} {: <15} {: <12} {: <24} {: <16} {: <1}".format('Show Name:', 'TVMaze Link:', 'Type:',
-                                                                  'Show Status:', 'Premiered:', 'Language:',
-                                                                  'Length:', 'Network:', 'Country:', "Option:"))
+    print(f'{"Show Name:".ljust(50)} {"TVMaze Link:".ljust(80)} {"Type:".ljust(12)} {"Show Status:".ljust(16)} '
+          f'{"Premiered:".ljust(12)} {"Language:".ljust(15)} {"Length:".ljust(12)} {"Network:".ljust(24)} '
+          f'{"Country:".ljust(16)} {"Option:"}')
     for newshow in newshows:
         if not newshow[5]:
             premiered = " "
@@ -313,14 +313,9 @@ def process_new_shows():
             country = "Unknown"
         else:
             country = newshow[9]
-        print("{: <1} "
-              "{: <50} {: <80} {: <12} {: <16} {: <12} "
-              "{: <15} {: <12} {: <24} {: <15} {: <1} {: <6}  "
-              "{: <1}".format(
-            f'\033[0m',
-            newshow[1], newshow[2], newshow[3], newshow[4], premiered,
-            language, length, network, country, f'\033[1m', request,
-            f'\033[0m'), end=":")
+        print(f'{newshow[1].ljust(50)} {newshow[2].ljust(80)} {newshow[3].ljust(12)} {newshow[5].ljust(16)} '
+              f'{premiered.ljust(12)} {language.ljust(15)} {str(length).ljust(12)} {network.ljust(24)} '
+              f'{country.ljust(16)} {request}', end=":")
         command_str = 'open -a safari ' + newshow[2]
         os.system(command_str)
         ans = input(" ").lower()
@@ -519,7 +514,6 @@ if args['-r']:
 if args['-d']:
     process_the_episodes_to_download()
 if not args['-d'] and not args['-r']:
-    process_new_shows()
-    process_the_episodes_to_download()
+    print(f'Nothing to do, neither -r, -d or -rd cli agrs were supplied')
 print()
 
