@@ -107,8 +107,9 @@ def validate_requirements(filename, extension, epi_no, showname):
                 #       f'{filename.replace(".", " ").lower()[len(showname) + 1]} '
                 #       f'with Showname {showname} and Filename {filename}')
                 priority = 1
-    # print(f'Validated Requirement - Showname: {showname.replace(" ", ".").lower()} and got Priority: {priority}, '
-    #       f'Filename: {filename.lower()} and Season {epi_no}')
+    if verbose:
+        print(f'Validated Requirement - Showname: {showname.replace(" ", ".").lower()} and got Priority: {priority}, '
+              f'Filename: {filename.lower()} and Season {epi_no}')
     return priority
 
 
@@ -136,7 +137,8 @@ def get_eztv_api_options(imdb_id, seas, showname):
         size = int(size)
         size = str(size).zfill(6)
         prio = validate_requirements(filename, True, seas, showname)
-        print(f'Checking filename eztvAPI {filename} with {seas} got prio {prio}')
+        if verbose:
+            print(f'Checking filename eztvAPI {filename} with {seas} got prio {prio}')
         if prio > 100:
             download_options.append((prio, filename, mag_url, size, 'eztvAPI'))
     return download_options
@@ -146,7 +148,11 @@ def get_rarbg_api_options(show, seas):
     dl_options = []
     dl_info = execute_sql(sqltype='Fetch', sql=f'SELECT * from download_options WHERE `providername` = "rarbgAPI"')[0]
     main_link = f"{dl_info[1]}{show} {seas}{dl_info[2]}"
-    main_request = execute_tvm_request(api=main_link, req_type='get').json()
+    main_request = execute_tvm_request(api=main_link, req_type='get')
+    if main_request:
+        main_request = main_request.json()
+    else:
+        return dl_options
     if 'No results found' in str(main_request):
         return dl_options
     records = main_request['torrent_results']
@@ -380,8 +386,10 @@ def do_api_process(epi_tdl, req):
     elif formatted_call[1] == 'piratebay':
         dl_options = get_piratebay_api_options(epi_tdl[11], req)
         dler = 'piratebay'
+    elif formatted_call[1] == 'ShowRSS':
+        return False, 'RSS link via Catch', 'ShowRSS'
     else:
-        return False, 'No Link Yet', 'No Download Provider'
+        return False, 'No Link', 'No activated download provider'
     if formatted_call[1] == 'Multi':
         # print(f'Formatted call is Multi ---> {formatted_call}')
         main_link = f'Formatted call is Multi ---> {formatted_call[0]}'
@@ -392,9 +400,11 @@ def do_api_process(epi_tdl, req):
         return False, main_link, dler
     else:
         for sdl_o in sdl_options:
-            print(f'The Options are {sdl_o[0]}, {sdl_o[3]}, {sdl_o[1]}, {sdl_o[4]}')
+            if verbose:
+                print(f'The Options are {sdl_o[0]}, {sdl_o[3]}, {sdl_o[1]}, {sdl_o[4]}')
         for dlo in sdl_options:
-            print(f'Selected Option = {dlo[0]}, {dlo[3]}, {dlo[1]}, {dlo[4]}')
+            if verbose:
+                print(f'Selected Option = {dlo[0]}, {dlo[3]}, {dlo[1]}, {dlo[4]}')
             command_str = 'open -a transmission ' + dlo[2]
             os.system(command_str)
             return True, main_link, dler
@@ -442,8 +452,9 @@ def process_the_episodes_to_download():
             # print('First Process the whole season request')
             # print(f'Whole season -> {epi_to_download[2]}, Season Info {season_info}')
             processed = do_api_process(epi_to_download, season_info[0])
-            # print(f'Whole Season Processed is {processed}')
-            if processed[0][0]:
+            if verbose:
+                print(f'Whole Season Processed is {processed}')
+            if processed[0]:
                 print(f'Whole Season Processed is {processed}')
                 downloaded_show = epi_to_download[11]
                 do_text = f" ---> Whole Season downloading "
@@ -464,9 +475,10 @@ def process_the_episodes_to_download():
             else:
                 display_status(processed, epi_to_download, do_text, season_info[0])
                 downloaded_show = ''
-                # print('If Whole Season is not downloading try the first episode of the season')
+                if verbose:
+                    print('If Whole Season is not downloading try the first episode of the season')
                 processed = do_api_process(epi_to_download, season_info[1])
-                if processed[0][0]:
+                if processed[0]:
                     do_text = " ---> Episode now downloading "
                     season = season_info[1]
                     update_tvmaze_episode_status(epi_to_download[0])
@@ -497,6 +509,11 @@ def process_the_episodes_to_download():
 
 args = docopt(__doc__, version='Try Release 1.0')
 # print(args)
+if args['-v']:
+    verbose = True
+    print(f'Verbose Logging is turned on')
+else:
+    verbose = False
 
 download_apis = get_download_apis()
 if not download_apis:
