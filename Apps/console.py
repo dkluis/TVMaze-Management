@@ -584,6 +584,12 @@ while loop:
         print()
         subprocess.call(" python3 shows.py -u", shell=True)
         cl_screen = False
+    elif cons_in == "7v":
+        display_menu(True)
+        print(term_pos(menu_pos.status_x, menu_pos.status_y), "Process Shows" + term_codes.cl_eol)
+        print()
+        subprocess.call(" python3 shows.py -uv", shell=True)
+        cl_screen = False
     elif cons_in == "8":
         display_menu(True)
         print(term_pos(menu_pos.status_x, menu_pos.status_y), "Process Episodes" + term_codes.cl_eol)

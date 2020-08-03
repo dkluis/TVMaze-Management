@@ -13,7 +13,7 @@ class release:
     
 
 class def_downloader:
-    dl = 'piratebay'
+    dl = 'Multi'
 
 
 def get_today(tp='human', fmt='full'):

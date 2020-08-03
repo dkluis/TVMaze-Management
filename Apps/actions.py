@@ -1,11 +1,11 @@
 """
 
-action.py   The App that handle all actions for reviewing new shows and for downloading episodes based
+action.py   The App that handles all actions for reviewing new shows and for downloading episodes based on the
             episode air dates, future will be a manual request for an episode
 
 Usage:
-  action.py [-d] [-r] [-v | --verbose]
-  action.py -f (--show <fshow> --episode <fepisode> | <show> <episode>)
+  action.py [-d] [-r] [-v]
+  action.py -f <show> <episode>
   action.py -h | --help
   action.py --version
 
@@ -23,7 +23,6 @@ from datetime import datetime, timedelta, date
 from bs4 import BeautifulSoup as Soup
 import re
 
-from terminal_lib import check_cli_args, term_codes
 from db_lib import *
 from tvm_lib import def_downloader, date_delta
 from tvm_api_lib import *
@@ -97,7 +96,8 @@ def validate_requirements(filename, extension, epi_no, showname):
     elif 'repack' in filename.lower():
         priority += 5
     if showname:
-        # print(f'''Checking showname with filename {showname.replace(' ', '.').lower()} ---> {filename}.lower()''')
+        if verbose:
+            print(f'''Checking showname with filename {showname.replace(' ', '.').lower()} ---> {filename}.lower()''')
         if showname.replace(' ', '.').lower() not in filename.lower():
             priority = 0
         else:
@@ -107,8 +107,9 @@ def validate_requirements(filename, extension, epi_no, showname):
                 #       f'{filename.replace(".", " ").lower()[len(showname) + 1]} '
                 #       f'with Showname {showname} and Filename {filename}')
                 priority = 1
-    # print(f'Validated Requirement - Showname: {showname.replace(" ", ".").lower()} and got Priority: {priority}, '
-    #       f'Filename: {filename.lower()} and Season {epi_no}')
+    if verbose:
+        print(f'Validated Requirement - Showname: {showname.replace(" ", ".").lower()} and got Priority: {priority}, '
+              f'Filename: {filename.lower()} and Season {epi_no}')
     return priority
 
 
@@ -118,8 +119,8 @@ def get_eztv_api_options(imdb_id, seas, showname):
         return download_options
     eztv_show = imdb_id
     eztv_url = execute_sql(sqltype='Fetch',
-                           sql='SELECT link_prefix FROM download_options where `providername` = "eztvAPI"')[0][0] \
-               + eztv_show[2:]
+                           sql='SELECT link_prefix FROM download_options '
+                               'where `providername` = "eztvAPI"')[0][0] + eztv_show[2:]
     # print(eztv_url)
     eztv_data = requests.get(eztv_url).json()
     # print(eztv_data)
@@ -136,7 +137,8 @@ def get_eztv_api_options(imdb_id, seas, showname):
         size = int(size)
         size = str(size).zfill(6)
         prio = validate_requirements(filename, True, seas, showname)
-        print(f'Checking filename eztvAPI {filename} with {seas} got prio {prio}')
+        if verbose:
+            print(f'Checking filename eztvAPI {filename} with {seas} got prio {prio}')
         if prio > 100:
             download_options.append((prio, filename, mag_url, size, 'eztvAPI'))
     return download_options
@@ -146,7 +148,11 @@ def get_rarbg_api_options(show, seas):
     dl_options = []
     dl_info = execute_sql(sqltype='Fetch', sql=f'SELECT * from download_options WHERE `providername` = "rarbgAPI"')[0]
     main_link = f"{dl_info[1]}{show} {seas}{dl_info[2]}"
-    main_request = execute_tvm_request(api=main_link, req_type='get').json()
+    main_request = execute_tvm_request(api=main_link, req_type='get')
+    if main_request:
+        main_request = main_request.json()
+    else:
+        return dl_options
     if 'No results found' in str(main_request):
         return dl_options
     records = main_request['torrent_results']
@@ -216,35 +222,6 @@ def get_piratebay_api_options(show, seas):
     return piratebay_titles
 
 
-def magnetdl_download(show, seas):
-    main_link_pre = '''http://www.magnetdl.com/search/?m=1&q="'''
-    main_link_suf = '"'
-    main_link = main_link_pre + show.replace(' ', '+') + '+' + seas + main_link_suf
-    main_request = execute_tvm_request(api=main_link, req_type='get')
-    print(main_link, main_request)
-    if not main_request:
-        return False, main_link
-    titles = main_request['torrent_results']
-    dl_options = []
-    for title in titles:
-        name = title['title']
-        magnet = title['download']
-        seeders = title['seeders']
-        size = title['size']
-        prio = validate_requirements(name, False, show)
-        if prio > 100:
-            dl_options.append((prio, size, seeders, name, magnet))
-    if len(dl_options) > 0:
-        dl_options.sort(reverse=True)
-        for do in dl_options:
-            print(f'Calling Transmission with {do[4]}')
-            command_str = 'open -a transmission ' + do[4]
-            os.system(command_str)
-            return True, main_link
-    else:
-        return False, main_link
-
-
 def get_episodes_to_download():
     todownload = execute_sql(sqltype='Fetch', sql=tvm_views.eps_to_download)
     if not todownload:
@@ -275,61 +252,50 @@ def process_new_shows():
     newshows = get_shows_to_review()
     print("TVM_Action_List ---> Processing New Shows to Review:", len(newshows))
     # Process all the new shows to review
-    if not newshows:
+    if len(newshows) == 0:
         return
-    print(f'\033[1m', "                                                                       "
-                      "                                                  Shows To Evaluate", f'\033[0m')
+    print(f'{"Shows To Evaluate".rjust(135)}')
     request = "[s,S,u,D,f,F]"
-    print("{: <1} {: <50} {: <80} {: <12} {: <16} "
-          "{: <12} {: <15} {: <12} {: <24} {: <16} {: <1}".format(f'\033[1m',
-                                                                  'Show Name:', 'TVMaze Link:', 'Type:', 'Show Status:',
-                                                                  'Premiered:',
-                                                                  'Language:', 'Length:', 'Network:', 'Country:',
-                                                                  "Option:",
-                                                                  f'\033[0m'))
-    if len(newshows) != 0:
-        for newshow in newshows:
-            if not newshow[5]:
-                premiered = " "
-            else:
-                premiered = newshow[5]
-            if not newshow[6]:
-                language = " "
-            else:
-                language = newshow[6]
-            if not newshow[7]:
-                length = " "
-            else:
-                length = newshow[7]
-            if not newshow[8]:
-                network = "Unknown"
-            else:
-                network = newshow[8]
-            if not newshow[9]:
-                country = "Unknown"
-            else:
-                country = newshow[9]
-            print("{: <1} "
-                  "{: <50} {: <80} {: <12} {: <16} {: <12} "
-                  "{: <15} {: <12} {: <24} {: <15} {: <1} {: <6}  "
-                  "{: <1}".format(
-                f'\033[0m',
-                newshow[1], newshow[2], newshow[3], newshow[4], premiered,
-                language, length, network, country, f'\033[1m', request,
-                f'\033[0m'), end=":")
-            command_str = 'open -a safari ' + newshow[2]
-            os.system(command_str)
-            ans = input(" ").lower()
-            if ans == "s":
-                answer = "Skipped"
-            elif ans == "u":
-                answer = "Undecided"
-            elif ans == "f":
-                answer = "Followed"
-                update_tvmaze_followed_shows(newshow[0])
-            else:
-                continue
-            update_show_status(newshow[0], answer)
+    print(f'{"Show Name:".ljust(50)} {"TVMaze Link:".ljust(80)} {"Type:".ljust(12)} {"Show Status:".ljust(16)} '
+          f'{"Premiered:".ljust(12)} {"Language:".ljust(15)} {"Length:".ljust(12)} {"Network:".ljust(24)} '
+          f'{"Country:".ljust(16)} {"Option:"}')
+    for newshow in newshows:
+        if not newshow[5]:
+            premiered = " "
+        else:
+            premiered = newshow[5]
+        if not newshow[6]:
+            language = " "
+        else:
+            language = newshow[6]
+        if not newshow[7]:
+            length = " "
+        else:
+            length = newshow[7]
+        if not newshow[8]:
+            network = "Unknown"
+        else:
+            network = newshow[8]
+        if not newshow[9]:
+            country = "Unknown"
+        else:
+            country = newshow[9]
+        print(f'{newshow[1].ljust(50)} {newshow[2].ljust(80)} {newshow[3].ljust(12)} {newshow[5].ljust(16)} '
+              f'{premiered.ljust(12)} {language.ljust(15)} {str(length).ljust(12)} {network.ljust(24)} '
+              f'{country.ljust(16)} {request}', end=":")
+        command_str = 'open -a safari ' + newshow[2]
+        os.system(command_str)
+        ans = input(" ").lower()
+        if ans == "s":
+            answer = "Skipped"
+        elif ans == "u":
+            answer = "Undecided"
+        elif ans == "f":
+            answer = "Followed"
+            update_tvmaze_followed_shows(newshow[0])
+        else:
+            continue
+        update_show_status(newshow[0], answer)
     print()
 
 
@@ -380,8 +346,10 @@ def do_api_process(epi_tdl, req):
     elif formatted_call[1] == 'piratebay':
         dl_options = get_piratebay_api_options(epi_tdl[11], req)
         dler = 'piratebay'
+    elif formatted_call[1] == 'ShowRSS':
+        return False, 'RSS link via Catch', 'ShowRSS'
     else:
-        return False, 'No Link Yet', 'No Download Provider'
+        return False, 'No Link', 'No activated download provider'
     if formatted_call[1] == 'Multi':
         # print(f'Formatted call is Multi ---> {formatted_call}')
         main_link = f'Formatted call is Multi ---> {formatted_call[0]}'
@@ -392,9 +360,11 @@ def do_api_process(epi_tdl, req):
         return False, main_link, dler
     else:
         for sdl_o in sdl_options:
-            print(f'The Options are {sdl_o[0]}, {sdl_o[3]}, {sdl_o[1]}, {sdl_o[4]}')
+            if verbose:
+                print(f'The Options are {sdl_o[0]}, {sdl_o[3]}, {sdl_o[1]}, {sdl_o[4]}')
         for dlo in sdl_options:
-            print(f'Selected Option = {dlo[0]}, {dlo[3]}, {dlo[1]}, {dlo[4]}')
+            if verbose:
+                print(f'Selected Option = {dlo[0]}, {dlo[3]}, {dlo[1]}, {dlo[4]}')
             command_str = 'open -a transmission ' + dlo[2]
             os.system(command_str)
             return True, main_link, dler
@@ -406,12 +376,10 @@ def display_status(processed, epi_to_download, do_text, season):
         do_text = f' ---> Show managed by {processed[2]}'
     else:
         do_text = do_text + f" ---> {processed[2]}"
-    tvmaze = "https://www.tvmaze.com/shows/" + str(epi_to_download[1]) + do_text
-    print("{: <1} {: <50} {: <10} "
-          "{: <14} {: <120} {: <30}".format(f'\033[0m',
-                                            '"' + str(epi_to_download[11][0:48]) + '"', season,
-                                            str(epi_to_download[6]), str(processed[1]), tvmaze))
-
+    tvmaze = "https://www.tvmaze.com/shows/" + str(epi_to_download[1]).ljust(5) + do_text
+    print(f'{str(epi_to_download[11][0:48]).ljust(51)} {season.ljust(10)} {str(epi_to_download[6]).ljust(14)} '
+          f'{str(processed[1]).ljust(119)} {tvmaze}')
+    
 
 def process_the_episodes_to_download():
     episodes_to_download = get_episodes_to_download()
@@ -419,12 +387,9 @@ def process_the_episodes_to_download():
     print("TVM_Action_List ---> Episodes to Download:", len(episodes_to_download))
     # process the episodes that need to be downloading
     print()
-    print(f'\033[1m', "                                                                     "
-                      "                                                    Shows To Download", f'\033[0m')
-    print("{: <1} {: <50} {: <10} {: <14} "
-          "{: <120} {: <30} {: <1}".format(f'\033[1m',
-                                           "Shown Name: ", "Season:", "Airdate:",
-                                           "Torrent Link:", "TVMaze Link:", f'\033[0m'))
+    print(f'{"Shows To Download".rjust(120)}')
+    print(f'{"Show Name:".ljust(51)} {"Season:".ljust(10)} {"Air Date:".ljust(14)} {"Link:".ljust(119)} '
+          f'{"Acquisition Info:"}')
     # message_txt = "TVM "
     downloaded_show = ''
     season_dled = False
@@ -442,8 +407,9 @@ def process_the_episodes_to_download():
             # print('First Process the whole season request')
             # print(f'Whole season -> {epi_to_download[2]}, Season Info {season_info}')
             processed = do_api_process(epi_to_download, season_info[0])
-            # print(f'Whole Season Processed is {processed}')
-            if processed[0][0]:
+            if verbose:
+                print(f'Whole Season Processed is {processed}')
+            if processed[0]:
                 print(f'Whole Season Processed is {processed}')
                 downloaded_show = epi_to_download[11]
                 do_text = f" ---> Whole Season downloading "
@@ -464,9 +430,10 @@ def process_the_episodes_to_download():
             else:
                 display_status(processed, epi_to_download, do_text, season_info[0])
                 downloaded_show = ''
-                # print('If Whole Season is not downloading try the first episode of the season')
+                if verbose:
+                    print('If Whole Season is not downloading try the first episode of the season')
                 processed = do_api_process(epi_to_download, season_info[1])
-                if processed[0][0]:
+                if processed[0]:
                     do_text = " ---> Episode now downloading "
                     season = season_info[1]
                     update_tvmaze_episode_status(epi_to_download[0])
@@ -495,21 +462,24 @@ def process_the_episodes_to_download():
     First get all the supporting lists we use
 '''
 
-args = docopt(__doc__, version='Try Release 1.0')
+args = docopt(__doc__, version='Actions Release 0.9.5')
 # print(args)
+if args['-v']:
+    verbose = True
+    print(f'Verbose Logging is turned on')
+else:
+    verbose = False
 
+print(f'Starting Actions with download={args["-d"]} and review={args["-r"]}')
 download_apis = get_download_apis()
 if not download_apis:
     print(f"Main Program: Error getting Download Options: {download_apis}")
     quit()
 
-print(term_codes.cl_scr)
 if args['-r']:
     process_new_shows()
 if args['-d']:
     process_the_episodes_to_download()
 if not args['-d'] and not args['-r']:
-    process_new_shows()
-    process_the_episodes_to_download()
+    print(f'Nothing to do, neither -r, -d or -rd cli args were supplied')
 print()
-

@@ -294,7 +294,7 @@ for dl in download:
                 shutil.move(dl, plex_trash_dir)
             continue
         else:
-            d = dl
+            d = str(dl).replace(' ', '.')
             dc = cleanup_name(d)
             # print(f'Cleaned Name "{dc}"')
             ds = find_showname(dc)
