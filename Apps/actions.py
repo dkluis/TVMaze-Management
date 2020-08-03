@@ -514,6 +514,6 @@ if args['-r']:
 if args['-d']:
     process_the_episodes_to_download()
 if not args['-d'] and not args['-r']:
-    print(f'Nothing to do, neither -r, -d or -rd cli agrs were supplied')
+    print(f'Nothing to do, neither -r, -d or -rd cli args were supplied')
 print()
 
