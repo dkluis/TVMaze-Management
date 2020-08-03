@@ -1,6 +1,6 @@
 """
 
-action.py   The App that handle all actions for reviewing new shows and for downloading episodes based
+action.py   The App that handles all actions for reviewing new shows and for downloading episodes based on the
             episode air dates, future will be a manual request for an episode
 
 Usage:
@@ -23,7 +23,7 @@ from datetime import datetime, timedelta, date
 from bs4 import BeautifulSoup as Soup
 import re
 
-from terminal_lib import check_cli_args, term_codes
+from terminal_lib import term_codes
 from db_lib import *
 from tvm_lib import def_downloader, date_delta
 from tvm_api_lib import *
@@ -226,8 +226,11 @@ def magnetdl_download(show, seas):
     main_link_pre = '''http://www.magnetdl.com/search/?m=1&q="'''
     main_link_suf = '"'
     main_link = main_link_pre + show.replace(' ', '+') + '+' + seas + main_link_suf
+    if verbose:
+        print(f'Magnetdl link {main_link}')
     main_request = execute_tvm_request(api=main_link, req_type='get')
-    print(main_link, main_request)
+    if verbose:
+        print(f'Magnetdl result {main_request}')
     if not main_request:
         return False, main_link
     titles = main_request['torrent_results']
