@@ -284,61 +284,56 @@ def process_new_shows():
     newshows = get_shows_to_review()
     print("TVM_Action_List ---> Processing New Shows to Review:", len(newshows))
     # Process all the new shows to review
-    if not newshows:
+    if len(newshows) == 0:
         return
-    print(f'\033[1m', "                                                                       "
-                      "                                                  Shows To Evaluate", f'\033[0m')
+    print(f'{"Shows To Evaluate".rjust(135)}')
     request = "[s,S,u,D,f,F]"
     print("{: <1} {: <50} {: <80} {: <12} {: <16} "
-          "{: <12} {: <15} {: <12} {: <24} {: <16} {: <1}".format(f'\033[1m',
-                                                                  'Show Name:', 'TVMaze Link:', 'Type:', 'Show Status:',
-                                                                  'Premiered:',
-                                                                  'Language:', 'Length:', 'Network:', 'Country:',
-                                                                  "Option:",
-                                                                  f'\033[0m'))
-    if len(newshows) != 0:
-        for newshow in newshows:
-            if not newshow[5]:
-                premiered = " "
-            else:
-                premiered = newshow[5]
-            if not newshow[6]:
-                language = " "
-            else:
-                language = newshow[6]
-            if not newshow[7]:
-                length = " "
-            else:
-                length = newshow[7]
-            if not newshow[8]:
-                network = "Unknown"
-            else:
-                network = newshow[8]
-            if not newshow[9]:
-                country = "Unknown"
-            else:
-                country = newshow[9]
-            print("{: <1} "
-                  "{: <50} {: <80} {: <12} {: <16} {: <12} "
-                  "{: <15} {: <12} {: <24} {: <15} {: <1} {: <6}  "
-                  "{: <1}".format(
-                f'\033[0m',
-                newshow[1], newshow[2], newshow[3], newshow[4], premiered,
-                language, length, network, country, f'\033[1m', request,
-                f'\033[0m'), end=":")
-            command_str = 'open -a safari ' + newshow[2]
-            os.system(command_str)
-            ans = input(" ").lower()
-            if ans == "s":
-                answer = "Skipped"
-            elif ans == "u":
-                answer = "Undecided"
-            elif ans == "f":
-                answer = "Followed"
-                update_tvmaze_followed_shows(newshow[0])
-            else:
-                continue
-            update_show_status(newshow[0], answer)
+          "{: <12} {: <15} {: <12} {: <24} {: <16} {: <1}".format('Show Name:', 'TVMaze Link:', 'Type:',
+                                                                  'Show Status:', 'Premiered:', 'Language:',
+                                                                  'Length:', 'Network:', 'Country:', "Option:"))
+    for newshow in newshows:
+        if not newshow[5]:
+            premiered = " "
+        else:
+            premiered = newshow[5]
+        if not newshow[6]:
+            language = " "
+        else:
+            language = newshow[6]
+        if not newshow[7]:
+            length = " "
+        else:
+            length = newshow[7]
+        if not newshow[8]:
+            network = "Unknown"
+        else:
+            network = newshow[8]
+        if not newshow[9]:
+            country = "Unknown"
+        else:
+            country = newshow[9]
+        print("{: <1} "
+              "{: <50} {: <80} {: <12} {: <16} {: <12} "
+              "{: <15} {: <12} {: <24} {: <15} {: <1} {: <6}  "
+              "{: <1}".format(
+            f'\033[0m',
+            newshow[1], newshow[2], newshow[3], newshow[4], premiered,
+            language, length, network, country, f'\033[1m', request,
+            f'\033[0m'), end=":")
+        command_str = 'open -a safari ' + newshow[2]
+        os.system(command_str)
+        ans = input(" ").lower()
+        if ans == "s":
+            answer = "Skipped"
+        elif ans == "u":
+            answer = "Undecided"
+        elif ans == "f":
+            answer = "Followed"
+            update_tvmaze_followed_shows(newshow[0])
+        else:
+            continue
+        update_show_status(newshow[0], answer)
     print()
 
 
@@ -419,12 +414,10 @@ def display_status(processed, epi_to_download, do_text, season):
         do_text = f' ---> Show managed by {processed[2]}'
     else:
         do_text = do_text + f" ---> {processed[2]}"
-    tvmaze = "https://www.tvmaze.com/shows/" + str(epi_to_download[1]) + do_text
-    print("{: <1} {: <50} {: <10} "
-          "{: <14} {: <120} {: <30}".format(f'\033[0m',
-                                            '"' + str(epi_to_download[11][0:48]) + '"', season,
-                                            str(epi_to_download[6]), str(processed[1]), tvmaze))
-
+    tvmaze = "https://www.tvmaze.com/shows/" + str(epi_to_download[1]).ljust(5) + do_text
+    print(f'{str(epi_to_download[11][0:48]).ljust(51)} {season.ljust(10)} {str(epi_to_download[6]).ljust(14)} '
+          f'{str(processed[1]).ljust(119)} {tvmaze}')
+    
 
 def process_the_episodes_to_download():
     episodes_to_download = get_episodes_to_download()
@@ -432,12 +425,9 @@ def process_the_episodes_to_download():
     print("TVM_Action_List ---> Episodes to Download:", len(episodes_to_download))
     # process the episodes that need to be downloading
     print()
-    print(f'\033[1m', "                                                                     "
-                      "                                                    Shows To Download", f'\033[0m')
-    print("{: <1} {: <50} {: <10} {: <14} "
-          "{: <120} {: <30} {: <1}".format(f'\033[1m',
-                                           "Shown Name: ", "Season:", "Airdate:",
-                                           "Torrent Link:", "TVMaze Link:", f'\033[0m'))
+    print(f'{"Shows To Download".rjust(120)}')
+    print(f'{"Show Name:".ljust(51)} {"Season:".ljust(10)} {"Air Date:".ljust(14)} {"Link:".ljust(119)} '
+          f'{"Acquisition Info:"}')
     # message_txt = "TVM "
     downloaded_show = ''
     season_dled = False
@@ -518,12 +508,12 @@ if args['-v']:
 else:
     verbose = False
 
+print(f'Starting Actions with download={args["-d"]} and review={args["-r"]}')
 download_apis = get_download_apis()
 if not download_apis:
     print(f"Main Program: Error getting Download Options: {download_apis}")
     quit()
 
-print(term_codes.cl_scr)
 if args['-r']:
     process_new_shows()
 if args['-d']:
