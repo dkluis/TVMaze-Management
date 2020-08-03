@@ -1,3 +1,23 @@
+"""
+
+shows.py    The App that handles all actions for finding new shows, updating existing shows with the latest information
+            syncing our info with TVMaze'es info
+
+Usage:
+  action.py [-u] [-s] [-i] [-v | --verbose]
+  action.py -h | --help
+  action.py --version
+
+Options:
+  -h --help      Show this screen
+  -v             Verbose Logging
+  -u             The standard process to get all shows updated on TVMaze and update our info
+  -s             Use TVMaze'es API to get the latest paged shows to sync our db (it is a safety check) (Not implemented)
+  -i             Initialize the shows info when starting out with TVMaze Management
+  --version      Show version.
+
+"""
+
 from tvm_api_lib import *
 from db_lib import *
 from terminal_lib import *
@@ -5,6 +25,7 @@ from tvm_lib import def_downloader
 
 from timeit import default_timer as timer
 from datetime import datetime, date
+from docopt import docopt
 
 
 def transform_showname(name):
@@ -66,44 +87,32 @@ def process_show_info(rec, interest="New"):
             'premiered': premiered, 'interest': my_interest}
 
 
-def get_cli_args():
-    tlc = ["-i", "-s", "-u", "-h"]
-    flc = check_cli_args(tlc)
-    found = False
-    for e in flc.items():
-        if e[1]:
-            found = True
-            break
-    if not found or flc['-h']:
-        print(f"{term_codes.green}CLI Options are: {term_codes.red}-h{term_codes.green} (Help), "
-              f"{term_codes.red}-i{term_codes.green} (Initialize from TVMaze - Fresh), "
-              f"{term_codes.red}-s{term_codes.green} (Sync with TVMaze - All shows sync'), "
-              f"{term_codes.red}-u{term_codes.green} (Update Sync with TVMaze - Updated Shows Only)")
-        print()
-        quit()
-    return flc
-
-
 def process_all_shows(start, end, sync):
     ind = start  # Enter the last page processed
     while ind <= end:  # Paging is going up to 250  # Remember last page processed here: 197
-        print('All Shows Processing TVMaze Page: ', ind)
+        if verbose:
+            print('All Shows Processing TVMaze Page: ', ind)
         req = tvm_apis.shows_by_page + str(ind)
         response = execute_tvm_request(api=req, err=False)
         if type(response) == bool:
-            print('Last TVMaze page found was:', ind - 1)
+            if verbose:
+                print('Last TVMaze page found was:', ind - 1)
             break
         for res in response.json():
             result = execute_sql(sql="SELECT * from shows WHERE showid = {0}".format(res['id']), sqltype="Fetch")
             if not result:
-                print('Record Not Found:', result)
+                if verbose:
+                    if verbose:
+                        print('Record Not Found:', result)
                 # insert_show(res)
             else:
                 if sync:
-                    print('Syncing: ', res['id'], res['name'])
+                    if verbose:
+                        print('Syncing: ', res['id'], res['name'])
                     # update_show(res)
                 else:
-                    print("Found: ", res['id'], res['name'])
+                    if verbose:
+                        print("Found: ", res['id'], res['name'])
         # time.sleep(1)
         ind = ind + 1
 
@@ -111,7 +120,8 @@ def process_all_shows(start, end, sync):
 def process_update_all_shows(mdb, mcur):
     response = execute_tvm_request(api=tvm_apis.updated_shows)
     response = response.json()
-    print('Number of Shows to potentially update', len(response))
+    if verbose:
+        print('Number of Shows to potentially update', len(response))
     updated = 0
     inserted = 0
     skipped = 0
@@ -120,7 +130,8 @@ def process_update_all_shows(mdb, mcur):
     for key in response:
         processed = processed + 1
         if processed % 5000 == 0:
-            print(f"Processed {processed} records. ")
+            if verbose:
+                print(f"Processed {processed} records. ")
         showid = key
         showupdated = response[key]
         result = execute_sql(con="Y", db=mdb, cur=mcur,
@@ -205,10 +216,12 @@ def process_update_all_shows(mdb, mcur):
                 updated = updated + 1
                 batch = batch + 1
                 if batch % 100 == 0:
-                    print(f"Commit of {batch} updated records")
+                    if verbose:
+                        print(f"Commit of {batch} updated records")
                     mdb.commit()
     if batch != 0:
-        print("Final Commit of updated records")
+        if verbose:
+            print("Final Commit of updated records")
         mdb.commit()
     print(f"Processed {processed} records. ")
     print(f'Shows Evaluated: {len(response)} -> Inserted: {inserted} '
@@ -238,13 +251,15 @@ def process_followed_shows():
                                 sql=f'SELECT showname, status from shows where showid={res["show_id"]}')
         if validates[0][1] != 'Followed':
             new_followed += 1
-            print(validates[0][0], validates[0][1])
+            if verbose:
+                print(validates[0][0], validates[0][1])
             result = execute_sql(sqltype='Commit', sql=f'UPDATE shows SET status="Followed", '
                                                        f'download="{def_downloader.dl}" WHERE showid={res["show_id"]}')
             if not result:
                 print(f'Update error on Shows table for show: {res["show_id"]} trying to make a followed show')
                 quit()
-            print(f'Now following show {validates[0][0]}')
+            if verbose:
+                print(f'Now following show {validates[0][0]}')
 
     un_followed = 0
     for nf in nf_list:
@@ -266,15 +281,21 @@ def process_followed_shows():
         if not result:
             print(f'Update error on Shows table for show: {nf} trying to un-follow')
             quit()
-        print(f'Un-followed show {showname}')
+        if verbose:
+            print(f'Un-followed show {showname}')
 
     print(f"Updates performed based on TVMaze Followed status.  "
           f"Un-followed: {un_followed} and new Followed: {new_followed}")
 
 
 ''' Main Program'''
-print(term_codes.cl_scr)
-options = get_cli_args()
+options = docopt(__doc__, version='Shows Release 0.9.5')
+if options['-v']:
+    verbose = True
+    print(f'Verbose Logging is turned on')
+    print(options)
+else:
+    verbose = False
 
 mdb_info = mdbi('', '')
 tvmaze = connect_mdb(d=mdb_info.db)
