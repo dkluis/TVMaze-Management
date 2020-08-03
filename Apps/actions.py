@@ -5,7 +5,7 @@ action.py   The App that handles all actions for reviewing new shows and for dow
 
 Usage:
   action.py [-d] [-r] [-v | --verbose]
-  action.py -f (--show <fshow> --episode <fepisode> | <show> <episode>)
+  action.py -f <show> <episode>
   action.py -h | --help
   action.py --version
 
@@ -23,7 +23,6 @@ from datetime import datetime, timedelta, date
 from bs4 import BeautifulSoup as Soup
 import re
 
-from terminal_lib import term_codes
 from db_lib import *
 from tvm_lib import def_downloader, date_delta
 from tvm_api_lib import *
@@ -120,8 +119,8 @@ def get_eztv_api_options(imdb_id, seas, showname):
         return download_options
     eztv_show = imdb_id
     eztv_url = execute_sql(sqltype='Fetch',
-                           sql='SELECT link_prefix FROM download_options where `providername` = "eztvAPI"')[0][0] \
-               + eztv_show[2:]
+                           sql='SELECT link_prefix FROM download_options '
+                               'where `providername` = "eztvAPI"')[0][0] + eztv_show[2:]
     # print(eztv_url)
     eztv_data = requests.get(eztv_url).json()
     # print(eztv_data)
@@ -221,38 +220,6 @@ def get_piratebay_api_options(show, seas):
         if prio > 100:
             piratebay_titles.append((prio, showname, magnet_link, size, 'piratebay'))
     return piratebay_titles
-
-
-def magnetdl_download(show, seas):
-    main_link_pre = '''http://www.magnetdl.com/search/?m=1&q="'''
-    main_link_suf = '"'
-    main_link = main_link_pre + show.replace(' ', '+') + '+' + seas + main_link_suf
-    if verbose:
-        print(f'Magnetdl link {main_link}')
-    main_request = execute_tvm_request(api=main_link, req_type='get')
-    if verbose:
-        print(f'Magnetdl result {main_request}')
-    if not main_request:
-        return False, main_link
-    titles = main_request['torrent_results']
-    dl_options = []
-    for title in titles:
-        name = title['title']
-        magnet = title['download']
-        seeders = title['seeders']
-        size = title['size']
-        prio = validate_requirements(name, False, show)
-        if prio > 100:
-            dl_options.append((prio, size, seeders, name, magnet))
-    if len(dl_options) > 0:
-        dl_options.sort(reverse=True)
-        for do in dl_options:
-            print(f'Calling Transmission with {do[4]}')
-            command_str = 'open -a transmission ' + do[4]
-            os.system(command_str)
-            return True, main_link
-    else:
-        return False, main_link
 
 
 def get_episodes_to_download():
@@ -495,7 +462,7 @@ def process_the_episodes_to_download():
     First get all the supporting lists we use
 '''
 
-args = docopt(__doc__, version='Try Release 1.0')
+args = docopt(__doc__, version='Actions Release 0.9.5')
 # print(args)
 if args['-v']:
     verbose = True
@@ -516,4 +483,3 @@ if args['-d']:
 if not args['-d'] and not args['-r']:
     print(f'Nothing to do, neither -r, -d or -rd cli args were supplied')
 print()
-
