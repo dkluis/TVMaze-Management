@@ -4,7 +4,7 @@ action.py   The App that handles all actions for reviewing new shows and for dow
             episode air dates, future will be a manual request for an episode
 
 Usage:
-  action.py [-d] [-r] [-v | --verbose]
+  action.py [-d] [-r] [-v]
   action.py -f <show> <episode>
   action.py -h | --help
   action.py --version

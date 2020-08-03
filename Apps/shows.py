@@ -1,26 +1,30 @@
 """
 
 shows.py    The App that handles all actions for finding new shows, updating existing shows with the latest information
-            syncing our info with TVMaze'es info
+            syncing our info with TVMaze's info
 
 Usage:
-  action.py [-u] [-s] [-i] [-v | --verbose]
-  action.py -h | --help
-  action.py --version
+  shows.py -u [-v]
+  shows.py -s [-v]
+  shows.py -i [-v]
+  shows.py -h | --help
+  shows.py --version
 
 Options:
   -h --help      Show this screen
   -v             Verbose Logging
   -u             The standard process to get all shows updated on TVMaze and update our info
-  -s             Use TVMaze'es API to get the latest paged shows to sync our db (it is a safety check) (Not implemented)
+  -s             Use theTVMaze API to get the latest paged shows to sync our db
+                 (This is system check)
+                 (Not implemented)
   -i             Initialize the shows info when starting out with TVMaze Management
+                 (Not implemented)
   --version      Show version.
 
 """
 
 from tvm_api_lib import *
 from db_lib import *
-from terminal_lib import *
 from tvm_lib import def_downloader
 
 from timeit import default_timer as timer
@@ -307,11 +311,11 @@ if options['-s']:
     print("Starting to process all tvmaze show with updates (sync)")
     print('Not fully implemented yet - no insert or update')
     process_all_shows(196, 199, sync=True)
-elif options['-i']:
+if options['-i']:
     print('Starting to process all tvmaze shows for initialize only')
     print('Not fully implemented yet - no insert or update')
     process_all_shows(0, 198, sync=False)
-elif options['-u']:
+if options['-u']:
     started = timer()
     print(f'{str(datetime.now())} -> Starting to process recently updated shows for insert and sync')
     process_update_all_shows(mdb=db, mcur=cur)
