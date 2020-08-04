@@ -12,7 +12,7 @@ Usage:
 
 Options:
   -h --help      Show this screen
-  --db=<dbname>  Production (or not) [default: Test_TVM_DB]
+  --db=<dbname>  Production Schema (or not) [default: Test_TVM_DB]
   -v             Verbose Logging
   -d             Download all outstanding Episodes
   -r             Review all newly detected Shows

@@ -30,7 +30,7 @@ python3 swift_rep.py >>$LogDir'/Swift_Rep.log'
 echo ""
 echo ""
 echo "$(date) TVMaze Shows"
-python3 shows.py -u 
+python3 shows.py -u --vl=i
 echo ""
 echo ""
 echo "$(date) TVMaze Episodes"
