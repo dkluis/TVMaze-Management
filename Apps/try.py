@@ -3,7 +3,7 @@
 Try.py  Proof out the docopt library
 
 Usage:
-  try.py -m <mshow> <mepisode> [-v] [-h]
+  try.py -m <mshow> <mepisode> [-v]
   try.py [-d] [-r] [-v | --verbose] [-b [--db=<dbname>]]
   try.py -f (--show <fshow> --episode <fepisode> | <show> <episode>)
   try.py -s <sshow>...
