@@ -1,12 +1,39 @@
+"""
+
+episodes.py     The App that handles finding and inserting as well as updating all episodes for the followed shows
+                This is based on the TVMaze API to request all episode info for all followed shows.
+
+Usage:
+  episodes.py [--vl=<vlevel>]
+  episodes.py -h | --help
+  episodes.py --version
+
+Options:
+  -h --help             Show this screen
+  --vl=<vlevel>         Level of verbosity (a = All, i = Informational, w = Warnings only) [default: w]
+  --version             Show version.
+
+"""
+
 from tvm_api_lib import *
 from db_lib import *
-from terminal_lib import *
+from docopt import docopt
 
 from timeit import default_timer as timer
 from datetime import datetime, date
 
+
 '''Main Program'''
-print(term_codes.cl_scr)
+options = docopt(__doc__, version='Shows Release 0.9.5')
+vli = False
+vlw = True
+if options['--vl'].lower() == 'a':
+    vli = True
+elif options['--vl'].lower() == 'i':
+    vli = True
+if vli:
+    print(f'verbosity levels Informational {vli} and Warnings {vlw}')
+    print(options)
 
 started = timer()
 print(f'{str(datetime.now())} -> Starting to process recently updated episodes for insert and re-sync')
@@ -71,11 +98,13 @@ for show in shows:
             execute_sql(sql=sql, sqltype='Commit')
             updated += 1
         else:
-            print("Should not happen")
+            print(f"Found more than 1 record for {epi['id']} episode which should not happen")
             quit()
         if (updated + inserted) % 250 == 0:
-            print(f'Processed {updated + inserted} records')
-    # print(f'Do Show update for {show[0]}')
+            if vli:
+                print(f'Processed {updated + inserted} records')
+    if vli:
+        print(f'Do Show update for {show[0]}')
     execute_sql(sqltype='Commit', sql=f'UPDATE shows '
                                       f'set eps_updated = current_date, eps_count = {num_eps} '
                                       f'WHERE showid = {show[0]}')
@@ -91,7 +120,8 @@ print("Starting update of episode statuses for (watched, downloaded and skipped)
 episodes = execute_tvm_request(api=tvm_apis.episodes_status, code=True, sleep=0)
 eps_updated = episodes.json()
 updated = 0
-print("Episodes to process: ", len(eps_updated))
+if vli:
+    print("Episodes to process: ", len(eps_updated))
 for epi in eps_updated:
     if epi['type'] == 0:
         watch = "Watched"
@@ -119,11 +149,12 @@ for epi in eps_updated:
     result = execute_sql(sqltype='Commit', sql=sql)
     updated += 1
     if updated % 5000 == 0:
-        print(f"Processed {updated} records")
+        if vli:
+            print(f"Processed {updated} records")
 
 print("Total Episodes updated:", updated)
 
-print('Starting to find episodes to reset back')
+print('Starting to find episodes to reset')
 found = False
 result = execute_sql(sqltype='Fetch', sql=std_sql.episodes)
 count = 0
@@ -139,7 +170,8 @@ for res in result:
     if not found:
         ep_list.append(res[0])
     if count % 5000 == 0:
-        print(f'Processed {count} records')
+        if vli:
+            print(f'Processed {count} records')
 
 print(f'Number of Episodes to reset is {len(ep_list)}')
 
