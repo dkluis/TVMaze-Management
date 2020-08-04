@@ -3,6 +3,7 @@
 Try.py  Proof out the docopt library
 
 Usage:
+  try.py
   try.py -m <mshow> <mepisode> [-v]
   try.py [-d] [-r] [-v | --verbose] [-b [--db=<dbname>]]
   try.py -f (--show <fshow> --episode <fepisode> | <show> <episode>)
@@ -32,6 +33,4 @@ print(f'Option -m was selected {args["-m"]} show = {args["<mshow>"]} episode = {
 print(f'Option -s was selected {args["-s"]} list of show = {args["<sshow>"]}')
 print(f'Option -b was selected {args["-b"]} DB schema to use = {args["--db"]}')
 print(f'Option -v was selected {args["-v"]}')
-
-
 

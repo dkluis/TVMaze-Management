@@ -12,7 +12,6 @@ Usage:
 
 Options:
   -h --help             Show this screen
-  -v                    Verbose Logging
   --vl=<vlevel>         Level of verbosity (a = All, i = Informational, w = Warnings only) [default: w]
   -u                    The standard process to get all shows updated on TVMaze and update our info
   -s                    Using the TVMaze API to get the latest paged shows to sync our db
