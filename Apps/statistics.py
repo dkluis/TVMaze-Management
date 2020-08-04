@@ -82,16 +82,15 @@ def go_store_download_options(dls):
 
 
 def view_history(last: False):
-    shows = execute_sql(sqltype='Fetch',
-                        sql='SELECT * from statistics where statrecind = "TVMaze" order by statdate desc ')
-
-    mdbe = create_engine('mysql://dick:Sandy3942@127.0.0.1/TVMazeDB')
     if last:
+        shows = execute_sql(sqltype='Fetch',
+                            sql='SELECT * from statistics where statrecind = "TVMaze" order by statdate desc ')
         if len(shows) == 0:
             return False
         else:
             return shows[0]
     else:
+        mdbe = create_engine('mysql://dick:Sandy3942@127.0.0.1/TVMazeDB')
         pd.set_option('max_rows', 31)
         pd.set_option('min_rows', 30)
         df = pd.read_sql_query('select statepoch, statdate, tvmshows, myshows, myshowsended,'

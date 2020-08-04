@@ -4,17 +4,17 @@ action.py   The App that handles all actions for reviewing new shows and for dow
             episode air dates, future will be a manual request for an episode
 
 Usage:
-  action.py [-d] [-r] [-v]
-  action.py -f <show> <episode>
+  action.py [-d] [-r] [--vl=<vlevel>]
+  action.py -f <show> <episode> [--vl=<vlevel>]
   action.py -h | --help
   action.py --version
 
 Options:
   -h --help      Show this screen
-  -v             Verbose Logging
   -d             Download all outstanding Episodes
   -r             Review all newly detected Shows
   -f             Find downloads for a Show and Episode (Episode can also be a whole season - S01E05 or S01)
+  --vl=<vlevel>  Level of verbosity (a = All, i = Informational, w = Warnings only) [default: w]
   --version      Show version.
 
 """
@@ -96,18 +96,14 @@ def validate_requirements(filename, extension, epi_no, showname):
     elif 'repack' in filename.lower():
         priority += 5
     if showname:
-        if verbose:
+        if vli:
             print(f'''Checking showname with filename {showname.replace(' ', '.').lower()} ---> {filename}.lower()''')
         if showname.replace(' ', '.').lower() not in filename.lower():
             priority = 0
         else:
-            # print(f'''Checking season in filename {seas.lower()} ---> {filename.lower()}''')
             if str(epi_no.lower() + ".") not in filename.lower():
-                # print(f'Validate Requirement: Filename character to compare is '
-                #       f'{filename.replace(".", " ").lower()[len(showname) + 1]} '
-                #       f'with Showname {showname} and Filename {filename}')
                 priority = 1
-    if verbose:
+    if vli:
         print(f'Validated Requirement - Showname: {showname.replace(" ", ".").lower()} and got Priority: {priority}, '
               f'Filename: {filename.lower()} and Season {epi_no}')
     return priority
@@ -137,11 +133,55 @@ def get_eztv_api_options(imdb_id, seas, showname):
         size = int(size)
         size = str(size).zfill(6)
         prio = validate_requirements(filename, True, seas, showname)
-        if verbose:
+        if vli:
             print(f'Checking filename eztvAPI {filename} with {seas} got prio {prio}')
         if prio > 100:
             download_options.append((prio, filename, mag_url, size, 'eztvAPI'))
     return download_options
+
+
+def get_eztv_options(show, seas):
+    eztv_titles = []
+    api = f'https://eztv.io/search/{show}-{seas}'
+    eztv_data = execute_tvm_request(api=api, timeout=(20, 20), err=False)
+    if not eztv_data:
+        return eztv_titles
+    eztv_page = Soup(eztv_data.content, 'html.parser')
+    eztv_table = eztv_page.findAll('a', {'class': 'magnet'})
+    if len(eztv_table) == 0:
+        return eztv_titles
+    dloptions = []
+    for rec in eztv_table:
+        if show.lower() in str(rec).lower() and seas.lower() in str(rec).lower():
+            dloptions.append(f"***{rec}***")
+    if len(dloptions) == 0:
+        return dloptions
+    for dlo in dloptions:
+        split1 = str(dlo).split('href="')[1]
+        magnet_link = str(split1).split('" rel=')[0]
+        split1 = str(magnet_link).split(';dn=')[1]
+        showname = str(split1).split('%')[0]
+        split1 = str(dlo).split(' (')[1]
+        sizeraw = str(split1).split(') ')[0]
+        s = sizeraw.split(' ')
+        if s[1] == 'MB':
+            size = float(s[0])
+            size = int(size)
+            size = str(size).zfill(6)
+            # print(size)
+        elif s[1] == 'GB':
+            size = float(s[0]) * 1000
+            size = int(size)
+            size = str(size).zfill(6)
+        if vli:
+            print(f"{dlo} \n Validating {showname}, True, {seas}, {show} ")
+        prio = validate_requirements(showname, True, seas, show)
+        if vli:
+            print(f'Prio returned {prio} for {showname}')
+        if prio > 100:
+            size = size - 5
+            eztv_titles.append((prio, showname, magnet_link, size, 'eztv'))
+    return eztv_titles
 
 
 def get_rarbg_api_options(show, seas):
@@ -202,7 +242,6 @@ def get_piratebay_api_options(show, seas):
                     sub_info = sub_info[1].split(', ULed by')
                     sub_info = sub_info[0].replace('Uploaded ', '').replace(' Size ', '')
                     sub_info = sub_info.split(',')
-                    # e1 = sub_info[0]
                     size = str(sub_info[1]).replace('\xa0', '')
                     if 'MiB' in size:
                         size = str(size).split('MiB')
@@ -333,8 +372,9 @@ def do_api_process(epi_tdl, req):
         dler = 'Multi'
         dl_options_rarbg_api = get_rarbg_api_options(epi_tdl[11], req)
         dl_options_piratebay = get_piratebay_api_options(epi_tdl[11], req)
-        dl_options_eztv = get_eztv_api_options(epi_tdl[12], req, epi_tdl[11])
-        dl_options = dl_options_rarbg_api + dl_options_piratebay + dl_options_eztv
+        dl_options_eztv_api = get_eztv_api_options(epi_tdl[12], req, epi_tdl[11])
+        dl_options_eztv = get_eztv_options(epi_tdl[11], req)
+        dl_options = dl_options_rarbg_api + dl_options_piratebay + dl_options_eztv_api + dl_options_eztv
     elif formatted_call[1] == 'rarbgAPI':
         dl_options = get_rarbg_api_options(epi_tdl[11], req)
         dler = 'rarbgAPI'
@@ -360,12 +400,12 @@ def do_api_process(epi_tdl, req):
         return False, main_link, dler
     else:
         for sdl_o in sdl_options:
-            if verbose:
+            if vli:
                 print(f'The Options are {sdl_o[0]}, {sdl_o[3]}, {sdl_o[1]}, {sdl_o[4]}')
         for dlo in sdl_options:
-            if verbose:
+            if vli:
                 print(f'Selected Option = {dlo[0]}, {dlo[3]}, {dlo[1]}, {dlo[4]}')
-            command_str = 'open -a transmission ' + dlo[2]
+            command_str = f'''open -a transmission '{dlo[2]}' '''
             os.system(command_str)
             return True, main_link, dler
 
@@ -407,7 +447,7 @@ def process_the_episodes_to_download():
             # print('First Process the whole season request')
             # print(f'Whole season -> {epi_to_download[2]}, Season Info {season_info}')
             processed = do_api_process(epi_to_download, season_info[0])
-            if verbose:
+            if vli:
                 print(f'Whole Season Processed is {processed}')
             if processed[0]:
                 print(f'Whole Season Processed is {processed}')
@@ -430,7 +470,7 @@ def process_the_episodes_to_download():
             else:
                 display_status(processed, epi_to_download, do_text, season_info[0])
                 downloaded_show = ''
-                if verbose:
+                if vli:
                     print('If Whole Season is not downloading try the first episode of the season')
                 processed = do_api_process(epi_to_download, season_info[1])
                 if processed[0]:
@@ -462,24 +502,27 @@ def process_the_episodes_to_download():
     First get all the supporting lists we use
 '''
 
-args = docopt(__doc__, version='Actions Release 0.9.5')
-# print(args)
-if args['-v']:
-    verbose = True
-    print(f'Verbose Logging is turned on')
-else:
-    verbose = False
+options = docopt(__doc__, version='Shows Release 0.9.5')
+vli = False
+vlw = True
+if options['--vl'].lower() == 'a':
+    vli = True
+elif options['--vl'].lower() == 'i':
+    vli = True
+if vli:
+    print(f'verbosity levels Informational {vli} and Warnings {vlw}')
+    print(options)
 
-print(f'Starting Actions with download={args["-d"]} and review={args["-r"]}')
+print(f'Starting Actions with download={options["-d"]} and review={options["-r"]}')
 download_apis = get_download_apis()
 if not download_apis:
     print(f"Main Program: Error getting Download Options: {download_apis}")
     quit()
 
-if args['-r']:
+if options['-r']:
     process_new_shows()
-if args['-d']:
+if options['-d']:
     process_the_episodes_to_download()
-if not args['-d'] and not args['-r']:
+if not options['-d'] and not options['-r']:
     print(f'Nothing to do, neither -r, -d or -rd cli args were supplied')
 print()
