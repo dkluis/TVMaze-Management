@@ -319,7 +319,7 @@ def process_new_shows():
             country = "Unknown"
         else:
             country = newshow[9]
-        print(f'{newshow[1].ljust(50)} {newshow[2].ljust(80)} {newshow[3].ljust(12)} {newshow[5].ljust(16)} '
+        print(f'{newshow[1].ljust(50)} {newshow[2].ljust(80)} {newshow[3].ljust(12)} {newshow[4].ljust(16)} '
               f'{premiered.ljust(12)} {language.ljust(15)} {str(length).ljust(12)} {network.ljust(24)} '
               f'{country.ljust(16)} {request}', end=":")
         command_str = 'open -a safari ' + newshow[2]
