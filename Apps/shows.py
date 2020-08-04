@@ -4,22 +4,27 @@ shows.py    The App that handles all actions for finding new shows, updating exi
             syncing our info with TVMaze's info
 
 Usage:
-  shows.py -u [-v]
-  shows.py -s [-v]
-  shows.py -i [-v]
+  shows.py -u [--vl=<vlevel>]
+  shows.py -s [--sp=<start_page>] [--ep=<end_page>] [--vl=<vlevel>]
+  shows.py -i [--sp=<start_page>] [--ep=<end_page>] [--vl=<vlevel>]
   shows.py -h | --help
   shows.py --version
 
 Options:
-  -h --help      Show this screen
-  -v             Verbose Logging
-  -u             The standard process to get all shows updated on TVMaze and update our info
-  -s             Use theTVMaze API to get the latest paged shows to sync our db
-                 (This is system check)
-                 (Not implemented)
-  -i             Initialize the shows info when starting out with TVMaze Management
-                 (Not implemented)
-  --version      Show version.
+  -h --help             Show this screen
+  -v                    Verbose Logging
+  --vl=<vlevel>         Level of verbosity (a = All, i = Informational, w = Warnings only) [default: w]
+  -u                    The standard process to get all shows updated on TVMaze and update our info
+  -s                    Using the TVMaze API to get the latest paged shows to sync our db
+                          (This is a system check, typically you want to have the start page about 5 pages less then
+                             the last page available Example --sp=195 --ep=200)
+                          (Not implemented)
+  --sp=<start_page>     Starting page to get TVMaze Show info [default: 0]
+  --ep=<end_page>       Ending page to get TVMaze Show info [default: 205]
+                          (At 2020--08-03 the ending page was 198)
+  -i                    Initialize the shows info when starting out with TVMaze Management initially
+                          (Not implemented)
+  --version             Show version.
 
 """
 
@@ -61,7 +66,6 @@ def process_show_info(rec, interest="New"):
         language = rec['language']
     else:
         language = "NA"
-    # Setting the default for classifying the show status/interest
     if rec['premiered'] is None:
         premiered = '2030-12-31'
     else:
@@ -81,10 +85,13 @@ def process_show_info(rec, interest="New"):
                 rec['type'] == 'Variety' or \
                 rec['type'] == 'Game Show':
             my_interest = "Skipped"
-        elif network == 'Youtube' or \
-                network == 'Youtube Premium' or \
-                network == 'Facebook Watch':
+        elif network == 'YouTube' or \
+                network == 'YouTube Premium' or \
+                network == 'Facebook Watch' or \
+                network == 'Quibi':
             my_interest = 'Skipped'
+    if my_interest == 'Skipped' and vli:
+        print(f'Skipping {rec} due to the interest rules')
     
     return {'network': network, 'country': country,
             'runtime': length, 'language': language,
@@ -94,37 +101,36 @@ def process_show_info(rec, interest="New"):
 def process_all_shows(start, end, sync):
     ind = start  # Enter the last page processed
     while ind <= end:  # Paging is going up to 250  # Remember last page processed here: 197
-        if verbose:
+        if vli:
             print('All Shows Processing TVMaze Page: ', ind)
         req = tvm_apis.shows_by_page + str(ind)
         response = execute_tvm_request(api=req, err=False)
-        if type(response) == bool:
-            if verbose:
-                print('Last TVMaze page found was:', ind - 1)
+        if vli:
+            print(f'Response to page request {ind} is {response}')
+        if response.status_code == 404:
+            print('Last TVMaze page found was:', ind - 1)
             break
         for res in response.json():
             result = execute_sql(sql="SELECT * from shows WHERE showid = {0}".format(res['id']), sqltype="Fetch")
             if not result:
-                if verbose:
-                    if verbose:
-                        print('Record Not Found:', result)
+                if vli:
+                    print('Inserting:', res['id'], res['name'])
                 # insert_show(res)
             else:
                 if sync:
-                    if verbose:
+                    if vli:
                         print('Syncing: ', res['id'], res['name'])
                     # update_show(res)
                 else:
-                    if verbose:
+                    if vli:
                         print("Found: ", res['id'], res['name'])
-        # time.sleep(1)
         ind = ind + 1
 
 
 def process_update_all_shows(mdb, mcur):
     response = execute_tvm_request(api=tvm_apis.updated_shows)
     response = response.json()
-    if verbose:
+    if vli:
         print('Number of Shows to potentially update', len(response))
     updated = 0
     inserted = 0
@@ -134,7 +140,7 @@ def process_update_all_shows(mdb, mcur):
     for key in response:
         processed = processed + 1
         if processed % 5000 == 0:
-            if verbose:
+            if vli:
                 print(f"Processed {processed} records. ")
         showid = key
         showupdated = response[key]
@@ -220,11 +226,11 @@ def process_update_all_shows(mdb, mcur):
                 updated = updated + 1
                 batch = batch + 1
                 if batch % 100 == 0:
-                    if verbose:
+                    if vli:
                         print(f"Commit of {batch} updated records")
                     mdb.commit()
     if batch != 0:
-        if verbose:
+        if vli:
             print("Final Commit of updated records")
         mdb.commit()
     print(f"Processed {processed} records. ")
@@ -255,14 +261,14 @@ def process_followed_shows():
                                 sql=f'SELECT showname, status from shows where showid={res["show_id"]}')
         if validates[0][1] != 'Followed':
             new_followed += 1
-            if verbose:
-                print(validates[0][0], validates[0][1])
+            if vli:
+                print(f'Process Followed shows {validates[0][0]}  {validates[0][1]}')
             result = execute_sql(sqltype='Commit', sql=f'UPDATE shows SET status="Followed", '
                                                        f'download="{def_downloader.dl}" WHERE showid={res["show_id"]}')
             if not result:
                 print(f'Update error on Shows table for show: {res["show_id"]} trying to make a followed show')
                 quit()
-            if verbose:
+            if vli:
                 print(f'Now following show {validates[0][0]}')
 
     un_followed = 0
@@ -285,7 +291,7 @@ def process_followed_shows():
         if not result:
             print(f'Update error on Shows table for show: {nf} trying to un-follow')
             quit()
-        if verbose:
+        if vli:
             print(f'Un-followed show {showname}')
 
     print(f"Updates performed based on TVMaze Followed status.  "
@@ -294,12 +300,15 @@ def process_followed_shows():
 
 ''' Main Program'''
 options = docopt(__doc__, version='Shows Release 0.9.5')
-if options['-v']:
-    verbose = True
-    print(f'Verbose Logging is turned on')
+vli = False
+vlw = True
+if options['--vl'].lower() == 'a':
+    vli = True
+elif options['--vl'].lower() == 'i':
+    vli = True
+if vli:
+    print(f'verbosity levels Informational {vli} and Warnings {vlw}')
     print(options)
-else:
-    verbose = False
 
 mdb_info = mdbi('', '')
 tvmaze = connect_mdb(d=mdb_info.db)
@@ -308,9 +317,10 @@ cur = tvmaze['mcursor']
 db.autocommit = False
 
 if options['-s']:
-    print("Starting to process all tvmaze show with updates (sync)")
+    print(f"Starting to process all tvmaze show with updates "
+          f"from page {int(options['--sp'])} to page {int(options['--ep'])} (sync)")
     print('Not fully implemented yet - no insert or update')
-    process_all_shows(196, 199, sync=True)
+    process_all_shows(int(options['--sp']), int(options['--ep']), sync=True)
 if options['-i']:
     print('Starting to process all tvmaze shows for initialize only')
     print('Not fully implemented yet - no insert or update')
