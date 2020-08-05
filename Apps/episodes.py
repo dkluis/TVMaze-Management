@@ -78,7 +78,7 @@ for show in shows:
             inserted += 1
         elif len(result) == 1:
             if epi['airdate'] is None or epi['airdate'] == '':
-                sql = generate_update_sql(epiname=epi['name'],
+                sql = generate_update_sql(str(epi['name']).replace('"', ' '),
                                           url=epi['url'],
                                           season=epi['season'],
                                           episode=epi['number'],
@@ -86,7 +86,7 @@ for show in shows:
                                           where=f"epiid={epi['id']}",
                                           table='episodes')
             else:
-                sql = generate_update_sql(epiname=epi['name'],
+                sql = generate_update_sql(epiname=str(epi['name']).replace('"', ' '),
                                           url=epi['url'],
                                           season=epi['season'],
                                           episode=epi['number'],
@@ -174,12 +174,23 @@ for res in result:
             print(f'Processed {count} records')
 
 print(f'Number of Episodes to reset is {len(ep_list)}')
-
 for epi in ep_list:
     result = execute_sql(sqltype='Commit', sql=f'UPDATE episodes '
                                                f'SET mystatus = NULL, mystatus_date = NULL '
                                                f'WHERE epiid = {epi}')
     if not result:
         print(f'Epi reset for {epi} went wrong {result}')
-
 print()
+
+# Checking to see if there are any episodes with no status on TVMaze for Followed shows set to skip downloading
+# and tracking so that we can set them to skipped on TVMaze
+
+eps_to_update = execute_sql(sqltype='Fetch', sql=tvm_views.eps_to_check)
+if len(eps_to_update) != 0:
+    print(f'There are {len(eps_to_update)} episodes to update')
+    for epi in eps_to_update:
+        baseurl = 'https://api.tvmaze.com/v1/user/episodes/' + str(epi[0])
+        epoch_date = int(date.today().strftime("%s"))
+        data = {"marked_at": epoch_date, "type": 2}
+        response = execute_tvm_request(baseurl, data=data, req_type='put', code=True)
+        print(f'Updating Epi {epi[0]} as Skipped since the Show download is set to Skip')

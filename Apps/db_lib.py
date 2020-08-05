@@ -338,6 +338,12 @@ class tvm_views:
                       "WHERE mystatus is NULL and airdate is not NULL and airdate <= subdate(current_date, 1) " \
                       "and download != 'Skip' " \
                       "ORDER BY showid asc, season asc, episode asc;"
+    eps_to_check = "SELECT e.*, s.download, s.showname FROM episodes e " \
+                   "JOIN shows s on e.showid = s.showid " \
+                   "WHERE s.status = 'Followed' " \
+                   "and s.download = 'Skip' " \
+                   "and e.mystatus is NULL " \
+                   "ORDER BY s.showid asc, e.season asc, e.episode asc;"
 
 
 class stat_views:
