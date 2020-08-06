@@ -632,7 +632,7 @@ while loop:
         log_file = '/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Logs/30M-Process.log'
         log_path = 'open -a /System/Applications/Utilities/Console.app ' + log_file
         os.system(log_path)
-        log_file = '/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Logs/Swift_Rep.log'
+        log_file = '/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Logs/Plex_TVM_update.log'
         log_path = 'open -a /System/Applications/Utilities/Console.app ' + log_file
         os.system(log_path)
         log_file = '/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Logs/Plex-Cleanup.log'

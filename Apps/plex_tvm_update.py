@@ -182,7 +182,7 @@ def check_destination(sn, m):
     else:
         dd = plex_show_dir
         for ps in plex_kids_shows:
-            print(f'ps = {ps} and sn = {sn}')
+            # print(f'ps = {ps} and sn = {sn}')
             if ps.lower() in sn[0].lower():
                 dd = plex_kids_show_dir
                 break

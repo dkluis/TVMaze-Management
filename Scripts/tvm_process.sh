@@ -26,7 +26,7 @@ echo "$(date) TVMaze Half Hourly Update Started"
 echo ""
 echo ""
 echo "$(date) Downloads Move to Plex and Episode Status Update to TVMaze"
-python3 swift_rep.py >>$LogDir'/Swift_Rep.log'
+python3 plex_tvm_update.py >>$LogDir'/Plex_TVM_update.log'
 echo ""
 echo ""
 echo "$(date) TVMaze Shows"
