@@ -179,7 +179,7 @@ def get_eztv_options(show, seas):
         if vli:
             print(f'Prio returned {prio} for {showname}')
         if prio > 100:
-            size = size - 5
+            prio = prio - 5
             eztv_titles.append((prio, showname, magnet_link, size, 'eztv'))
     return eztv_titles
 
