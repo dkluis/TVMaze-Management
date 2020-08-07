@@ -68,10 +68,10 @@ Main Functions are:
 ## Screenshots
 
 * Console
-    * ![Console Menu](https://github.com/dkluis/TVMaze-Management/blob/dev/Docs/Pics/console_shot1.jpg)
+  ![Console Menu](https://github.com/dkluis/TVMaze-Management/blob/dev/Docs/Pics/console_shot1.jpg)
 * Dashboard
-    * ![Dashboard Top of the page](https://github.com/dkluis/TVMaze-Management/blob/dev/Docs/Pics/dashboard_part1.jpg)
-    * ![Dashboard Bottom of the page](https://github.com/dkluis/TVMaze-Management/blob/dev/Docs/Pics/dashboard_part2.jpg)
+  ![Dashboard Top of the page](https://github.com/dkluis/TVMaze-Management/blob/dev/Docs/Pics/dashboard_part1.jpg)
+  ![Dashboard Bottom of the page](https://github.com/dkluis/TVMaze-Management/blob/dev/Docs/Pics/dashboard_part2.jpg)
     
 # _Functions & Features:_
 
