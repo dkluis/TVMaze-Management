@@ -25,16 +25,16 @@ def gather_all_key_info():
     px_processed_dir = str(px_processed_dir[0][0]).split(',')[0]
     px_trash_dir = execute_sql(sqltype='Fetch', sql='SELECT info FROM key_values where `key` = "plextrash"')
     px_trash_dir = str(px_trash_dir[0][0]).split(',')[0]
-    return px_extensions, px_prefs, px_source_dir, px_movie_dir, px_show_dir, px_kids_show_dir, px_kids_shows, \
-           px_do_not_move, px_processed_dir, px_trash_dir
+    return px_extensions, px_prefs, px_source_dir, px_movie_dir, px_show_dir, px_kids_show_dir, \
+           px_kids_shows, px_do_not_move, px_processed_dir, px_trash_dir
 
 
 def get_all_episodes_to_update():
     ttps = []
     try:
         transmissions = open('/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Logs/Transmission.log')
-    except IOError as err:
-        # print(f'Transmission file did not exist: {err}')
+    except IOError as er:
+        print(f'Transmission file did not exist: {er}')
         return ttps
     
     for ttp in transmissions:
@@ -162,7 +162,7 @@ def check_file_ext(file):
         if file[-3:] == ext:
             return True
     return False
-    
+
 
 def cleanup_name(dl):
     sf = str(dl).split('/')
@@ -215,7 +215,7 @@ def update_tvmaze(showinfo, found_showid):
         else:
             for epi in found_epiid:
                 update_tvmaze_episode_status(epi[0])
-                print(f"Updated TVMaze as downloaded for {epi[2]}, Season {epi[5]}, Episode {epi[6]}")
+                print(f"Updated TVMaze as downloaded for {epi[2]}, Season {epi[4]}, Episode {epi[5]}")
 
 
 '''
@@ -239,7 +239,6 @@ if not cli_download:
                    rf'/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Logs/Archived/Transmission - {t}.log')
 else:
     download.append(cli_download)
-    
 
 key_info = gather_all_key_info()
 plex_extensions = key_info[0]
@@ -316,9 +315,11 @@ for dl in download:
                 # print(f'Processing F: {f}')
                 for e in fedl:
                     # print(f'Processing E: {e}')
-                    sf = f + '/' + e
+                    if not dl_dir:
+                        sf = f
+                    else:
+                        sf = f + '/' + e
                     if movie:
-                        # ToDo finetune logic to intercept tv shows mis-classified as Movie due to
                         if "season" in str(sf).lower():
                             print(f'This might not be a movie it has the string "season" embedded --> {sf}')
                             skip = True
@@ -370,4 +371,3 @@ for dl in download:
                 update_tvmaze(ds, de)
 
 quit()
-

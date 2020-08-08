@@ -316,14 +316,9 @@ def follow_a_show(si):
 
 
 def skip_a_followed_show(si):
-    # First set the all-show info to Skipped
     result = execute_sql(sqltype='Commit', sql=f"UPDATE shows SET download = 'Skip' WHERE `showid` = {si};")
     if not result:
         return False
-    # Second set all none watched shows to Skipped in the episode table
-    # Todo set the shows episodes to Skip on TVMaze
-    # Get lis of all NULL or Downloaded eps
-    # Iterate and update TVMaze to Skip
     return True
 
 
