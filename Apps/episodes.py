@@ -8,6 +8,7 @@ Usage:
   episodes.py -h | --help
   episodes.py --version
 
+
 Options:
   -h --help             Show this screen
   --vl=<vlevel>         Level of verbosity (a = All, i = Informational, w = Warnings only) [default: w]
@@ -77,8 +78,10 @@ for show in shows:
             execute_sql(sql=sql, sqltype='Commit')
             inserted += 1
         elif len(result) == 1:
+            if vli:
+                print(f'Working on EPI: {epi["id"]}')
             if epi['airdate'] is None or epi['airdate'] == '':
-                sql = generate_update_sql(str(epi['name']).replace('"', ' '),
+                sql = generate_update_sql(epiname=str(epi['name']).replace('"', ' '),
                                           url=epi['url'],
                                           season=epi['season'],
                                           episode=epi['number'],
