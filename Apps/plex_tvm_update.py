@@ -1,3 +1,21 @@
+
+"""
+
+transmission.py The App that handles all transmission generated files (or directories) by processing the
+                transmission log and archiving it.  And updatign TVMaze that the show or movie has been acquired.
+
+Usage:
+  transmission.py [--vl=<vlevel>] [<to_process>]
+  transmission.py -h | --help
+  transmission.py --version
+
+Options:
+  -h --help      Show this screen
+  --vl=<vlevel>  Level of verbosity (a = All, i = Informational, w = Warnings only) [default: w]
+  --version      Show version.
+
+"""
+
 from db_lib import execute_sql
 from tvm_api_lib import execute_tvm_request
 import os
@@ -6,6 +24,7 @@ import shutil
 import sys
 from datetime import date
 from time import strftime
+from docopt import docopt
 
 
 def gather_all_key_info():
@@ -34,7 +53,8 @@ def get_all_episodes_to_update():
     try:
         transmissions = open('/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Logs/Transmission.log')
     except IOError as er:
-        print(f'Transmission file did not exist: {er}')
+        if vli:
+            print(f'Transmission file did not exist: {er}')
         return ttps
     
     for ttp in transmissions:
@@ -44,14 +64,6 @@ def get_all_episodes_to_update():
             continue
         ttps.append(ttp[:-1])
     return ttps
-
-
-def get_cli_args():
-    clis = sys.argv
-    if len(clis) < 2:
-        # print('No download info provided in the command line')
-        return False
-    return clis[1]
 
 
 def find_showname(download):
@@ -96,30 +108,34 @@ def find_showname(download):
 
 
 def find_showid(asn):
-    # print(f'Find Show ID via alt_showname: {asn}')
+    if vli:
+        print(f'Find Show ID via alt_showname: {asn}')
     result = execute_sql(sqltype='Fetch', sql=f"SELECT showid FROM shows "
                                               f"WHERE alt_showname like '{asn}' AND status = 'Followed'")
     if len(result) < 1:
-        # print("Show not found: ---> ", "'" + asn + "'")
+        if vli:
+            print("Show not found: ---> ", "'" + asn + "'")
         if str(asn[len(asn) - 4:]).isnumeric():
             result = execute_sql(sqltype='Fetch', sql=f"SELECT showid FROM shows "
                                                       f"WHERE alt_showname like '{asn[:-5]}' AND status = 'Followed'")
             if len(result) < 1:
-                # print("Show without last 4 characters not found: ---> ", "'" + asn[:-5] + "'")
+                if vli:
+                    print("Show without last 4 characters not found: ---> ", "'" + asn[:-5] + "'")
                 pass
             else:
-                # print("Show without last 4 characters found: ---> ", "'" + asn[:-5] + "'")
+                if vli:
+                    print("Show without last 4 characters found: ---> ", "'" + asn[:-5] + "'")
                 return result[0][0]
         return False
     return result[0][0]
 
 
 def find_epiid(si, s, e, is_epi):
-    if is_epi and e != 0:
-        result = execute_sql(sqltype='Fetch', sql=f'SELECT * FROM  episodes '
+    if is_epi and e == 0:
+        result = execute_sql(sqltype='Fetch', sql=f'SELECT * FROM episodes '
                                                   f'WHERE showid = {si} AND season = {s} AND episode is NULL')
     elif is_epi:
-        result = execute_sql(sqltype='Fetch', sql=f'SELECT * FROM  episodes '
+        result = execute_sql(sqltype='Fetch', sql=f'SELECT * FROM episodes '
                                                   f'WHERE showid = {si} AND season = {s} AND episode = {e}')
     else:
         result = execute_sql(sqltype='Fetch', sql=f'SELECT * FROM  episodes '
@@ -132,12 +148,13 @@ def find_epiid(si, s, e, is_epi):
                 print(f'Episodes of {si} for season {s} were watched before')
             else:
                 print(f'Episode of {si} for season {s} and episode {2} was watched before')      
-        return False
+            return False
     return result
 
 
 def update_tvmaze_episode_status(epiid):
-    # print("Updating", epiid)
+    if vli:
+        print("Updating", epiid)
     baseurl = 'https://api.tvmaze.com/v1/user/episodes/' + str(epiid)
     epoch_date = int(date.today().strftime("%s"))
     data = {"marked_at": epoch_date, "type": 1}
@@ -147,7 +164,8 @@ def update_tvmaze_episode_status(epiid):
 
 def check_exist(file_dir):
     check = str(plex_source_dir + file_dir).lower()
-    # print(f'Check File Dir with {check}')
+    if vli:
+        print(f'Check File Dir with {check}')
     ch_path = os.path.exists(check)
     ch_isdir = os.path.isdir(check)
     # print(f'Check Exist: {ch_path}, {ch_isdir}')
@@ -155,9 +173,11 @@ def check_exist(file_dir):
 
 
 def check_file_ext(file):
-    # print(f'Check File Ext {file}')
+    if vli:
+        print(f'Check File Ext {file}')
     for ext in plex_extensions:
-        # print(f'Check File Ext: {ext} with {file[-3:]}')
+        if vli:
+            print(f'Check File Ext: {ext} with {file[-3:]}')
         if file[-3:] == ext:
             return True
     return False
@@ -181,7 +201,8 @@ def check_destination(sn, m):
     else:
         dd = plex_show_dir
         for ps in plex_kids_shows:
-            # print(f'ps = {ps} and sn = {sn}')
+            if vli:
+                print(f'ps = {ps} and sn = {sn}')
             if ps.lower() in sn[0].lower():
                 dd = plex_kids_show_dir
                 break
@@ -189,9 +210,11 @@ def check_destination(sn, m):
 
 
 def check_file_ignore(fi):
-    # print(f'Starting to check {fi} type {type(fi)}with all of {plex_do_not_move}, type {type(plex_do_not_move)}')
+    if vli:
+        print(f'Starting to check {fi} type {type(fi)}with all of {plex_do_not_move}, type {type(plex_do_not_move)}')
     for ign in plex_do_not_move:
-        # print(f'Checking for {ign}, type {type(ign)}')
+        if vli:
+            print(f'Checking for {ign}, type {type(ign)}')
         if ign in str(fi.lower()):
             return True
     return False
@@ -221,23 +244,34 @@ def update_tvmaze(showinfo, found_showid):
 Main Program start
 '''
 
-cli_download = get_cli_args()
-cli = True
-download = []
-
-if not cli_download:
-    # print(f'Now processing the transmission log')
+options = docopt(__doc__, version='Transmission Release 0.9.5')
+vli = False
+vlw = True
+if options['--vl'].lower() == 'a':
+    vli = True
+elif options['--vl'].lower() == 'i':
+    vli = True
+if vli:
+    print(f'verbosity levels Informational {vli} and Warnings {vlw}')
+    print(options)
+if options['<to_process>']:
+    download = [options['<to_process>']]
+    cli = True
+else:
     cli = False
     download = get_all_episodes_to_update()
-    if len(download) == 0:
-        print(f'Nothing to Process in the transmission log')
-        quit()
-    else:
-        t = strftime("%U-%a-at-%X")
-        os.replace(r'/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Logs/Transmission.log',
-                   rf'/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Logs/Archived/Transmission - {t}.log')
-else:
-    download.append(cli_download)
+    
+if len(download) == 0:
+    print(f'Nothing to Process in the transmission log')
+    quit()
+
+if vli:
+    print(f'Download = {download}')
+
+if not cli:
+    t = strftime("%Y-%m-%d-%I-%M-%S ")
+    os.replace(r'/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Logs/Transmission.log',
+               rf'/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Logs/Archived/{t}Transmission.log')
 
 key_info = gather_all_key_info()
 plex_extensions = key_info[0]
@@ -255,7 +289,8 @@ for dl in download:
     edl = []  # Shows / Movies
     fedl = []  # Files
     ndl = []  #
-    # print(f'Processing download {dl}')
+    if vli:
+        print(f'Processing download {dl}')
     dl_check = check_exist(dl)
     dl_exist = dl_check[0]
     if dl_exist:
@@ -264,7 +299,8 @@ for dl in download:
         print(f'Transmission input "{plex_source_dir + dl}" does not exist ')
         continue
     else:
-        # print(f'Transmission input "{plex_source_dir + dl}" exist and directory is {dl_dir} ')
+        if vli:
+            print(f'Transmission input "{plex_source_dir + dl}" exist and directory is {dl_dir} ')
         dl = plex_source_dir + dl
         edl.append(dl)
         if not dl_dir:
@@ -274,30 +310,41 @@ for dl in download:
             else:
                 print(f'No File found with the right extension {dl}:  {plex_extensions}')
         else:
-            # print(f'Do the directory process and find all files')
+            if vli:
+                print(f'Do the directory process and find all files')
             dirfiles = os.listdir(dl)
-            # print(f'All files to process {dirfiles}')
+            if vli:
+                print(f'All files to process {dirfiles}')
             for df in dirfiles:
                 dfn = dl + '/' + df
                 dfe = check_file_ext(dfn)
-                # print(f'Checked {dfn} and result is {dfe}')
+                if vli:
+                    print(f'Checked {dfn} and result is {dfe}')
                 if dfe:
                     ignore = check_file_ignore(df)
                     if not ignore:
                         fedl.append(df)
-        # print(f'Working on edl {edl} \n, with fedl {fedl}')
+        if vli:
+            print(f'Working on edl {edl} \n, with fedl {fedl}')
         if len(fedl) == 0:
             print(f'Found no video files to move for {dl}')
             if os.path.exists(dl):
-                # print(f'Deleted {dl}')
-                shutil.move(dl, plex_trash_dir)
+                t = strftime(" %Y-%m-%d-%I-%M-%S")
+                print(f'Moving to Trash {dl}')
+                try:
+                    shutil.move(dl, f'{plex_trash_dir}/{dl + t}')
+                except OSError as err:
+                    print(f'Deleted directly instead {dl}')
+                    shutil.rm(d)
             continue
         else:
             d = str(dl).replace(' ', '.')
             dc = cleanup_name(d)
-            # print(f'Cleaned Name "{dc}"')
+            if vli:
+                print(f'Cleaned Name "{dc}"')
             ds = find_showname(dc)
-            # print(f'Find Showname output: {ds}')
+            if vli:
+                print(f'Find Showname output: {ds}')
             if not ds[0]:
                 movie = True
                 fn = str(d).split('/')
@@ -306,14 +353,17 @@ for dl in download:
             else:
                 movie = False
                 de = find_showid(ds[0])
-                # print(f'Showid is {de}')
+                if vli:
+                    print(f'Showid is {de}')
                 dest_dir = check_destination(ds, movie)
                 du = dest_dir + str(ds[0]).title() + '/Season ' + str(ds[2]) + '/'
             for f in edl:
                 skip = False
-                # print(f'Processing F: {f}')
+                if vli:
+                    print(f'Processing F: {f}')
                 for e in fedl:
-                    # print(f'Processing E: {e}')
+                    if vli:
+                        print(f'Processing E: {e}')
                     if not dl_dir:
                         sf = f
                     else:
@@ -326,7 +376,8 @@ for dl in download:
                             print(f'This might not be a movie it has the string "part" embedded --> {sf}')
                             skip = True
                         if dl_dir:
-                            # print(f'Movie with Directory working on du {du} and e {e} and f {f}')
+                            if vli:
+                                print(f'Movie with Directory working on du {du} and e {e} and f {f}')
                             fn = str(e).split('/')
                             fn = fn[len(fn) - 1]
                             to = plex_movie_dir + fn
@@ -354,14 +405,14 @@ for dl in download:
             if not chd:
                 pass
             elif os.path.exists(chd):
-                # t = strftime("%U-%a-at-%X")
                 if skip:
                     print(f'Moved {d} to {plex_processed_dir}')
                     shutil.move(d, plex_processed_dir)
                 else:
-                    print(f'Moved to Trash {d}')
+                    t = strftime(" %Y-%m-%d-%I-%M-%S")
+                    print(f'Moved to Trash {d + t}')
                     try:
-                        shutil.move(d, plex_trash_dir)
+                        shutil.move(d, f'{plex_trash_dir}/{d + t}')
                     except OSError as err:
                         print(f'Deleted directly instead {d}')
                         shutil.rmtree(d)
