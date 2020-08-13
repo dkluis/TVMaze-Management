@@ -1,22 +1,42 @@
+
+"""
+
+transmission.py The App that handles all transmission generated files (or directories) by processing the
+                transmission log and archiving it.  And updatign TVMaze that the show or movie has been acquired.
+
+Usage:
+  transmission.py [--vl=<vlevel>] [<to_process>]
+  transmission.py -h | --help
+  transmission.py --version
+
+Options:
+  -h --help      Show this screen
+  --vl=<vlevel>  Level of verbosity (a = All, i = Informational, w = Warnings only) [default: w]
+  --version      Show version.
+
+"""
+
+
 from db_lib import execute_sql
 from tvm_api_lib import execute_tvm_request
-import os
 
+import os
 import sys
 from datetime import date
 from time import strftime
-
+from docopt import docopt
 
 def get_all_episodes_to_update():
     ttps = []
     try:
         transmissions = open('/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Logs/Transmission.log')
     except IOError as err:
-        # print(f'Transmission file did not exist: {err}')
+        if vli:
+            print(f'Transmission file did not exist: {err}')
         return ttps
     
     for ttp in transmissions:
-        if ' Swift ' in ttp:
+        if ' Transmission ' in ttp:
             continue
         if len(ttp) < 5:
             continue
@@ -27,7 +47,8 @@ def get_all_episodes_to_update():
 def get_cli_args():
     clis = sys.argv
     if len(clis) < 2:
-        # print('No download info provided in the command line')
+        if vli:
+            print('No download info provided in the command line')
         return False
     return clis[1]
 
@@ -126,16 +147,29 @@ def update_tvmaze_episode_status(epiid):
 '''
 Main Program start
 '''
-download = get_cli_args()
-cli = True
-if not download:
-    # print(f'Now processing the transmission log')
+
+options = docopt(__doc__, version='Transmission Release 0.9.5')
+vli = False
+vlw = True
+if options['--vl'].lower() == 'a':
+    vli = True
+elif options['--vl'].lower() == 'i':
+    vli = True
+if vli:
+    print(f'verbosity levels Informational {vli} and Warnings {vlw}')
+    print(options)
+if options['<to_process>']:
+    download = options['<to_process>']
+    cli = True
+else:
     cli = False
     download = get_all_episodes_to_update()
     if len(download) == 0:
         print(f'Nothing to Process in the transmission log')
         quit()
-
+        
+if vli:
+    print(f'Download = {download}')
 
 plexprefs = execute_sql(sqltype='Fetch', sql="SELECT info FROM key_values WHERE `key` = 'plexprefs'")[0]
 plexprefs = str(plexprefs).replace('(', '').replace(')', '').replace("'", "")
@@ -143,11 +177,13 @@ plexprefs = str(plexprefs).split(',')
 ndl = []
 
 if cli:
-    # print(f'Processing {download}')
+    if vli:
+        print(f'Processing {download}')
     for plexpref in plexprefs:
         plexpref = plexpref.lower()
         dl = download.lower()
-        # print(f'Trying download "{dl}" with string "{plexpref}"')
+        if vli:
+            print(f'Trying download "{dl}" with string "{plexpref}"')
         if plexpref in dl:
             ndl.append(str(dl).replace(plexpref, "").replace(' ', '.'))
             break
@@ -171,9 +207,11 @@ if len(ndl) == 0:
     print(f'Nothing to process: NDL = {ndl} and downloads are: {download}')
 
 for dl in ndl:
-    print(f'Processing Download {dl}')
+    if vli:
+        print(f'Processing Download {dl}')
     showinfo = find_showname(dl)
-    # print(f'Processing Showinfo {showinfo}')
+    if vli:
+        print(f'Processing Showinfo {showinfo}')
     if not showinfo[0]:
         print(f"Processing as a movie {dl}")
     else:
@@ -182,7 +220,8 @@ for dl in ndl:
         season = showinfo[2]
         is_episode = showinfo[3]
         episode = showinfo[4]
-        # print("Looking for:", showname, season, episode, is_episode)
+        if vli:
+            print("Looking for:", showname, season, episode, is_episode)
         found_showid = find_showid(showname)
         if found_showid:
             found_epiid = find_epiid(found_showid, season, episode, is_episode)
@@ -196,8 +235,7 @@ for dl in ndl:
                     update_tvmaze_episode_status(epi[0])
                     print(f"Updated TVMaze as downloaded for {epi[2]}, Season {epi[5]}, Episode {epi[6]}")
 
-quit()
 if not cli:
-    t = strftime("%U-%a-at-%X")
+    t = strftime("%Y-%m-%d-%I-%M-%S ")
     os.replace(r'/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Logs/Transmission.log',
-               rf'/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Logs/Archived/Transmission - {t}.log')
+               rf'/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Logs/Archived/{t}Transmission.log')
