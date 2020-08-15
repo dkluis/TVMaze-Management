@@ -1,15 +1,13 @@
 """
 
-plex_extract.py   The App that runs on the Plex Server Machine and extracts the relevant Plex data needed
-                  by TVM-Management.  Currently only the episodes that Plex has marked as watched.
+plex_extract_processing.py   The App that picks up and processes the extracted Plex info into TVM Management
 
 Usage:
-  plex_extract.py [-a] [--vl=<vlevel>]
-  plex_extract.py -h | --help
-  plex_extract.py --version
+  plex_extract_processing.py [--vl=<vlevel>]
+  plex_extract_processing.py -h | --help
+  plex_extract_processing.py --version
 
 Options:
-  -a             Extract all watched episodes from Plex otherwise only the ones since yesterday
   -h --help      Show this screen
   --vl=<vlevel>  Level of verbosity
                  1 = Warnings & Errors Only, 2 = High Level Info, 3 = Medium Level Info, 4 = Low Level Info, 5 = All
@@ -21,6 +19,8 @@ Options:
 from docopt import docopt
 import sqlite3
 import os
+
+from db_lib import execute_sql
 
 
 class sdb_info:
@@ -76,7 +76,25 @@ def execute_sqlite(sqltype='', sql=''):
         return result
     else:
         return False, 'Not implemented yet'
-    
+
+
+def fix_showname(sn):
+    sn = sn.replace(" : ", " ").replace("vs.", "vs").replace("'", "").replace(":", '').replace("&", "and")
+    if sn[-1:] == " ":
+        sn = sn[:-1]
+    lsix = sn[-6:]
+    if lsix[0] == "(" and lsix[5] == ")":
+        sn = sn[:-7]
+    lfour = sn[-4:]
+    if lfour.lower() == "(us)":
+        sn = sn[:-5]
+    if lfour.isnumeric():
+        sn = sn[:-5]
+    ltree = sn[-3:]
+    if ltree.lower() == " us":
+        sn = sn[:-3]
+    return sn
+
 
 ''' Main Program'''
 ''' Get Options'''
@@ -108,7 +126,7 @@ watched_episodes = execute_sqlite(sqltype='Fetch', sql=sqlw)
 if not watched_episodes:
     print(f'Reading Plex DB while trying to get the watched episodes {watched_episodes}')
     quit()
-    
+
 check = os.getcwd()
 if 'Pycharm' in check:
     wetxt = '/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Data/Plex_Watched_Episodes.txt'
@@ -126,7 +144,7 @@ for episode in watched_episodes:
     ew += 1
     if vli > 2:
         print(f'Processed {episode}')
-        
+
 we.close()
 if vli > 1:
     print(f'Found Plex Episodes {len(watched_episodes)} and written {ew} to file')
