@@ -24,6 +24,7 @@ Options:
 """
 
 from docopt import docopt
+
 args = docopt(__doc__, version='Try Release 1.0')
 print(args)
 print(f'Option -d was selected {args["-d"]}')
@@ -33,4 +34,3 @@ print(f'Option -m was selected {args["-m"]} show = {args["<mshow>"]} episode = {
 print(f'Option -s was selected {args["-s"]} list of show = {args["<sshow>"]}')
 print(f'Option -b was selected {args["-b"]} DB schema to use = {args["--db"]}')
 print(f'Option -v was selected {args["-v"]}')
-

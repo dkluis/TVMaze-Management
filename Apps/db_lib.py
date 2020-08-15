@@ -40,7 +40,6 @@ class mdbi:
 
 def connect_mdb(h='', d='', err=True):
     mdb_info = mdbi(h, d)
-    # print(f'Connecting to {mdb_info.db}')
     try:
         mdb = mariadb.connect(
             host=mdb_info.host,
@@ -66,7 +65,6 @@ def connect_pd():
     mdb_info = mdbi('', '')
     sql_alchemy = f'mysql://{mdb_info.user}:{mdb_info.password}@{mdb_info.host}/{mdb_info.db}'
     mdbe = create_engine(sql_alchemy)
-    # print(f'Connected to TVMazeDB for Pandas DataFrame Connections {mdbe}')
     return mdbe
 
 
@@ -116,10 +114,14 @@ def execute_sql(con='', db='', cur='', batch='', h='', d='', sqltype='', sql='')
         return False, 'Not implemented yet'
 
 
-''' Old SQLite Stuff
+'''
 class sdb_info:
-    data = '/Users/dick/PycharmProjects/TVMaze/Data/TVMaze.db'
-
+    check = os.getcwd()
+    if 'Pycharm' in check:
+        data = '/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/Plex DB/com.plexapp.plugins.library.db'
+    else:
+        data = '/Users/dick/PycharmProjects/TVMaze/Data/TVMaze.db'
+    
 
 def connect_sdb():
     sdb = sqlite3.connect(sdb_info.data)
@@ -144,9 +146,9 @@ def execute_sqlite(sqltype='', sql=''):
         except sqlite3.Error as er:
             print('Commit Database Error: ', er, sql)
             print('----------------------------------------------------------------------')
-            close_mdb(sdbdb)
+            close_sdb(sdbdb)
             return False, er
-        close_mdb(sdbdb)
+        close_sdb(sdbdb)
         return True
     elif sqltype == "Fetch":
         try:
@@ -155,9 +157,9 @@ def execute_sqlite(sqltype='', sql=''):
         except sqlite3.Error as er:
             print('Execute SQL Database Error: ', er, sql)
             print('----------------------------------------------------------------------')
-            close_mdb(sdbdb)
+            close_sdb(sdbdb)
             return False, er
-        close_mdb(sdbdb)
+        close_sdb(sdbdb)
         return result
     else:
         return False, 'Not implemented yet'
