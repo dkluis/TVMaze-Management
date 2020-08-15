@@ -108,9 +108,9 @@ elif vli > 1:
 '''Get Plex Watched Episodes'''
 check = os.getcwd()
 if 'Pycharm' in check:
-    wetxt = '/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Data/Plex_Watched_Episodes.txt'
+    wetxt = '/Volumes/HD-Data-CA-Server/Development/PycharmProjects/TVM-Management/Data/Plex_Watched_Episodes.txt'
 else:
-    wetxt = '/Volumes/HD-Media-CA-Media/PlexMedia/PlexProcessing/TVMaze/Data/Plex_Watched_Episodes.txt'
+    wetxt = '/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Data/Plex_Watched_Episodes.txt'
 
 try:
     we = open(wetxt, "r")

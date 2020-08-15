@@ -147,6 +147,9 @@ def process_update_all_shows(mdb, mcur):
                              sql="SELECT * from shows WHERE showid = {0}".format(showid), sqltype="Fetch")
         if not result:
             showinfo = execute_tvm_request(f'http://api.tvmaze.com/shows/{showid}')
+            if not showinfo:
+                print(f'Working on {key} in response and cannot find the show info {showinfo}')
+                continue
             showinfo = showinfo.json()
             si = process_show_info(showinfo)
             sql = generate_insert_sql(
