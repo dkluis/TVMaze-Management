@@ -17,10 +17,11 @@ Options:
 """
 
 from docopt import docopt
-import sqlite3
 import os
+from datetime import date
 
 from db_lib import execute_sql
+from tvm_api_lib import execute_tvm_request
 
 
 def fix_showname(sn):
@@ -61,6 +62,39 @@ def find_show(ssn):
     return records
 
 
+def find_plex_show(psn):
+    p_sql = f"select showid from plex_shows where showname = {psn}"
+    record = execute_sql(sqltype='Fetch', sql=p_sql)
+    return record
+
+
+def update_tvmaze_episode_status(epiid):
+    if vli:
+        print("Updating", epiid)
+    baseurl = 'https://api.tvmaze.com/v1/user/episodes/' + str(epiid)
+    epoch_date = int(date.today().strftime("%s"))
+    data = {"marked_at": epoch_date, "type": 0}
+    response = execute_tvm_request(baseurl, data=data, req_type='put', code=True)
+    return response
+
+
+def do_update_tvmaze(pid, ps, pe, pw):
+    epi_sql = f"select epiid, mystatus from episodes where showid = {pid} and season = {ps} and episode = {pe}"
+    epi_info = execute_sql(sqltype='Fetch', sql=epi_sql)
+    if len(epi_info) == 0:
+        print(f'Episode not found show {pid}, season {ps}, episode {pe}')
+        return False
+    if vli > 3:
+        print(f'Episode {epi_info[0][0]} found for show {pid}, season {ps}, episode {pe} with status {epi_info[0][1]}')
+    if epi_info[0][1] == 'Watched':
+        return True
+    result = update_tvmaze_episode_status(epi_info[0][0])
+    if not result:
+        return False
+    else:
+        return True
+    
+    
 ''' Main Program'''
 ''' Get Options'''
 options = docopt(__doc__, version='Plex Extract Release 0.1')
@@ -92,15 +126,26 @@ for episode in we:
     plex_season = epi[1]
     plex_epi = epi[2]
     plex_watch_date = epi[3]
-    fsn = fix_showname(plex_sn)
-    found_show = find_show(fsn)
-    if not found_show:
-        found_show = [(None,)]
-    if vli > 3:
-        print(f'Found showid {found_show[0][0]} for {fsn}')
-    update_plex_shows(plex_sn, fsn, found_show[0][0])
-    if vli > 2:
-        print(f'Processed {plex_sn}, {fsn}, {plex_season}, {plex_epi}, {plex_watch_date}')
+    plex_show = find_plex_show(plex_sn)
+    if plex_show:
+        p_show = plex_show[0][0]
+        if vli > 3:
+            print(f'Found Show in Plex Shows {plex_sn} with id {p_show}')
+        result = do_update_tvmaze(p_show, plex_season, plex_epi, plex_watch_date)
+        if result:
+            if vli > 2:
+                print(f'Processed {plex_sn}, {plex_season}, {plex_epi}, {plex_watch_date}')
+        else:
+            print(f'Failed to Process {plex_sn}, {plex_season}, {plex_epi}, {plex_watch_date}')
+    else:
+        fsn = fix_showname(plex_sn)
+        found_show = find_show(fsn)
+        if not found_show:
+            found_show = [(None,)]
+        if vli > 3:
+            print(f'Found showid {found_show[0][0]} for {fsn}')
+        update_plex_shows(plex_sn, fsn, found_show[0][0])
+        print(f'Updated Plex Show with new entry {plex_sn}, {fsn}, {found_show[0][0]}')
     
 we.close()
 if vli > 1:

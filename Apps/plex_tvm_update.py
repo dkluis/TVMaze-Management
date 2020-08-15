@@ -21,7 +21,6 @@ from tvm_api_lib import execute_tvm_request
 import os
 import shutil
 
-import sys
 from datetime import date
 from time import strftime
 from docopt import docopt
