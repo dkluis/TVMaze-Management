@@ -24,6 +24,8 @@ Options:
 """
 
 from docopt import docopt
+from db_lib import execute_sql
+from tvm_api_lib import execute_tvm_request
 
 args = docopt(__doc__, version='Try Release 1.0')
 print(args)
@@ -34,3 +36,13 @@ print(f'Option -m was selected {args["-m"]} show = {args["<mshow>"]} episode = {
 print(f'Option -s was selected {args["-s"]} list of show = {args["<sshow>"]}')
 print(f'Option -b was selected {args["-b"]} DB schema to use = {args["--db"]}')
 print(f'Option -v was selected {args["-v"]}')
+
+etu_sql = "select epiid, airdate from episodes where mystatus = 'Watched' and mystatus_date is None"
+eps_to_update = execute_sql(sqltype='Fetch', sql=etu_sql.replace('None', 'NULL'))
+print(f'Number of Episodes to update: {len(eps_to_update)}')
+for eptu in eps_to_update:
+    print(f'Working on {eptu[0]} with date {eptu[1]}')
+    baseurl = 'https://api.tvmaze.com/v1/user/episodes/' + str(eptu[0])
+    epoch_date = eptu[1].strftime('%s')
+    data = {"marked_at": epoch_date, "type": 0}
+    response = execute_tvm_request(baseurl, data=data, req_type='put', code=True)

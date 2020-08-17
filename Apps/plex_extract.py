@@ -101,7 +101,7 @@ else:
         print(f'Getting Plex Watched Episodes since yesterday')
     sqlw = f"select grandparent_title, parent_index, `index`, viewed_at " \
            f"from metadata_item_views " \
-           f"where parent_index > 0 and metadata_type = 4 and viewed_at > date('now', '-1 day') " \
+           f"where parent_index > 0 and metadata_type = 4 and viewed_at > date('now', '-1 day') and account_id = 1 " \
            f"order by grandparent_title asc, parent_index asc, `index` asc"
 
 watched_episodes = execute_sqlite(sqltype='Fetch', sql=sqlw)
