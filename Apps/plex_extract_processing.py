@@ -40,15 +40,19 @@ def fix_showname(sn):
     ltree = sn[-3:]
     if ltree.lower() == " us":
         sn = sn[:-3]
+    sn = sn.strip()
     return sn
 
 
 def update_plex_shows(psn, sn, si):
-    f_sql = f"select * from plex_shows where showname = {psn}"
+    if si:
+        f_sql = f"select * from plex_shows where showid = {si}"
+    else:
+        f_sql = f"select * from plex_shows where showname = {psn} or showname = '{sn}'"
     recs = execute_sql(sqltype='Fetch', sql=f_sql)
     if len(recs) == 0:
         if vli > 3:
-            print(f'Insert a new records into Plex Shows for {psn}')
+            print(f'Insert a new records into Plex Shows for {psn}, {sn}, {si}')
         if si == 0:
             w_sql = f"insert into plex_shows values ({psn}, None, '{sn}')"
         else:
@@ -57,7 +61,7 @@ def update_plex_shows(psn, sn, si):
 
 
 def find_show(ssn):
-    s_sql = f"select showid from shows where showname = '{ssn}' or alt_showname = '{ssn}'"
+    s_sql = f"select showid from shows where status = 'Followed' and (showname = '{ssn}' or alt_showname = '{ssn}')"
     records = execute_sql(sqltype='Fetch', sql=s_sql)
     return records
 
@@ -69,8 +73,6 @@ def find_plex_show(psn):
 
 
 def update_tvmaze_episode_status(epiid):
-    if vli:
-        print("Updating", epiid)
     baseurl = 'https://api.tvmaze.com/v1/user/episodes/' + str(epiid)
     epoch_date = int(date.today().strftime("%s"))
     data = {"marked_at": epoch_date, "type": 0}
@@ -89,6 +91,8 @@ def do_update_tvmaze(pid, ps, pe, pw):
     if epi_info[0][1] == 'Watched':
         return True
     result = update_tvmaze_episode_status(epi_info[0][0])
+    if vli:
+        print(f"Updated TVMaze for show {pid} and {epi_info[0][0]} for {ps}, {pe} on {pw}")
     if not result:
         return False
     else:
