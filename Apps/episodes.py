@@ -38,9 +38,10 @@ if vli:
 
 started = timer()
 print(f'{str(datetime.now())} -> Starting to process recently updated episodes for insert and re-sync')
+shows_sql = "SELECT * FROM shows where status = 'Followed' and  (record_updated = current_date or eps_updated is None)"
+shows_sql = shows_sql.replace('None', 'Null')
+shows = execute_sql(sqltype='Fetch', sql=shows_sql)
 
-shows = execute_sql(sqltype='Fetch', sql="SELECT * FROM shows "
-                                         "where status = 'Followed' and  record_updated = current_date")
 # shows = [(32, "Fargo")]
 show_num = (len(shows))
 total_episodes = 0
