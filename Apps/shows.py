@@ -86,8 +86,7 @@ def process_show_info(rec, interest="New"):
             my_interest = "Skipped"
         elif network == 'YouTube' or \
                 network == 'YouTube Premium' or \
-                network == 'Facebook Watch' or \
-                network == 'Quibi':
+                network == 'Facebook Watch':
             my_interest = 'Skipped'
     if my_interest == 'Skipped' and vli:
         print(f'Skipping {rec} due to the interest rules')

@@ -27,7 +27,7 @@ echo "$(date) Downloads Move to Plex and Episode Status Update to TVMaze"
 python3 plex_tvm_update.py >>$LogDir'/Plex_TVM_update.log'
 echo ""
 echo "$(date) Plex Extract Processing to update TVMaze Watched status"
-python3 plex_extract_processing.py --vl=3 >>$LogDir'/Plex_Extract_Update.log'
+python3 plex_extract_processing.py --vl=5 >>$LogDir'/Plex_Extract_Update.log'
 echo ""
 echo "$(date) TVMaze Shows"
 python3 shows.py -u
