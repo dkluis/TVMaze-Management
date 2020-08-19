@@ -90,13 +90,20 @@ def do_update_tvmaze(pid, ps, pe, pw):
         print(f'Episode {epi_info[0][0]} found for show {pid}, season {ps}, episode {pe} with status {epi_info[0][1]}')
     if epi_info[0][1] == 'Watched':
         return True
-    result = update_tvmaze_episode_status(epi_info[0][0])
+    utes = update_tvmaze_episode_status(epi_info[0][0])
     if vli:
         print(f"Updated TVMaze for show {pid} and {epi_info[0][0]} for {ps}, {pe} on {pw}")
-    if not result:
+    if not utes:
         return False
     else:
         return True
+    
+    
+def find_plex_episodes(plex_sn, plex_season, plex_epi):
+    f_sql = f'select * from plex_episodes ' \
+            f'where showname = {plex_sn} and season = {plex_season} and episode = {plex_epi}'
+    fpe = execute_sql(sqltype='Fetch', sql=f_sql)
+    return fpe
     
     
 ''' Main Program'''
@@ -130,6 +137,18 @@ for episode in we:
     plex_season = epi[1]
     plex_epi = epi[2]
     plex_watch_date = epi[3]
+    found_pe = find_plex_episodes(plex_sn, plex_season, plex_epi)
+    if len(found_pe) != 0:
+        if found_pe[0][4]:
+            if vli > 3:
+                print(f'Already updated before {plex_sn}, {plex_season}, {plex_epi}, {plex_watch_date}')
+            continue
+    else:
+        ipe_sql = f'insert into plex_episodes values ' \
+                  f'({plex_sn}, {plex_season}, {plex_epi}, {plex_watch_date}, None, None)'
+        ipe_sql = ipe_sql.replace('None', 'NULL')
+        execute_sql(sqltype='Commit', sql=ipe_sql)
+    
     plex_show = find_plex_show(plex_sn)
     if plex_show:
         p_show = plex_show[0][0]
@@ -139,8 +158,14 @@ for episode in we:
         if result:
             if vli > 2:
                 print(f'Processed {plex_sn}, {plex_season}, {plex_epi}, {plex_watch_date}')
+            upe_sql = f'update plex_episodes set tvm_updated = current_date, tvm_update_status = "Watched" ' \
+                      f'where showname = {plex_sn} and season = {plex_season} and episode = {plex_epi}'
+            execute_sql(sqltype='Commit', sql=upe_sql)
         else:
             print(f'Failed to Process {plex_sn}, {plex_season}, {plex_epi}, {plex_watch_date}')
+            upe_sql = f'update plex_episodes set tvm_update_status = "Failed Update" ' \
+                      f'where showname = {plex_sn} and season = {plex_season} and episode = {plex_epi}'
+            execute_sql(sqltype='Commit', sql=upe_sql)
     else:
         fsn = fix_showname(plex_sn)
         found_show = find_show(fsn)

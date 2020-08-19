@@ -236,6 +236,6 @@ for dl in ndl:
                     print(f"Updated TVMaze as downloaded for {epi[2]}, Season {epi[5]}, Episode {epi[6]}")
 
 if not cli:
-    t = strftime("%Y-%m-%d-%I-%M-%S ")
+    t = strftime("%Y-%m-%d %H-%M-%S ")
     os.replace(r'/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Logs/Transmission.log',
                rf'/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Logs/Archived/{t}Transmission.log')
