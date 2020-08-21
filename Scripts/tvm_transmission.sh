@@ -1,13 +1,4 @@
 #!/bin/zsh
-
-### Automatic Script after Transmission download complete
-###   to move the video to the right Plex Directory
-###
-##
-#
-
-
-
 ### Setup Bash for Error Checking and Handling
 ## Setup catching variables that are not initialized
 #

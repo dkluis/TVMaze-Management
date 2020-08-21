@@ -1,20 +1,22 @@
 """
 
-action.py   The App that handles all actions for reviewing new shows and for downloading episodes based on the
-            episode air dates, future will be a manual request for an episode
+actions.py   The App that handles all actions for reviewing new shows and for downloading episodes based on the
+             episode air dates, future will be a manual request for an episode
 
 Usage:
-  action.py [-d] [-r] [--vl=<vlevel>]
-  action.py -f <show> <episode> [--vl=<vlevel>]
-  action.py -h | --help
-  action.py --version
+  actions.py [-d] [-r] [--vl=<vlevel>]
+  actions.py -f <show> <episode> [--vl=<vlevel>] Not Implemented Yet
+  actions.py -h | --help
+  actions.py --version
 
 Options:
   -h --help      Show this screen
   -d             Download all outstanding Episodes
   -r             Review all newly detected Shows
   -f             Find downloads for a Show and Episode (Episode can also be a whole season - S01E05 or S01)
-  --vl=<vlevel>  Level of verbosity (a = All, i = Informational, w = Warnings only) [default: w]
+  --vl=<vlevel>  Level of verbosity
+                   1 = Warnings & Errors Only, 2 = High Level Info,
+                   3 = Medium Level Info, 4 = Low Level Info, 5 = All  [default: 1]
   --version      Show version.
 
 """
@@ -45,7 +47,7 @@ def update_show_status(showid, status):
         sql = f'UPDATE shows SET status = "{status}", download = "{dl}" WHERE `showid` = {showid}'
     result = execute_sql(sqltype='Commit', sql=sql)
     if not result:
-        print(f'Error updating show status {result}')
+        print(f'{time.strftime("%D %T")} Actions: Error updating show status {result}')
     return
 
 
@@ -62,13 +64,15 @@ def update_tvmaze_episode_status(epiid):
     data = {"marked_at": epoch_date, "type": 1}
     response = requests.put(api, headers=headers, data=data)
     if response.status_code != 200:
-        print(f"Update TVMaze Episode Status: Error: {response} for episode: {api}")
+        print(f"{time.strftime('%D %T')} Actions: Update TVMaze Episode Status: Error: {response} for episode: {api}")
         return False
     return True
 
 
 def validate_requirements(filename, extension, epi_no, showname):
-    # print(f'Starting to validate for {filename}, --> {showname}, --> {epi_no}, and {extension}')
+    if vli > 2:
+        print(f'{time.strftime("%D %T")} Actions: '
+              f'Starting to validate for {filename}, --> {showname}, --> {epi_no}, and {extension}')
     res1 = '1080p'
     res2 = '720p'
     res3 = '480p'
@@ -96,15 +100,17 @@ def validate_requirements(filename, extension, epi_no, showname):
     elif 'repack' in filename.lower():
         priority += 5
     if showname:
-        if vli:
-            print(f'''Checking showname with filename {showname.replace(' ', '.').lower()} ---> {filename}.lower()''')
+        if vli > 2:
+            print(f'''{time.strftime('%D %T')} Actions: '''
+                  f'''Checking showname with filename {showname.replace(' ', '.').lower()} ---> {filename}.lower()''')
         if showname.replace(' ', '.').lower() not in filename.lower():
             priority = 0
         else:
             if str(epi_no.lower() + ".") not in filename.lower():
                 priority = 1
-    if vli:
-        print(f'Validated Requirement - Showname: {showname.replace(" ", ".").lower()} and got Priority: {priority}, '
+    if vli > 2:
+        print(f'{time.strftime("%D %T")} Actions: '
+              f'Validated Requirement - Showname: {showname.replace(" ", ".").lower()} and got Priority: {priority}, '
               f'Filename: {filename.lower()} and Season {epi_no}')
     return priority
 
@@ -133,8 +139,9 @@ def get_eztv_api_options(imdb_id, seas, showname):
         size = int(size)
         size = str(size).zfill(6)
         prio = validate_requirements(filename, True, seas, showname)
-        if vli:
-            print(f'Checking filename eztvAPI {filename} with {seas} got prio {prio}')
+        if vli > 2:
+            print(f'{time.strftime("%D %T")} Actions: '
+                  f'Checking filename eztvAPI {filename} with {seas} got prio {prio}')
         if prio > 100:
             download_options.append((prio, filename, mag_url, size, 'eztvAPI'))
     return download_options
@@ -157,6 +164,7 @@ def get_eztv_options(show, seas):
     if len(dloptions) == 0:
         return dloptions
     for dlo in dloptions:
+        size = 0
         split1 = str(dlo).split('href="')[1]
         magnet_link = str(split1).split('" rel=')[0]
         split1 = str(magnet_link).split(';dn=')[1]
@@ -173,11 +181,11 @@ def get_eztv_options(show, seas):
             size = float(s[0]) * 1000
             size = int(size)
             size = str(size).zfill(6)
-        if vli:
-            print(f"{dlo} \n Validating {showname}, True, {seas}, {show} ")
+        if vli > 2:
+            print(f"{time.strftime('%D %T')} Actions: {dlo} \n Validating {showname}, True, {seas}, {show} ")
         prio = validate_requirements(showname, True, seas, show)
-        if vli:
-            print(f'Prio returned {prio} for {showname}')
+        if vli > 2:
+            print(f'{time.strftime("%D %T")} Actions: Prio returned {prio} for {showname}')
         if prio > 100:
             prio = prio - 5
             eztv_titles.append((prio, showname, magnet_link, size, 'eztv'))
@@ -193,8 +201,10 @@ def get_rarbg_api_options(show, seas):
         main_request = main_request.json()
     else:
         return dl_options
-    if 'No results found' in str(main_request):
+    if f'No results found' in str(main_request):
         return dl_options
+    if vli > 4:
+        print(f'{time.strftime("%D %T")} Actions: Found main_request {main_request}')
     records = main_request['torrent_results']
     for record in records:
         name = record['title']
@@ -264,14 +274,15 @@ def get_piratebay_api_options(show, seas):
 def get_episodes_to_download():
     todownload = execute_sql(sqltype='Fetch', sql=tvm_views.eps_to_download)
     if not todownload:
-        print(f'No episodes to download {todownload}')
+        if vli > 2:
+            print(f'{time.strftime("%D %T")} Actions: No episodes to download {todownload}')
     return todownload
 
 
 def get_download_apis():
     results = execute_sql(sqltype='Fetch', sql="SELECT * from download_options")
     if not results:
-        print(f'Error getting the download_options {results}')
+        print(f'{time.strftime("%D %T")} Actions: Error getting the download_options {results}')
     return results
 
 
@@ -289,7 +300,7 @@ def find_dl_info(dl, dlapis):
 
 def process_new_shows():
     newshows = get_shows_to_review()
-    print("TVM_Action_List ---> Processing New Shows to Review:", len(newshows))
+    print(f"{time.strftime('%D %T')} Actions: Processing New Shows to Review:", len(newshows))
     # Process all the new shows to review
     if len(newshows) == 0:
         return
@@ -423,8 +434,11 @@ def display_status(processed, epi_to_download, do_text, season):
 
 def process_the_episodes_to_download():
     episodes_to_download = get_episodes_to_download()
-    
-    print("TVM_Action_List ---> Episodes to Download:", len(episodes_to_download))
+    if vli > 1:
+        print(f"{time.strftime('%D %T')} Actions: "
+              f"Episodes to Download:", len(episodes_to_download))
+    if len(episodes_to_download) == 0:
+        return
     # process the episodes that need to be downloading
     print()
     print(f'{"Shows To Download".rjust(120)}')
@@ -501,22 +515,21 @@ def process_the_episodes_to_download():
     Main program
     First get all the supporting lists we use
 '''
+print()
+print(f'{time.strftime("%D %T")} Actions >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Started')
+options = docopt(__doc__, version='Statistics Release 1.0')
+vli = int(options['--vl'])
+if vli > 5 or vli < 1:
+    print(f"{time.strftime('%D %T')} Actions: Unknown Verbosity level of {vli}, try statistics.py -h")
+    quit()
+elif vli > 1:
+    print(f'{time.strftime("%D %T")} Actions: Verbosity level is set to: {options["--vl"]}')
 
-options = docopt(__doc__, version='Shows Release 0.9.5')
-vli = False
-vlw = True
-if options['--vl'].lower() == 'a':
-    vli = True
-elif options['--vl'].lower() == 'i':
-    vli = True
-if vli:
-    print(f'verbosity levels Informational {vli} and Warnings {vlw}')
-    print(options)
-
-print(f'Starting Actions with download={options["-d"]} and review={options["-r"]}')
 download_apis = get_download_apis()
 if not download_apis:
-    print(f"Main Program: Error getting Download Options: {download_apis}")
+    print(f"{time.strftime('%D %T')} Actions: Error getting Download Options: {download_apis}")
+    print(f'{time.strftime("%D %T")} Actions'
+          f' >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Ended')
     quit()
 
 if options['-r']:
@@ -524,5 +537,6 @@ if options['-r']:
 if options['-d']:
     process_the_episodes_to_download()
 if not options['-d'] and not options['-r']:
-    print(f'Nothing to do, neither -r, -d or -rd cli args were supplied')
-print()
+    print(f'{time.strftime("%D %T")} Actions: Nothing to do, neither -r, -d or -rd cli args were supplied')
+
+print(f'{time.strftime("%D %T")} Actions >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Ended')

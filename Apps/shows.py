@@ -12,7 +12,9 @@ Usage:
 
 Options:
   -h --help             Show this screen
-  --vl=<vlevel>         Level of verbosity (a = All, i = Informational, w = Warnings only) [default: w]
+  --vl=<vlevel>         Level of verbosity
+                          1 = Warnings & Errors Only, 2 = High Level Info,
+                          3 = Medium Level Info, 4 = Low Level Info, 5 = All  [default: 1]
   -u                    The standard process to get all shows updated on TVMaze and update our info
   -s                    Using the TVMaze API to get the latest paged shows to sync our db
                           (This is a system check, typically you want to have the start page about 5 pages less then
@@ -86,11 +88,10 @@ def process_show_info(rec, interest="New"):
             my_interest = "Skipped"
         elif network == 'YouTube' or \
                 network == 'YouTube Premium' or \
-                network == 'Facebook Watch' or \
-                network == 'Quibi':
+                network == 'Facebook Watch':
             my_interest = 'Skipped'
-    if my_interest == 'Skipped' and vli:
-        print(f'Skipping {rec} due to the interest rules')
+    if my_interest == 'Skipped' and vli > 4:
+        print(f'{time.strftime(("%D %T"))} Shows: Skipping {rec} due to the interest rules')
     
     return {'network': network, 'country': country,
             'runtime': length, 'language': language,
@@ -100,37 +101,37 @@ def process_show_info(rec, interest="New"):
 def process_all_shows(start, end, sync):
     ind = start  # Enter the last page processed
     while ind <= end:  # Paging is going up to 250  # Remember last page processed here: 197
-        if vli:
-            print('All Shows Processing TVMaze Page: ', ind)
+        if vli > 3:
+            print(f'{time.strftime(("%D %T"))} Shows: Processing TVMaze Page: ', ind)
         req = tvm_apis.shows_by_page + str(ind)
         response = execute_tvm_request(api=req, err=False)
-        if vli:
-            print(f'Response to page request {ind} is {response}')
+        if vli > 3:
+            print(f'{time.strftime(("%D %T"))} Shows: Response to page request {ind} is {response}')
         if response.status_code == 404:
             print('Last TVMaze page found was:', ind - 1)
             break
         for res in response.json():
             result = execute_sql(sql="SELECT * from shows WHERE showid = {0}".format(res['id']), sqltype="Fetch")
             if not result:
-                if vli:
-                    print('Inserting:', res['id'], res['name'])
+                if vli > 2:
+                    print(f'{time.strftime(("%D %T"))} Shows: Inserting:', res['id'], res['name'])
                 # insert_show(res)
             else:
                 if sync:
-                    if vli:
-                        print('Syncing: ', res['id'], res['name'])
+                    if vli > 2:
+                        print(f'{time.strftime(("%D %T"))} Shows: Syncing: ', res['id'], res['name'])
                     # update_show(res)
                 else:
-                    if vli:
-                        print("Found: ", res['id'], res['name'])
+                    if vli > 3:
+                        print(f"{time.strftime(('%D %T'))} Shows: Found: ", res['id'], res['name'])
         ind = ind + 1
 
 
 def process_update_all_shows(mdb, mcur):
     response = execute_tvm_request(api=tvm_apis.updated_shows)
     response = response.json()
-    if vli:
-        print('Number of Shows to potentially update', len(response))
+    if vli > 1:
+        print(f'{time.strftime(("%D %T"))} Shows: Number of Shows to potentially update', len(response))
     updated = 0
     inserted = 0
     skipped = 0
@@ -139,8 +140,8 @@ def process_update_all_shows(mdb, mcur):
     for key in response:
         processed = processed + 1
         if processed % 5000 == 0:
-            if vli:
-                print(f"Processed {processed} records. ")
+            if vli > 3:
+                print(f"{time.strftime(('%D %T'))} Shows: Processed {processed} records. ")
         showid = key
         showupdated = response[key]
         result = execute_sql(con="Y", db=mdb, cur=mcur,
@@ -148,7 +149,7 @@ def process_update_all_shows(mdb, mcur):
         if not result:
             showinfo = execute_tvm_request(f'http://api.tvmaze.com/shows/{showid}')
             if not showinfo:
-                print(f'Working on {key} in response and cannot find the show info {showinfo}')
+                print(f'{time.strftime(("%D %T"))} Shows: Working on {key} in response and cannot find the show info {showinfo}')
                 continue
             showinfo = showinfo.json()
             si = process_show_info(showinfo)
@@ -228,15 +229,15 @@ def process_update_all_shows(mdb, mcur):
                 updated = updated + 1
                 batch = batch + 1
                 if batch % 100 == 0:
-                    if vli:
-                        print(f"Commit of {batch} updated records")
+                    if vli > 3:
+                        print(f"{time.strftime(('%D %T'))} Shows: Commit of {batch} updated records")
                     mdb.commit()
     if batch != 0:
-        if vli:
-            print("Final Commit of updated records")
+        if vli > 3:
+            print(f"{time.strftime(('%D %T'))} Shows: Final Commit of updated records")
         mdb.commit()
-    print(f"Processed {processed} records. ")
-    print(f'Shows Evaluated: {len(response)} -> Inserted: {inserted} '
+    print(f"{time.strftime(('%D %T'))} Shows: Processed {processed} records. ")
+    print(f'{time.strftime(("%D %T"))} Shows: Shows Evaluated: {len(response)} -> Inserted: {inserted} '
           f'-> Updated: {updated}, No Update Needed: {skipped}')
 
 
@@ -263,54 +264,54 @@ def process_followed_shows():
                                 sql=f'SELECT showname, status from shows where showid={res["show_id"]}')
         if validates[0][1] != 'Followed':
             new_followed += 1
-            if vli:
-                print(f'Process Followed shows {validates[0][0]}  {validates[0][1]}')
+            if vli > 2:
+                print(f'{time.strftime(("%D %T"))} Shows: Process Followed shows {validates[0][0]}  {validates[0][1]}')
             result = execute_sql(sqltype='Commit', sql=f'UPDATE shows SET status="Followed", '
                                                        f'download="{def_downloader.dl}" WHERE showid={res["show_id"]}')
             if not result:
-                print(f'Update error on Shows table for show: {res["show_id"]} trying to make a followed show')
+                print(f'{time.strftime(("%D %T"))} Shows: Update error on Shows table for show: '
+                      f'{res["show_id"]} trying to make a followed show')
                 quit()
-            if vli:
-                print(f'Now following show {validates[0][0]}')
+            if vli > 1:
+                print(f'{time.strftime(("%D %T"))} Shows: Now following show {validates[0][0]}')
 
     un_followed = 0
     for nf in nf_list:
         un_followed += 1
         result = execute_sql(sqltype="Fetch", sql=f'SELECT showname, status from shows where showid={nf}')
         if not result:
-            print(f'Read error on: {nf}')
+            print(f'{time.strftime(("%D %T"))} Shows: Read error on: {nf}')
             quit()
         if len(result) != 1:
-            print(f'Did not get a single record for show: {nf}')
+            print(f'{time.strftime(("%D %T"))} Shows: Did not get a single record for show: {nf}')
             quit()
         showname = result[0][0]
         result = execute_sql(sqltype='Commit', sql=f'DELETE FROM episodes WHERE showid={nf}')
         if not result:
-            print(f'Delete error on Episodes table for show: {nf}')
+            print(f'{time.strftime(("%D %T"))} Shows: Delete error on Episodes table for show: {nf}')
             quit()
         result = execute_sql(sqltype='Commit',
                              sql=f'UPDATE shows SET status="Skipped", download=NULL WHERE showid={nf}')
         if not result:
-            print(f'Update error on Shows table for show: {nf} trying to un-follow')
+            print(f'{time.strftime(("%D %T"))} Shows: Update error on Shows table for show: {nf} trying to un-follow')
             quit()
-        if vli:
-            print(f'Un-followed show {showname}')
+        if vli > 1:
+            print(f'{time.strftime(("%D %T"))} Shows: Un-followed show {showname}')
 
-    print(f"Updates performed based on TVMaze Followed status.  "
+    print(f"{time.strftime(('%D %T'))} Shows: Updates performed based on TVMaze Followed status.  "
           f"Un-followed: {un_followed} and new Followed: {new_followed}")
 
 
 ''' Main Program'''
-options = docopt(__doc__, version='Shows Release 0.9.5')
-vli = False
-vlw = True
-if options['--vl'].lower() == 'a':
-    vli = True
-elif options['--vl'].lower() == 'i':
-    vli = True
-if vli:
-    print(f'verbosity levels Informational {vli} and Warnings {vlw}')
-    print(options)
+print()
+print(f'{time.strftime("%D %T")} Shows >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Started')
+options = docopt(__doc__, version='Shows Release 1.0')
+vli = int(options['--vl'])
+if vli > 5 or vli < 1:
+    print(f"{time.strftime(('%D %T'))} Shows: Unknown Verbosity level of {vli}, try plex_extract.py -h")
+    quit()
+elif vli > 1:
+    print(f'{time.strftime(("%D %T"))} Shows: Verbosity level is set to: {options["--vl"]}')
 
 mdb_info = mdbi('', '')
 tvmaze = connect_mdb(d=mdb_info.db)
@@ -319,27 +320,28 @@ cur = tvmaze['mcursor']
 db.autocommit = False
 
 if options['-s']:
-    print(f"Starting to process all tvmaze show with updates "
+    print(f"{time.strftime(('%D %T'))} Shows: Starting to process all tvmaze show with updates "
           f"from page {int(options['--sp'])} to page {int(options['--ep'])} (sync)")
-    print('Not fully implemented yet - no insert or update')
+    print(f'{time.strftime(("%D %T"))} Shows: Not fully implemented yet - no insert or update')
     process_all_shows(int(options['--sp']), int(options['--ep']), sync=True)
 if options['-i']:
-    print('Starting to process all tvmaze shows for initialize only')
-    print('Not fully implemented yet - no insert or update')
+    print(f'{time.strftime(("%D %T"))} Shows: Starting to process all tvmaze shows for initialize only')
+    print(f'{time.strftime(("%D %T"))} Shows: Not fully implemented yet - no insert or update')
     process_all_shows(0, 198, sync=False)
 if options['-u']:
     started = timer()
-    print(f'{str(datetime.now())} -> Starting to process recently updated shows for insert and sync')
+    print(f'{time.strftime(("%D %T"))} Shows: Starting to process recently updated shows for insert and sync')
     process_update_all_shows(mdb=db, mcur=cur)
     ended = timer()
-    print(f'{str(datetime.now())} -> The process (including calling the TVMaze APIs) took: {ended - started} seconds')
-    print()
+    print(f'{time.strftime(("%D %T"))} Shows: '
+          f'The process (including calling the TVMaze APIs) took: {ended - started} seconds')
     started = timer()
-    print(f'{str(datetime.now())} -> Starting to process to validate followed shows and update')
+    print(f'{time.strftime(("%D %T"))} Shows: Starting to process to validate followed shows and update')
     process_followed_shows()
     ended = timer()
-    print(f'{str(datetime.now())} -> The process (including calling the TVMaze APIs) took: {ended - started} seconds')
-    print()
+    print(f'{time.strftime(("%D %T"))} Shows: '
+          f'The process (including calling the TVMaze APIs) took: {ended - started} seconds')
 
 db.commit()
 close_mdb(mdb=db)
+print(f'{time.strftime("%D %T")} Shows >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Ended')
