@@ -21,7 +21,7 @@ export PYTHONPATH
 PATH=/Library/Frameworks/Python.framework/Versions/3.8/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Library/Apple/usr/bin
 export PATH
 
-echo "$(date) TVMaze Half Hourly Update Started"
+echo "$(date) >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
 python3 plex_tvm_update.py --vl=2
 python3 plex_extract_processing.py --vl=2
 python3 shows.py -u --vl=2
@@ -31,5 +31,5 @@ echo "$(date) TVMaze Downloads"
 python3 actions.py -d 
 echo "$(date) TVMaze Statistics Update"
 python3 statistics.py -s
-echo "$(Date) TVMaze TVMaze Half Hourly Update Finished"
+echo "$(Date) <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
 echo ""
