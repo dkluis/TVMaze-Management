@@ -54,7 +54,7 @@ def go_store_statistics(f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12):
                 str(f11) == str(last_rec[12]) and
                 str(f12) == str(last_rec[13])):
             if vli > 2:
-                print(f"{time.strftime('%D %T')} Statistics: No Update for TVMaze: ", last_rec)
+                print(f"{time.strftime('%D %T')} Statistics: No Update for TVMaze")
             return False
     sql = f"INSERT INTO statistics VALUES ({today_epoch}, {today_human}, {f1}, {f2}, {f3}, {f4}, {f5}, {f6}, {f7}, " \
           f"{f8}, {f9}, {f10}, {f11}, {f12}, " \
@@ -62,7 +62,7 @@ def go_store_statistics(f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12):
     sql = sql.replace('None', 'NULL')
     execute_sql(sqltype='Commit', sql=sql)
     if vli > 1:
-        print(f"{time.strftime('%D %T')} Statistics: Updated with:", last_rec)
+        print(f"{time.strftime('%D %T')} Statistics: Updated TVMaze")
     return True
 
 
@@ -84,7 +84,7 @@ def go_store_download_options(dls):
                 str(dls[10]) == str(stats[25]) and
                 str(dls[11]) == str(stats[26])):
             if vli > 2:
-                print(f"{time.strftime('%D %T')} Statistics: No Update for download_options: ", stats)
+                print(f"{time.strftime('%D %T')} Statistics: No Update for Download Options")
         else:
             time.sleep(1)
             today_epoch = int(get_today('system'))
@@ -96,7 +96,7 @@ def go_store_download_options(dls):
             sql = sql.replace('None', 'NULL')
             execute_sql(sql=sql, sqltype='Commit')
             if vli > 1:
-                print(f"{time.strftime('%D %T')} Statistics: Updated with:", stats)
+                print(f"{time.strftime('%D %T')} Statistics: Updated Download Options")
 
 
 def view_history(last: False):
