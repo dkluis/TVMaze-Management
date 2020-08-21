@@ -22,9 +22,7 @@ PATH=/Library/Frameworks/Python.framework/Versions/3.8/bin:/usr/local/bin:/usr/b
 export PATH
 
 echo "$(date) TVMaze Half Hourly Update Started"
-echo "$(date) Downloads Move to Plex and Episode Status Update to TVMaze"
-python3 plex_tvm_update.py
-echo "$(date) Plex Extract Processing to update TVMaze Watched status"
+python3 plex_tvm_update.py --vl=2
 python3 plex_extract_processing.py --vl=2
 python3 shows.py -u --vl=2
 echo "$(date) TVMaze Episodes"

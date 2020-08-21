@@ -14,7 +14,7 @@ Options:
   -h --help             Show this screen
   --vl=<vlevel>         Level of verbosity
                           1 = Warnings & Errors Only, 2 = High Level Info,
-                          3 = Medium Level Info, 4 = Low Level Info, 5 = All
+                          3 = Medium Level Info, 4 = Low Level Info, 5 = All  [default: 1]
   -u                    The standard process to get all shows updated on TVMaze and update our info
   -s                    Using the TVMaze API to get the latest paged shows to sync our db
                           (This is a system check, typically you want to have the start page about 5 pages less then
