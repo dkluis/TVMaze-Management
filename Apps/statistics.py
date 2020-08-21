@@ -125,13 +125,13 @@ Main Program
 '''
 print()
 print(f'{time.strftime("%D %T")} Statistics >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Started')
-options = docopt(__doc__, version='Episodes Release 1.0')
+options = docopt(__doc__, version='Statistics Release 1.0')
 vli = int(options['--vl'])
 if vli > 5 or vli < 1:
-    print(f"{time.strftime('%D %T')} Episodes: Unknown Verbosity level of {vli}, try plex_extract.py -h")
+    print(f"{time.strftime('%D %T')} Statistics: Unknown Verbosity level of {vli}, try statistics.py -h")
     quit()
 elif vli > 1:
-    print(f'{time.strftime("%D %T")} Episodes: Verbosity level is set to: {options["--vl"]}')
+    print(f'{time.strftime("%D %T")} Statistics: Verbosity level is set to: {options["--vl"]}')
 
 tvmshows = execute_sql(sql=stat_views.count_all_shows, sqltype="Fetch")[0][0]
 myshows = execute_sql(sql=stat_views.count_my_shows, sqltype="Fetch")[0][0]
