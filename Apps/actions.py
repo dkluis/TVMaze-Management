@@ -200,8 +200,10 @@ def get_rarbg_api_options(show, seas):
         main_request = main_request.json()
     else:
         return dl_options
-    if f'{time.strftime("%D %T")} Actions: No results found' in str(main_request):
+    if f'No results found' in str(main_request):
         return dl_options
+    if vli > 4:
+        print(f'{time.strftime("%D %T")} Actions: Found main_request {main_request}')
     records = main_request['torrent_results']
     for record in records:
         name = record['title']
