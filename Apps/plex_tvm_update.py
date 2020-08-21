@@ -260,7 +260,7 @@ def update_tvmaze(showinfo, found_showid):
 Main Program start
 '''
 print()
-print(f'{time.strftime("%D %T")} Started Program: Plex TVM Update')
+print(f'{time.strftime("%D %T")} Plex TVM Update >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Started')
 
 options = docopt(__doc__, version='Plex TVM Update Release 1.0')
 vli = int(options['--vl'])
@@ -279,7 +279,8 @@ else:
     
 if len(download) == 0:
     print(f'{time.strftime(("%D %T"))} Plex TVM Update: Nothing to Process in the transmission log')
-    print(f'{time.strftime("%D %T")} Started Program: Plex TVM Update')
+    print(f'{time.strftime("%D %T")} Plex TVM Update '
+          f'>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Ended')
     quit()
 
 if vli > 4:
@@ -448,5 +449,5 @@ for dl in download:
                           f'Starting the process to Update TVMaze download statuses for show {d}')
                 update_tvmaze(ds, de)
                 
-print(f'{time.strftime("%D %T")} Ended Program: Plex TVM Update')
+print(f'{time.strftime("%D %T")} Plex TVM Update >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Ended')
 quit()

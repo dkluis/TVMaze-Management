@@ -115,8 +115,8 @@ def find_plex_episodes(plex_sn, plex_season, plex_epi):
     
 ''' Main Program'''
 ''' Get Options'''
-print(f'{time.strftime("%D %T")} Started Program: Plex Extract Processing')
 print()
+print(f'{time.strftime("%D %T")} Plex Extract Processing >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Started')
 options = docopt(__doc__, version='Plex Extract Release 1.0')
 vli = int(options['--vl'])
 if vli > 5 or vli < 1:
@@ -194,4 +194,4 @@ for episode in we:
 we.close()
 if vli > 1:
     print(f'{time.strftime(("%D %T"))} Plex Extract Processing: Found Plex Episodes {ew} in the extract')
-print(f'{time.strftime("%D %T")} Ended Program: Plex Extract Processing')
+print(f'{time.strftime("%D %T")} Plex Extract Processing >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Ended')

@@ -303,8 +303,8 @@ def process_followed_shows():
 
 
 ''' Main Program'''
-print(f'{time.strftime("%D %T")} Started Program: Shows')
 print()
+print(f'{time.strftime("%D %T")} Shows >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Started')
 options = docopt(__doc__, version='Shows Release 1.0')
 vli = int(options['--vl'])
 if vli > 5 or vli < 1:
@@ -333,15 +333,15 @@ if options['-u']:
     print(f'{time.strftime(("%D %T"))} Shows: Starting to process recently updated shows for insert and sync')
     process_update_all_shows(mdb=db, mcur=cur)
     ended = timer()
-    print(f'{time.strftime(("%D %T"))} Shows: The process (including calling the TVMaze APIs) took: {ended - started} seconds')
-    print()
+    print(f'{time.strftime(("%D %T"))} Shows: '
+          f'The process (including calling the TVMaze APIs) took: {ended - started} seconds')
     started = timer()
     print(f'{time.strftime(("%D %T"))} Shows: Starting to process to validate followed shows and update')
     process_followed_shows()
     ended = timer()
-    print(f'{time.strftime(("%D %T"))} Shows: The process (including calling the TVMaze APIs) took: {ended - started} seconds')
-    print()
+    print(f'{time.strftime(("%D %T"))} Shows: '
+          f'The process (including calling the TVMaze APIs) took: {ended - started} seconds')
 
 db.commit()
 close_mdb(mdb=db)
-print(f'{time.strftime(("%D %T"))} Ended Program: Shows')
+print(f'{time.strftime("%D %T")} Shows >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Ended')
