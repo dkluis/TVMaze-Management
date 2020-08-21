@@ -26,7 +26,7 @@ python3 plex_tvm_update.py --vl=2
 python3 plex_extract_processing.py --vl=2
 python3 shows.py -u --vl=2
 python3 episodes.py --vl=2
-python3 actions.py -d -vl=2
+python3 actions.py -d --vl=2
 python3 statistics.py -s --vl=2
 echo "$(Date) <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
 echo ""

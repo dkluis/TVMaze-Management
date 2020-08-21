@@ -164,6 +164,7 @@ def get_eztv_options(show, seas):
     if len(dloptions) == 0:
         return dloptions
     for dlo in dloptions:
+        size = 0
         split1 = str(dlo).split('href="')[1]
         magnet_link = str(split1).split('" rel=')[0]
         split1 = str(magnet_link).split(';dn=')[1]
@@ -273,7 +274,8 @@ def get_piratebay_api_options(show, seas):
 def get_episodes_to_download():
     todownload = execute_sql(sqltype='Fetch', sql=tvm_views.eps_to_download)
     if not todownload:
-        print(f'{time.strftime("%D %T")} Actions: No episodes to download {todownload}')
+        if vli > 2:
+            print(f'{time.strftime("%D %T")} Actions: No episodes to download {todownload}')
     return todownload
 
 
@@ -432,8 +434,9 @@ def display_status(processed, epi_to_download, do_text, season):
 
 def process_the_episodes_to_download():
     episodes_to_download = get_episodes_to_download()
-    
-    print("TVM_Action_List ---> Episodes to Download:", len(episodes_to_download))
+    if vli > 1:
+        print(f"{time.strftime('%D %T')} Actions: "
+              f"Episodes to Download:", len(episodes_to_download))
     if len(episodes_to_download) == 0:
         return
     # process the episodes that need to be downloading

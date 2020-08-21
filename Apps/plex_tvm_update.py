@@ -58,7 +58,7 @@ def get_all_episodes_to_update():
         transmissions = open('/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Logs/Transmission.log')
     except IOError as er:
         if vli > 2:
-            print(f'{time.strftime(("%D %T"))} Plex TVM Update: Transmission file did not exist: {er}')
+            print(f'{time.strftime("%D %T")} Plex TVM Update: Transmission file did not exist: {er}')
         return ttps
     
     for ttp in transmissions:
@@ -113,23 +113,23 @@ def find_showname(download):
 
 def find_showid(asn):
     if vli > 3:
-        print(f'{time.strftime(("%D %T"))} Plex TVM Update: Find Show ID via alt_showname: {asn}')
+        print(f'{time.strftime("%D %T")} Plex TVM Update: Find Show ID via alt_showname: {asn}')
     result = execute_sql(sqltype='Fetch', sql=f"SELECT showid FROM shows "
                                               f"WHERE alt_showname like '{asn}' AND status = 'Followed'")
     if len(result) < 1:
         if vli > 3:
-            print(f"{time.strftime(('%D %T'))} Plex TVM Update: Show not found: ---> ", "'" + asn + "'")
+            print(f"{time.strftime('%D %T')} Plex TVM Update: Show not found: ---> ", "'" + asn + "'")
         if str(asn[len(asn) - 4:]).isnumeric():
             result = execute_sql(sqltype='Fetch', sql=f"SELECT showid FROM shows "
                                                       f"WHERE alt_showname like '{asn[:-5]}' AND status = 'Followed'")
             if len(result) < 1:
                 if vli > 3:
-                    print(f"{time.strftime(('%D %T'))} Plex TVM Update: "
+                    print(f"{time.strftime('%D %T')} Plex TVM Update: "
                           f"Show without last 4 characters not found: ---> ", "'" + asn[:-5] + "'")
                 pass
             else:
                 if vli > 3:
-                    print(f"{time.strftime(('%D %T'))} Plex TVM Update: "
+                    print(f"{time.strftime('%D %T')} Plex TVM Update: "
                           f"Show without last 4 characters found: ---> ", "'" + asn[:-5] + "'")
                 return result[0][0]
         return False
@@ -152,11 +152,11 @@ def find_epiid(si, s, e, is_epi):
         if result[0][7] == 'Watched':
             if is_epi:
                 if vli > 3:
-                    print(f'{time.strftime(("%D %T"))} Plex TVM Update: '
+                    print(f'{time.strftime("%D %T")} Plex TVM Update: '
                           f'Episodes of {si} for season {s} were watched before')
             else:
                 if vli > 3:
-                    print(f'{time.strftime(("%D %T"))} Plex TVM Update: '
+                    print(f'{time.strftime("%D %T")} Plex TVM Update: '
                           f'Episode of {si} for season {s} and episode {2} was watched before')
             return False
     return result
@@ -164,7 +164,7 @@ def find_epiid(si, s, e, is_epi):
 
 def update_tvmaze_episode_status(epiid):
     if vli > 2:
-        print(f"{time.strftime(('%D %T'))} Plex TVM Update: Updating", epiid)
+        print(f"{time.strftime('%D %T')} Plex TVM Update: Updating", epiid)
     baseurl = 'https://api.tvmaze.com/v1/user/episodes/' + str(epiid)
     epoch_date = int(date.today().strftime("%s"))
     data = {"marked_at": epoch_date, "type": 1}
@@ -175,7 +175,7 @@ def update_tvmaze_episode_status(epiid):
 def check_exist(file_dir):
     check = str(plex_source_dir + file_dir).lower()
     if vli > 3:
-        print(f'{time.strftime(("%D %T"))} Plex TVM Update: Check File Dir with {check}')
+        print(f'{time.strftime("%D %T")} Plex TVM Update: Check File Dir with {check}')
     ch_path = os.path.exists(check)
     ch_isdir = os.path.isdir(check)
     # print(f'Check Exist: {ch_path}, {ch_isdir}')
@@ -184,10 +184,10 @@ def check_exist(file_dir):
 
 def check_file_ext(file):
     if vli > 3:
-        print(f'{time.strftime(("%D %T"))} Plex TVM Update: Check File Ext {file}')
+        print(f'{time.strftime("%D %T")} Plex TVM Update: Check File Ext {file}')
     for ext in plex_extensions:
         if vli > 3:
-            print(f'{time.strftime(("%D %T"))} Plex TVM Update: Check File Ext: {ext} with {file[-3:]}')
+            print(f'{time.strftime("%D %T")} Plex TVM Update: Check File Ext: {ext} with {file[-3:]}')
         if file[-3:] == ext:
             return True
     return False
@@ -212,7 +212,7 @@ def check_destination(sn, m):
         dd = plex_show_dir
         for ps in plex_kids_shows:
             if vli > 3:
-                print(f'{time.strftime(("%D %T"))} Plex TVM Update: ps = {ps} and sn = {sn}')
+                print(f'{time.strftime("%D %T")} Plex TVM Update: ps = {ps} and sn = {sn}')
             if ps.lower() in sn[0].lower():
                 dd = plex_kids_show_dir
                 break
@@ -221,11 +221,11 @@ def check_destination(sn, m):
 
 def check_file_ignore(fi):
     if vli > 3:
-        print(f'{time.strftime(("%D %T"))} Plex TVM Update: '
+        print(f'{time.strftime("%D %T")} Plex TVM Update: '
               f'Starting to check {fi} type {type(fi)}with all of {plex_do_not_move}, type {type(plex_do_not_move)}')
     for ign in plex_do_not_move:
         if vli > 3:
-            print(f'{time.strftime(("%D %T"))} Plex TVM Update: Checking for {ign}, type {type(ign)}')
+            print(f'{time.strftime("%D %T")} Plex TVM Update: Checking for {ign}, type {type(ign)}')
         if ign in str(fi.lower()):
             return True
     return False
@@ -233,7 +233,7 @@ def check_file_ignore(fi):
 
 def update_tvmaze(showinfo, found_showid):
     if vli > 1:
-        print(f'{time.strftime(("%D %T"))} Plex TVM Update: '
+        print(f'{time.strftime("%D %T")} Plex TVM Update: '
               f'Starting to update TVMaze episodes for {showinfo} with Show ID {found_showid}')
     showname = showinfo[0]
     showepisode = showinfo[1]
@@ -243,16 +243,16 @@ def update_tvmaze(showinfo, found_showid):
     if found_showid:
         found_epiid = find_epiid(found_showid, season, episode, is_episode)
         if not found_epiid:
-            print(f"{time.strftime(('%D %T'))} Plex TVM Update: "
+            print(f"{time.strftime('%D %T')} Plex TVM Update: "
                   f"Did not find '{str(showname).title()}' with episode {showepisode} in TVMaze")
         elif is_episode and len(found_epiid) == 1:
             update_tvmaze_episode_status(found_epiid[0][0])
-            print(f"{time.strftime(('%D %T'))} Plex TVM Update: "
+            print(f"{time.strftime('%D %T')} Plex TVM Update: "
                   f"Updated Show '{str(showname).title()}', episode {showepisode} as downloaded in TVMaze")
         else:
             for epi in found_epiid:
                 update_tvmaze_episode_status(epi[0])
-                print(f"{time.strftime((''%D %T))} Plex TVM Update: "
+                print(f"{time.strftime('%D %T')} Plex TVM Update: "
                       f"Updated TVMaze as downloaded for {epi[2]}, Season {epi[4]}, Episode {epi[5]}")
 
 
@@ -265,10 +265,10 @@ print(f'{time.strftime("%D %T")} Plex TVM Update >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 options = docopt(__doc__, version='Plex TVM Update Release 1.0')
 vli = int(options['--vl'])
 if vli > 5 or vli < 1:
-    print(f"{time.strftime(('%D %T'))} Plex TVM Update: Unknown Verbosity level of {vli}, try plex_extract.py -h")
+    print(f"{time.strftime('%D %T')} Plex TVM Update: Unknown Verbosity level of {vli}, try plex_extract.py -h")
     quit()
 elif vli > 1:
-    print(f'{time.strftime(("%D %T"))} Plex TVM Update: Verbosity level is set to: {options["--vl"]}')
+    print(f'{time.strftime("%D %T")} Plex TVM Update: Verbosity level is set to: {options["--vl"]}')
 
 if options['<to_process>']:
     download = [options['<to_process>']]
@@ -278,13 +278,13 @@ else:
     download = get_all_episodes_to_update()
     
 if len(download) == 0:
-    print(f'{time.strftime(("%D %T"))} Plex TVM Update: Nothing to Process in the transmission log')
+    print(f'{time.strftime("%D %T")} Plex TVM Update: Nothing to Process in the transmission log')
     print(f'{time.strftime("%D %T")} Plex TVM Update '
           f'>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Ended')
     quit()
 
 if vli > 4:
-    print(f'{time.strftime(("%D %T"))} Plex TVM Update: Download = {download}')
+    print(f'{time.strftime("%D %T")} Plex TVM Update: Download = {download}')
 
 if not cli:
     t = strftime("%Y-%m-%d-%I-%M-%S ")
@@ -308,17 +308,17 @@ for dl in download:
     fedl = []  # Files
     ndl = []  #
     if vli > 2:
-        print(f'{time.strftime(("%D %T"))} Plex TVM Update: Processing download {dl}')
+        print(f'{time.strftime("%D %T")} Plex TVM Update: Processing download {dl}')
     dl_check = check_exist(dl)
     dl_exist = dl_check[0]
     if dl_exist:
         dl_dir = dl_check[1]
     if not dl_exist:
-        print(f'{time.strftime(("%D %T"))} Plex TVM Update: Transmission input "{plex_source_dir + dl}" does not exist ')
+        print(f'{time.strftime("%D %T")} Plex TVM Update: Transmission input "{plex_source_dir + dl}" does not exist ')
         continue
     else:
         if vli > 2:
-            print(f'{time.strftime(("%D %T"))} Plex TVM Update: '
+            print(f'{time.strftime("%D %T")} Plex TVM Update: '
                   f'Transmission input "{plex_source_dir + dl}" exist and directory is {dl_dir} ')
         dl = plex_source_dir + dl
         edl.append(dl)
@@ -327,44 +327,44 @@ for dl in download:
             if file_to_process:
                 fedl.append(dl)
             else:
-                print(f'{time.strftime(("%D %T"))} Plex TVM Update: '
+                print(f'{time.strftime("%D %T")} Plex TVM Update: '
                       f'No File found with the right extension {dl}:  {plex_extensions}')
         else:
             if vli > 2:
-                print(f'{time.strftime(("%D %T"))} Plex TVM Update: Do the directory process and find all files')
+                print(f'{time.strftime("%D %T")} Plex TVM Update: Do the directory process and find all files')
             dirfiles = os.listdir(dl)
             if vli > 2:
-                print(f'{time.strftime(("%D %T"))} Plex TVM Update: All files to process {dirfiles}')
+                print(f'{time.strftime("%D %T")} Plex TVM Update: All files to process {dirfiles}')
             for df in dirfiles:
                 dfn = dl + '/' + df
                 dfe = check_file_ext(dfn)
                 if vli > 3:
-                    print(f'{time.strftime(("%D %T"))} Plex TVM Update: Checked {dfn} and result is {dfe}')
+                    print(f'{time.strftime("%D %T")} Plex TVM Update: Checked {dfn} and result is {dfe}')
                 if dfe:
                     ignore = check_file_ignore(df)
                     if not ignore:
                         fedl.append(df)
         if vli > 3:
-            print(f'{time.strftime(("%D %T"))} Plex TVM Update: Working on edl {edl} \n, with fedl {fedl}')
+            print(f'{time.strftime("%D %T")} Plex TVM Update: Working on edl {edl} \n, with fedl {fedl}')
         if len(fedl) == 0:
-            print(f'{time.strftime(("%D %T"))} Plex TVM Update: Found no video files to move for {dl}')
+            print(f'{time.strftime("%D %T")} Plex TVM Update: Found no video files to move for {dl}')
             if os.path.exists(dl):
                 t = strftime(" %Y-%m-%d-%I-%M-%S")
-                print(f'{time.strftime(("%D %T"))} Plex TVM Update: Moving to Trash {dl}')
+                print(f'{time.strftime("%D %T")} Plex TVM Update: Moving to Trash {dl}')
                 try:
                     shutil.move(dl, f'{plex_trash_dir}/{dl + t}')
                 except OSError as err:
-                    print(f'{time.strftime(("%D %T"))} Plex TVM Update: Deleted directly instead {dl}')
+                    print(f'{time.strftime("%D %T")} Plex TVM Update: Deleted directly instead {dl}')
                     shutil.rm(d)
             continue
         else:
             d = str(dl).replace(' ', '.')
             dc = cleanup_name(d)
             if vli > 3:
-                print(f'{time.strftime(("%D %T"))} Plex TVM Update: Cleaned Name "{dc}"')
+                print(f'{time.strftime("%D %T")} Plex TVM Update: Cleaned Name "{dc}"')
             ds = find_showname(dc)
             if vli > 3:
-                print(f'{time.strftime(("%D %T"))} Plex TVM Update: Find Showname output: {ds}')
+                print(f'{time.strftime("%D %T")} Plex TVM Update: Find Showname output: {ds}')
             if not ds[0]:
                 movie = True
                 fn = str(d).split('/')
@@ -374,32 +374,32 @@ for dl in download:
                 movie = False
                 de = find_showid(ds[0])
                 if vli > 3:
-                    print(f'{time.strftime(("%D %T"))} Plex TVM Update: Showid is {de}')
+                    print(f'{time.strftime("%D %T")} Plex TVM Update: Showid is {de}')
                 dest_dir = check_destination(ds, movie)
                 du = dest_dir + str(ds[0]).title() + '/Season ' + str(ds[2]) + '/'
             for f in edl:
                 skip = False
                 if vli > 3:
-                    print(f'{time.strftime(("%D %T"))} Plex TVM Update: Processing F: {f}')
+                    print(f'{time.strftime("%D %T")} Plex TVM Update: Processing F: {f}')
                 for e in fedl:
                     if vli > 4:
-                        print(f'{time.strftime(("%D %T"))} Plex TVM Update: Processing E: {e}')
+                        print(f'{time.strftime("%D %T")} Plex TVM Update: Processing E: {e}')
                     if not dl_dir:
                         sf = f
                     else:
                         sf = f + '/' + e
                     if movie:
                         if "season" in str(sf).lower():
-                            print(f'{time.strftime(("%D %T"))} Plex TVM Update: '
+                            print(f'{time.strftime("%D %T")} Plex TVM Update: '
                                   f'This might not be a movie it has the string "season" embedded --> {sf}')
                             skip = True
                         elif "part" in str(sf).lower():
-                            print(f'{time.strftime(("%D %T"))} Plex TVM Update: '
+                            print(f'{time.strftime("%D %T")} Plex TVM Update: '
                                   f'This might not be a movie it has the string "part" embedded --> {sf}')
                             skip = True
                         if dl_dir:
                             if vli > 3:
-                                print(f'{time.strftime(("%D %T"))} Plex TVM Update: '
+                                print(f'{time.strftime("%D %T")} Plex TVM Update: '
                                       f'Movie with Directory working on du {du} and e {e} and f {f}')
                             fn = str(e).split('/')
                             fn = fn[len(fn) - 1]
@@ -409,7 +409,7 @@ for dl in download:
                             fn = fn[len(fn) - 1]
                             to = plex_movie_dir + fn
                         if not skip:
-                            print(f'{time.strftime(("%D %T"))} Plex TVM Update: Move the movie {f} to ------> {to}')
+                            print(f'{time.strftime("%D %T")} Plex TVM Update: Move the movie {f} to ------> {to}')
                             os.rename(rf'{f}', rf'{to}')
                         if dl_dir:
                             chd = dl
@@ -420,11 +420,11 @@ for dl in download:
                         fn = fn[len(fn) - 1]
                         if not os.path.exists(du):
                             if vli > 2:
-                                print(f'{time.strftime(("%D %T"))} Plex TVM Update: Creating directory {du}')
+                                print(f'{time.strftime("%D %T")} Plex TVM Update: Creating directory {du}')
                             os.makedirs(du)
                         to = du + fn
                         if vli > 2:
-                            print(f'{time.strftime(("%D %T"))} Plex TVM Update: Move the episode {sf} to ------> {to}')
+                            print(f'{time.strftime("%D %T")} Plex TVM Update: Move the episode {sf} to ------> {to}')
                         os.rename(rf'{sf}', rf'{to}')
                         chd = d
             if not chd:
@@ -432,12 +432,12 @@ for dl in download:
             elif os.path.exists(chd):
                 if skip:
                     if vli > 2:
-                        print(f'{time.strftime(("%D %T"))} Plex TVM Update: Moved {d} to {plex_processed_dir}')
+                        print(f'{time.strftime("%D %T")} Plex TVM Update: Moved {d} to {plex_processed_dir}')
                     shutil.move(d, plex_processed_dir)
                 else:
                     t = strftime(" %Y-%m-%d-%I-%M-%S")
                     if vli > 2:
-                        print(f'{time.strftime(("%D %T"))} Plex TVM Update: Moved to Trash {d + t}')
+                        print(f'{time.strftime("%D %T")} Plex TVM Update: Moved to Trash {d + t}')
                     try:
                         shutil.move(d, f'{plex_trash_dir}/{d + t}')
                     except OSError as err:
@@ -445,7 +445,7 @@ for dl in download:
                         shutil.rmtree(d)
             if not movie:
                 if vli > 2:
-                    print(f'{time.strftime(("%D %T"))} Plex TVM Update: '
+                    print(f'{time.strftime("%D %T")} Plex TVM Update: '
                           f'Starting the process to Update TVMaze download statuses for show {d}')
                 update_tvmaze(ds, de)
                 
