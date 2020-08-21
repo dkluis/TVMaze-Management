@@ -20,26 +20,18 @@ PYTHONPATH=/Library/Frameworks/Python.framework/Versions/3.8/lib/python3.8/site-
 export PYTHONPATH
 PATH=/Library/Frameworks/Python.framework/Versions/3.8/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Library/Apple/usr/bin
 export PATH
-# printenv
 
 echo "$(date) TVMaze Half Hourly Update Started"
 echo "$(date) Downloads Move to Plex and Episode Status Update to TVMaze"
-python3 plex_tvm_update.py >>$LogDir'/Plex_TVM_update.log'
-echo ""
+python3 plex_tvm_update.py
 echo "$(date) Plex Extract Processing to update TVMaze Watched status"
-python3 plex_extract_processing.py --vl=5 >>$LogDir'/Plex_Extract_Update.log'
-echo ""
-echo "$(date) TVMaze Shows"
-python3 shows.py -u
-echo ""
+python3 plex_extract_processing.py --vl=2
+python3 shows.py -u --vl=2
 echo "$(date) TVMaze Episodes"
 python3 episodes.py 
-echo ""
 echo "$(date) TVMaze Downloads"
 python3 actions.py -d 
-echo ""
 echo "$(date) TVMaze Statistics Update"
 python3 statistics.py -s
-echo ""
 echo "$(Date) TVMaze TVMaze Half Hourly Update Finished"
 echo ""
