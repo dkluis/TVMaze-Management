@@ -1,26 +1,38 @@
+
+"""
+
+statistics     The App that handles finding and inserting as well as updating all statistics for the followed shows
+                This is based on the TVMaze API to request all episode info for all followed shows.
+
+Usage:
+  statistics -d [--vl=<vlevel]
+  statistics -s [--vl=<vlevel]
+  statistics -v [--vl=<vlevel]
+  statistics [--vl=<vlevel>]
+  statistics -h | --help
+  statistics --version
+
+
+Options:
+  -s                    Store the Statistics
+  -d                    Display the latest Statistics
+  -v                    View the historical Statistics
+  -h --help             Show this screen
+  --vl=<vlevel>         Level of verbosity
+                          1 = Warnings & Errors Only, 2 = High Level Info,
+                          3 = Medium Level Info, 4 = Low Level Info, 5 = All  [default: 1]
+  --version             Show version.
+
+"""
+
+
 from terminal_lib import *
 from tvm_lib import get_today, count_by_download_options
-from db_lib import stat_views, execute_sql, connect_mdb, close_mdb
+from db_lib import stat_views, execute_sql
 import pandas as pd
 from sqlalchemy import create_engine
 import time
-
-
-def get_cli_args():
-    tlc = ["-d", "-s", "-v"]
-    flc = check_cli_args(tlc)
-    if flc['-s']:
-        # Store in Table
-        return 'Store'
-    elif flc['-d']:
-        # View current
-        return 'Display'
-    elif flc['-v']:
-        # View history from Table
-        return "View"
-    else:
-        print('No input parameter of -d. -s. or -v provided')
-        quit()
+from docopt import docopt
 
 
 def go_store_statistics(f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12):
@@ -41,13 +53,16 @@ def go_store_statistics(f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12):
                 str(f10) == str(last_rec[11]) and
                 str(f11) == str(last_rec[12]) and
                 str(f12) == str(last_rec[13])):
-            print("No Update for TVMaze: ", last_rec)
+            if vli > 2:
+                print(f"{time.strftime('%D %T')} Statistics: No Update for TVMaze: ", last_rec)
             return False
     sql = f"INSERT INTO statistics VALUES ({today_epoch}, {today_human}, {f1}, {f2}, {f3}, {f4}, {f5}, {f6}, {f7}, " \
           f"{f8}, {f9}, {f10}, {f11}, {f12}, " \
           f"'TVMaze', None, None, None, None, None, None, None, None, None, None, None, None);"
     sql = sql.replace('None', 'NULL')
     execute_sql(sqltype='Commit', sql=sql)
+    if vli > 1:
+        print(f"{time.strftime('%D %T')} Statistics: Updated with:", last_rec)
     return True
 
 
@@ -68,7 +83,8 @@ def go_store_download_options(dls):
                 str(dls[9]) == str(stats[24]) and
                 str(dls[10]) == str(stats[25]) and
                 str(dls[11]) == str(stats[26])):
-            print("No Update for download_options: ", stats)
+            if vli > 2:
+                print(f"{time.strftime('%D %T')} Statistics: No Update for download_options: ", stats)
         else:
             time.sleep(1)
             today_epoch = int(get_today('system'))
@@ -79,6 +95,8 @@ def go_store_download_options(dls):
                   f"{dls[6]}, {dls[7]}, {dls[8]}, {dls[9]}, {dls[10]}, {dls[11]});"
             sql = sql.replace('None', 'NULL')
             execute_sql(sql=sql, sqltype='Commit')
+            if vli > 1:
+                print(f"{time.strftime('%D %T')} Statistics: Updated with:", stats)
 
 
 def view_history(last: False):
@@ -106,7 +124,15 @@ def view_history(last: False):
 Main Program
 '''
 print()
-print('Statistics Started')
+print(f'{time.strftime("%D %T")} Statistics >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Started')
+options = docopt(__doc__, version='Episodes Release 1.0')
+vli = int(options['--vl'])
+if vli > 5 or vli < 1:
+    print(f"{time.strftime('%D %T')} Episodes: Unknown Verbosity level of {vli}, try plex_extract.py -h")
+    quit()
+elif vli > 1:
+    print(f'{time.strftime("%D %T")} Episodes: Verbosity level is set to: {options["--vl"]}')
+
 tvmshows = execute_sql(sql=stat_views.count_all_shows, sqltype="Fetch")[0][0]
 myshows = execute_sql(sql=stat_views.count_my_shows, sqltype="Fetch")[0][0]
 myshowsrunning = execute_sql(sql=stat_views.count_my_shows_running, sqltype="Fetch")[0][0]
@@ -123,9 +149,7 @@ mytodownloadeps = execute_sql(sql=stat_views.count_my_episodes_to_download, sqlt
 myfutureeps = execute_sql(sql=stat_views.count_my_episodes_future, sqltype='Fetch')[0][0] - mytodownloadeps
 
 dls = count_by_download_options()
-
-prog_option = get_cli_args()
-if prog_option == "Display":
+if options['-d']:
     print(term_pos(menu_pos.status_x + 1, menu_pos.menu_2y) + "Total # of Shows on TVMaze         :",
           str(format(tvmshows, ',d')))
     print(term_pos(menu_pos.status_x + 3, menu_pos.menu_2y) + "Number of My Shows                 :",
@@ -138,7 +162,6 @@ if prog_option == "Display":
           str(myshowsrunning).rjust(6))
     print(term_pos(menu_pos.status_x + 7, menu_pos.menu_2y) + "Number of My Shows in development  :",
           str(myshowsid).rjust(6))
-    
     print(term_pos(menu_pos.status_x + 1, menu_pos.menu_3y) + "Total # of My Episodes             :",
           str(format(myeps, ',d')))
     print(term_pos(menu_pos.status_x + 3, menu_pos.menu_3y) + "Number of My Episodes watched      :",
@@ -151,12 +174,14 @@ if prog_option == "Display":
           str(format(mytodownloadeps, ',d')).rjust(6))
     print(term_pos(menu_pos.status_x + 7, menu_pos.menu_3y) + "Number of My Episodes upcoming     :",
           str(format(myfutureeps, ',d')).rjust(6))
-elif prog_option == "Store":
-    print("TVMaze Statistics Update")
+elif options['-s']:
+    print(f"{time.strftime('%D %T')} Statistics: Storing")
     go_store_statistics(tvmshows, myshows, myshowsrunning, myshowsended, myshowstbd, myshowsid,
                         myeps, mywatchedeps, mytowatcheps, myskippedeps, mytodownloadeps, myfutureeps)
     go_store_download_options(dls)
-    print()
-else:
-    print()
+elif options['-v']:
     view_history(False)
+else:
+    print(f'{time.strftime("%D %T")} Statistics: No option like -d, -s, or -v was supplied')
+    
+print(f'{time.strftime("%D %T")} Statistics >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Ended')
