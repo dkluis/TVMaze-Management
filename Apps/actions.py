@@ -411,10 +411,10 @@ def do_api_process(epi_tdl, req):
         return False, main_link, dler
     else:
         for sdl_o in sdl_options:
-            if vli:
+            if vli > 2:
                 print(f'The Options are {sdl_o[0]}, {sdl_o[3]}, {sdl_o[1]}, {sdl_o[4]}')
         for dlo in sdl_options:
-            if vli:
+            if vli > 2:
                 print(f'Selected Option = {dlo[0]}, {dlo[3]}, {dlo[1]}, {dlo[4]}')
             command_str = f'''open -a transmission '{dlo[2]}' '''
             os.system(command_str)
@@ -451,8 +451,9 @@ def process_the_episodes_to_download():
         hour_now = int(str(datetime.now())[11:13])
         # print(f'Episode {epi_to_download[3]}, with time {hour_now} and date {date_delta("Now", -1)}')
         if epi_to_download[6] == date_delta('Now', -1) and hour_now < 6:
-            print(f'Skipping {epi_to_download[3]} because of air date is {epi_to_download[6]} '
-                  f'and time {str(hour_now)} is before 6am')
+            if vli > 2:
+                print(f'Skipping {epi_to_download[3]} because of air date is {epi_to_download[6]} '
+                      f'and time {str(hour_now)} is before 6am')
             continue
         season_info = do_season_process(epi_to_download)
         do_text = " ---> Not Downloading"
@@ -461,10 +462,11 @@ def process_the_episodes_to_download():
             # print('First Process the whole season request')
             # print(f'Whole season -> {epi_to_download[2]}, Season Info {season_info}')
             processed = do_api_process(epi_to_download, season_info[0])
-            if vli:
+            if vli > 2:
                 print(f'Whole Season Processed is {processed}')
             if processed[0]:
-                print(f'Whole Season Processed is {processed}')
+                if vli > 2:
+                    print(f'Whole Season Processed is {processed}')
                 downloaded_show = epi_to_download[11]
                 do_text = f" ---> Whole Season downloading "
                 season = season_info[0]
@@ -484,7 +486,7 @@ def process_the_episodes_to_download():
             else:
                 display_status(processed, epi_to_download, do_text, season_info[0])
                 downloaded_show = ''
-                if vli:
+                if vli > 2:
                     print('If Whole Season is not downloading try the first episode of the season')
                 processed = do_api_process(epi_to_download, season_info[1])
                 if processed[0]:
