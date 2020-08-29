@@ -71,7 +71,16 @@ add_seperator()
 
 
 def refresh_console(sender, data):
-    file = open('/Volumes/HD-Data-CA-Server/Development/PycharmProjects/TVM-Management/Apps/out.log', 'r')
+    mode = get_data('mode')
+    if mode == 'Test':
+        logfile = '/Volumes/HD-Data-CA-Server/Development/PycharmProjects/TVM-Management/Apps/out.log'
+    else:
+        logfile = '/Volumes/HD-Data-CA-Server/Development/PycharmProjects/TVM-Management/Apps/Logs/gui.log'
+    try:
+        file = open(logfile, 'r')
+    except IOError as err:
+        log_warning(f'Console log file IOError: {err}')
+        return
     log_info(f'refresh console file: {sender}, {data}')
     consolelines = file.readlines()
     table = []
@@ -82,7 +91,16 @@ def refresh_console(sender, data):
 
 
 def refresh_errors(sender, data):
-    file = open('/Volumes/HD-Data-CA-Server/Development/PycharmProjects/TVM-Management/Apps/err.log', 'r')
+    mode = get_data('mode')
+    if mode == 'Test':
+        logfile = '/Volumes/HD-Data-CA-Server/Development/PycharmProjects/TVM-Management/Apps/err.log'
+    else:
+        logfile = '/Volumes/HD-Data-CA-Server/Development/PycharmProjects/TVM-Management/Apps/Logs/gui_err.log'
+    try:
+        file = open(logfile, 'r')
+    except IOError as err:
+        log_warning(f'Error log file IOError: {err}')
+        return
     log_info(f'refresh error file: {sender}, {data}')
     errorlines = file.readlines()
     table = []
