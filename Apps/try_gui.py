@@ -14,7 +14,7 @@ add_data('showid', 0)
 add_data('mode', 'Prod')
 
 set_theme('Gold')
-set_main_window_title('TVMaze Management')
+set_main_window_title('TVMaze Management - Production DB')
 
 add_menu_bar("Menu")
 add_menu("Shows")
@@ -25,18 +25,18 @@ add_menu_item('Find Downloads', callback='find_downloads')
 end_menu("Shows")
 
 add_menu('TVMaze')
+add_menu('Programs')
+add_menu_item('Run Shows', callback='run_shows')
+add_menu_item('Run Episodes', callback='run_episodes')
+end_menu('Programs')
 add_menu('Logs')
 add_menu_item('Full run Log', callback='run_log')
 add_menu_item('Transmission Log', callback='transmission_log')
 add_menu_item('Plex Watched Log', callback='plex_watched_log')
 add_menu_item('Plex Cleanup Log', callback='plex_cleanup_log')
-end_menu('TVMaze')
-add_menu('Programs')
-add_menu_item('Run Shows', callback='run_shows')
-add_menu_item('Run Episodes', callback='run_episodes')
-end_menu('Programs')
+end_menu('Logs')
 add_menu_item('Misc', callback='misc')
-end_menu('Processes')
+end_menu('TVMaze')
 
 add_menu('Statistics')
 add_menu_item('Overview', callback='stats_on_web')
@@ -44,6 +44,10 @@ add_menu_item('Interactive', callback='stats_interactive')
 end_menu('Statistics')
 
 add_menu("Tools")
+add_menu_item("View Log", callback="show_logger")
+add_menu_item('View Console', callback='view_console')
+add_menu_item('View Script Errors', callback='view_errors')
+add_menu_item(f"Toggle Production & Test", callback='toggle_db')
 add_menu("Log Level")
 add_menu_item('Trace', callback='set_logging_T')
 add_menu_item('Debug##LL', callback='set_logging_D')
@@ -52,18 +56,12 @@ add_menu_item('Warning', callback='set_logging_W')
 add_menu_item('Error', callback='set_logging_E')
 add_menu_item('Off', callback='set_logging_O')
 end_menu('Log Level')
-
-add_menu_item("View Log", callback="show_logger")
-add_menu_item('View Console', callback='view_console')
-add_menu_item('View Script Errors', callback='view_errors')
-add_menu_item("Toggle DB", callback='toggle_db')
-
-add_menu("UI")
+add_menu("Debug")
 add_menu_item("About", callback="show_about")
 add_menu_item("Metrics", callback="show_metrics")
 add_menu_item("Documentation", callback="show_documentation")
 add_menu_item("Debug##UI", callback="show_debug")
-end_menu('UI')
+end_menu('Debug')
 end_menu('Tools')
 
 end_menu_bar('Menu')
@@ -101,7 +99,7 @@ def refresh_errors(sender, data):
     except IOError as err:
         log_warning(f'Error log file IOError: {err}')
         return
-    log_info(f'refresh error file: {sender}, {data}')
+    log_info(f'refresh error log: {sender}, {data}')
     errorlines = file.readlines()
     table = []
     for line in errorlines:
@@ -112,20 +110,50 @@ def refresh_errors(sender, data):
 
 def refresh_run_log(sender, data):
     file = open('/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Logs/30M-Process.log', 'r')
-    log_info(f'refresh error file: {sender}, {data}')
+    log_info(f'refresh Run Log: {sender}, {data}')
     lines = file.readlines()
     table = []
     for line in lines:
         table.append([line.replace("\n", "")])
     set_value('run_log_table', table)
     file.close()
+    
 
+def refresh_plex_cleanup_log(sender, data):
+    logfile = '/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Logs/Plex-Cleanup.log'
+    try:
+        file = open(logfile, 'r')
+    except IOError as err:
+        log_warning(f'Error log file IOError: {err}')
+        table = []
+        set_value('run_plex_cleanup_table', table)
+        return
+    log_info(f'refresh Plex Cleanup log: {sender}, {data}')
+    lines = file.readlines()
+    table = []
+    for line in lines:
+        table.append([line.replace("\n", "")])
+    set_value('run_plex_cleanup_table', table)
+    file.close()
+    
+    
+def empty_plex_cleanup_log(sender, data):
+    try:
+        os.remove('/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Logs/Plex-Cleanup.log')
+    except IOError as err:
+        log_warning(f'Could not remove clean up {err}')
+    else:
+        log_info(f'Removed the plex cleanup log')
+        refresh_plex_cleanup_log(sender, data)
+    
 
 def view_console(sender, data):
     log_info(f'View Console with {sender} and data {data}')
     add_window(f'View Console##{sender}', on_close="fs_close")
     set_style_window_title_align(0.5, 0.5)
     add_button(f'Refresh Console', callback='refresh_console')
+    add_spacing(count=2)
+    add_seperator()
     add_table(f'console_table',
               headers=['Console - Info'])
     refresh_console(sender, data)
@@ -137,6 +165,8 @@ def view_errors(sender, data):
     add_window(f'View Errors##{sender}', on_close="fs_close")
     set_style_window_title_align(0.5, 0.5)
     add_button(f'Refresh Error Log', callback='refresh_errors')
+    add_spacing(count=2)
+    add_seperator()
     add_table(f'errors_table',
               headers=['Error - Info'])
     refresh_errors(sender, data)
@@ -149,9 +179,27 @@ def run_log(sender, data):
                on_close="fs_close")
     set_style_window_title_align(0.5, 0.5)
     add_button(f'Refresh Run Log', callback='refresh_run_log')
+    add_spacing(count= 2)
+    add_seperator()
     add_table(f'run_log_table',
               headers=['Run Log - Info'])
     refresh_run_log(sender, data)
+    end_window()
+    
+
+def plex_cleanup_log(sender, data):
+    log_info(f'View Plex Cleanup Log with {sender} and data {data}')
+    add_window(f'View Plex Cleanup Log##{sender}', 1250, 750, start_x=15, start_y=35, resizable=True, movable=True,
+               on_close="fs_close")
+    set_style_window_title_align(0.5, 0.5)
+    add_button(f'Refresh Plex Cleanup Log', callback='refresh_plex_cleanup_log')
+    add_same_line()
+    add_button(f'Empty Log', callback='empty_plex_cleanup_log')
+    add_spacing(count=2)
+    add_seperator()
+    add_table(f'run_plex_cleanup_table',
+              headers=['Plex Cleanup Log - Info'])
+    refresh_plex_cleanup_log(sender, data)
     end_window()
     
 
@@ -215,12 +263,15 @@ def tvm_follow(fl, si):
 
 
 def toggle_db(sender, data):
+    log_info(f'Current toggle_db mode: {get_data("mode")}')
     if get_data('mode') == 'Prod':
         add_data('mode', 'Test')
-        set_main_window_title('TVMaze Management - Test DB Access')
+        set_main_window_title('TVMaze Management - Test DB')
+        log_info('Switched to Testing Mode')
     else:
         add_data('mode', 'Prod')
-        set_main_window_title('TVMaze Management')
+        set_main_window_title('TVMaze Management - Production DB')
+        log_info('Switched to Production Mode')
 
 
 def fs_close(sender, data):
