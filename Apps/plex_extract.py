@@ -30,6 +30,8 @@ class sdb_info:
     else:
         data = '/Users/dick/Library/Application Support/Plex Media Server/' \
                'Plug-in Support/Databases/com.plexapp.plugins.library.db'
+    ubuntu = '/var/lib/plexmediaserver/Library/Application Support/Plex Media Server/Plug-in Support/' \
+             'Databases/com.plexapp.plugins.library.db'
 
 
 def connect_sdb():
