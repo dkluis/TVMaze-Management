@@ -5,10 +5,7 @@ import subprocess
 
 from db_lib import execute_sql
 
-add_data('follow', False)
-add_data('unfollow', False)
-add_data('skip', False)
-add_data('find', False)
+
 add_data('selected', False)
 add_data('showid', 0)
 add_data('mode', 'Prod')
@@ -18,10 +15,10 @@ set_main_window_title('TVMaze Management - Production DB')
 
 add_menu_bar("Menu")
 add_menu("Shows")
-add_menu_item('Follow', callback='follow_show')
-add_menu_item('Unfollow', callback='unfollow_show')
-add_menu_item('Start Skipping', callback='skip_show')
-add_menu_item('Find Downloads', callback='find_downloads')
+add_menu_item('Follow', callback='activate_window')
+add_menu_item('Unfollow', callback='activate_window')
+add_menu_item('Start Skipping', callback='activate_window')
+add_menu_item('Find Downloads', callback='activate_window')
 end_menu("Shows")
 
 add_menu('TVMaze')
@@ -276,14 +273,6 @@ def toggle_db(sender, data):
 
 def fs_close(sender, data):
     log_info(f'Close Find Show with sender {sender} and data {data}')
-    if 'Follow' in str(sender):
-        add_data('follow', False)
-    elif 'Unfollow' in str(sender):
-        add_data('unfollow', False)
-    elif 'Skip' in str(sender):
-        add_data('skip', False)
-    elif 'Find' in str(sender):
-        add_data('find', False)
     delete_item(sender)
 
 
@@ -363,7 +352,6 @@ def execute_shows(sender, data):
 
 
 def find_show(sender, data):
-    print(f'Find Show {sender}, {data}', flush=True)
     if sender == 'Follow':
         y = 35
     elif sender == 'Unfollow':
@@ -414,42 +402,25 @@ def fill_fs_table(sender, data):
             table_row.append(field)
         table.append(table_row)
     set_value(f'fs_table##{window}', table)
+    
+    
+def get_window_data(sender, data):
+    switcher = {
+        'Follow': 'Follow a Show',
+        'Unfollow': 'Unfollow a Show',
+        'Start Skipping': 'Start Skipping a Show',
+        'Find Downloads': 'Find Download Option for a Show'
+                }
+    return switcher.get(sender, None)
 
 
-def follow_show(sender, data):
-    if get_data('follow'):
-        log_info(f'Follow Show already running with sender {sender} and data {data}')
+def activate_window(sender, data):
+    data = get_window_data(sender, data)
+    if does_item_exist(f"{data}##{sender}"):
+        log_info(f'{data} already running')
     else:
-        log_info(f'Follow Show with sender {sender} and data {data}')
-        find_show(sender, 'Follow a Show')
-        add_data('follow', True)
-
-
-def unfollow_show(sender, data):
-    if get_data('unfollow'):
-        log_info(f'Unfollow Show already running with sender {sender} and data {data}')
-    else:
-        log_info(f'Unfollow Show with sender {sender} and data {data}')
-        find_show(sender, 'Unfollow a Show')
-        add_data('unfollow', True)
-
-
-def skip_show(sender, data):
-    if get_data('skip'):
-        log_info(f'Skip Show already running with sender {sender} and data {data}')
-    else:
-        log_info(f'Skip Show with sender {sender} and data {data}')
-        find_show(sender, 'Skip a Show')
-        add_data('skip', True)
-
-
-def find_downloads(sender, data):
-    if get_data('find'):
-        log_info(f'Find Downloads already running with sender {sender} and data {data}')
-    else:
-        log_info(f'Find Downloads with sender {sender} and data {data}')
-        find_show(sender, 'Find Downloads')
-        add_data('find', True)
+        log_info(f'{data} window started')
+        find_show(sender, data)
 
 
 start_dearpygui()
