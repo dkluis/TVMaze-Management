@@ -215,7 +215,7 @@ def toggle_db(sender, data):
 def fs_close(sender, data):
     log_info(f'Close item (window): sender {sender} and data {data}')
     delete_item(sender)
-
+    # hide_item(sender)
 
 def table_click(sender, data):
     log_info(f'Table Click with sender {sender} and data {data}')
@@ -306,8 +306,8 @@ def find_show(sender, data):
     add_window(f'{data}##{sender}', 1250, 600, start_x=15, start_y=y, resizable=True, movable=True,
                on_close="fs_close")
     set_style_window_title_align(0.5, 0.5)
-    add_input_int(f'Show ID##{sender}', width=250, data_source='showid')
-    add_input_text(f'Show Name##{sender}', hint='Use % as wild-card', width=250, data_source='showname')
+    add_input_int(f'Show ID##{sender}', width=250)
+    add_input_text(f'Show Name##{sender}', hint='Use % as wild-card', width=250)
     add_button(f'Clear##{sender}', callback='clear_fs_show')
     add_same_line(spacing=10)
     add_button(f'Search##{sender}', callback='fill_fs_table')
@@ -359,6 +359,7 @@ def activate_window(sender, data):
     data = get_window_data(sender, data)
     if does_item_exist(f"{data}##{sender}"):
         log_info(f'{data} already running')
+        # show_item(f"{data}##{sender}")
     else:
         log_info(f'{data} window started')
         find_show(sender, data)
@@ -373,6 +374,21 @@ def show_windows(sender, data):
         log_info(f'Open window found: {win}')
         
 
+def about(sender, data):
+    data = 'TVM About'
+    if does_item_exist(data):
+        log_info(f'{data} already running')
+        # show_item(data)
+    else:
+        log_info(f'{data} window started')
+        log_info(f'Open About TVM - sender: {sender} and data: {data}')
+        add_window('TVM About', 500, 100, start_x=365, start_y=100, movable=False, resizable=False, on_close='fs_close')
+        add_spacing(count=9)
+        add_text('                          TVMaze Core V1.5')
+        add_text('                          TVMaze UI   V0.1')
+        end_window()
+    
+
 '''
 Main Program
 '''
@@ -384,6 +400,7 @@ add_data('mode', 'Prod')
 
 set_theme('Gold')
 set_main_window_title('TVMaze Management - Production DB')
+set_style_window_title_align(0.5, 0.5)
 
 add_menu_bar("Menu")
 add_menu("Shows")
@@ -436,6 +453,11 @@ end_menu('Tools')
 add_menu('Windows')
 add_menu_item('Open Windows', callback='show_windows')
 end_menu('Windows')
+
+add_menu('Help')
+add_menu_item('About TVM', callback='about')
+add_menu_item('TVM Documentation', callback='documentation')
+end_menu('Help')
 
 end_menu_bar('Menu')
 add_seperator()
