@@ -9,3 +9,5 @@ dash~=1.14.0
 plotly~=4.9.0
 setuptools~=49.2.0
 Flask~=1.1.2
+dearpygui~=0.1.0b13
+PySimpleGUI~=4.29.0
