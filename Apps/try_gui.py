@@ -6,65 +6,6 @@ import subprocess
 from db_lib import execute_sql
 
 
-add_data('selected', False)
-add_data('showid', 0)
-add_data('mode', 'Prod')
-
-set_theme('Gold')
-set_main_window_title('TVMaze Management - Production DB')
-
-add_menu_bar("Menu")
-add_menu("Shows")
-add_menu_item('Follow', callback='activate_window')
-add_menu_item('Unfollow', callback='activate_window')
-add_menu_item('Start Skipping', callback='activate_window')
-add_menu_item('Find Downloads', callback='activate_window')
-end_menu("Shows")
-
-add_menu('TVMaze')
-add_menu('Programs')
-add_menu_item('Run Shows', callback='run_shows')
-add_menu_item('Run Episodes', callback='run_episodes')
-end_menu('Programs')
-add_menu('Logs')
-add_menu_item('Full run Log', callback='run_log')
-add_menu_item('Transmission Log', callback='transmission_log')
-add_menu_item('Plex Watched Log', callback='plex_watched_log')
-add_menu_item('Plex Cleanup Log', callback='plex_cleanup_log')
-end_menu('Logs')
-add_menu_item('Misc', callback='misc')
-end_menu('TVMaze')
-
-add_menu('Statistics')
-add_menu_item('Overview', callback='stats_on_web')
-add_menu_item('Interactive', callback='stats_interactive')
-end_menu('Statistics')
-
-add_menu("Tools")
-add_menu_item("View Log", callback="show_logger")
-add_menu_item('View Console', callback='view_console')
-add_menu_item('View Script Errors', callback='view_errors')
-add_menu_item(f"Toggle Production & Test", callback='toggle_db')
-add_menu("Log Level")
-add_menu_item('Trace', callback='set_logging_T')
-add_menu_item('Debug##LL', callback='set_logging_D')
-add_menu_item('Info', callback='set_logging_I')
-add_menu_item('Warning', callback='set_logging_W')
-add_menu_item('Error', callback='set_logging_E')
-add_menu_item('Off', callback='set_logging_O')
-end_menu('Log Level')
-add_menu("Debug")
-add_menu_item("About", callback="show_about")
-add_menu_item("Metrics", callback="show_metrics")
-add_menu_item("Documentation", callback="show_documentation")
-add_menu_item("Debug##UI", callback="show_debug")
-end_menu('Debug')
-end_menu('Tools')
-
-end_menu_bar('Menu')
-add_seperator()
-
-
 def refresh_console(sender, data):
     mode = get_data('mode')
     if mode == 'Test':
@@ -272,7 +213,7 @@ def toggle_db(sender, data):
 
 
 def fs_close(sender, data):
-    log_info(f'Close Find Show with sender {sender} and data {data}')
+    log_info(f'Close item (window): sender {sender} and data {data}')
     delete_item(sender)
 
 
@@ -361,7 +302,7 @@ def find_show(sender, data):
     else:
         y = 95
     
-    log_info(f'Find Show with sender {sender} and data {data}')
+    log_info(f'Open Window sender: {sender} and data: {data}')
     add_window(f'{data}##{sender}', 1250, 600, start_x=15, start_y=y, resizable=True, movable=True,
                on_close="fs_close")
     set_style_window_title_align(0.5, 0.5)
@@ -421,6 +362,83 @@ def activate_window(sender, data):
     else:
         log_info(f'{data} window started')
         find_show(sender, data)
+        
+    
+def show_windows(sender, data):
+    log_info('Show Windows activated')
+    all_windows = get_windows(sender, data)
+    add_data('open_windows', all_windows)
+    for window in all_windows:
+        win = window.split('##')[0]
+        log_info(f'Open window found: {win}')
+        
 
+'''
+Main Program
+'''
+        
+        
+add_data('selected', False)
+add_data('showid', 0)
+add_data('mode', 'Prod')
+
+set_theme('Gold')
+set_main_window_title('TVMaze Management - Production DB')
+
+add_menu_bar("Menu")
+add_menu("Shows")
+add_menu_item('Follow', callback='activate_window')
+add_menu_item('Unfollow', callback='activate_window')
+add_menu_item('Start Skipping', callback='activate_window')
+add_menu_item('Find Downloads', callback='activate_window')
+end_menu("Shows")
+
+add_menu('TVMaze')
+add_menu('Programs')
+add_menu_item('Run Shows', callback='run_shows')
+add_menu_item('Run Episodes', callback='run_episodes')
+end_menu('Programs')
+add_menu('Logs')
+add_menu_item('Full run Log', callback='run_log')
+add_menu_item('Transmission Log', callback='transmission_log')
+add_menu_item('Plex Watched Log', callback='plex_watched_log')
+add_menu_item('Plex Cleanup Log', callback='plex_cleanup_log')
+end_menu('Logs')
+add_menu_item('Misc', callback='misc')
+end_menu('TVMaze')
+
+add_menu('Statistics')
+add_menu_item('Overview', callback='stats_on_web')
+add_menu_item('Interactive', callback='stats_interactive')
+end_menu('Statistics')
+
+add_menu("Tools")
+add_menu_item("View Log", callback="show_logger")
+add_menu_item('View Console', callback='view_console')
+add_menu_item('View Script Errors', callback='view_errors')
+add_menu_item(f"Toggle Production & Test", callback='toggle_db')
+add_menu("Log Level")
+add_menu_item('Trace', callback='set_logging_T')
+add_menu_item('Debug##LL', callback='set_logging_D')
+add_menu_item('Info', callback='set_logging_I')
+add_menu_item('Warning', callback='set_logging_W')
+add_menu_item('Error', callback='set_logging_E')
+add_menu_item('Off', callback='set_logging_O')
+end_menu('Log Level')
+add_menu("Debug")
+add_menu_item("About", callback="show_about")
+add_menu_item("Metrics", callback="show_metrics")
+add_menu_item("Documentation", callback="show_documentation")
+add_menu_item("Debug##UI", callback="show_debug")
+end_menu('Debug')
+end_menu('Tools')
+
+add_menu('Windows')
+add_menu_item('Open Windows', callback='show_windows')
+end_menu('Windows')
+
+end_menu_bar('Menu')
+add_seperator()
+    
 
 start_dearpygui()
