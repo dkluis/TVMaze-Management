@@ -6,16 +6,26 @@ import subprocess
 from db_lib import execute_sql
 
 
+class logfiles:
+    test_console = '/Volumes/HD-Data-CA-Server/Development/PycharmProjects/TVM-Management/Apps/out.log'
+    prod_console = '/Volumes/HD-Data-CA-Server/Development/PycharmProjects/TVM-Management/Apps/Logs/gui.log'
+    test_errors = '/Volumes/HD-Data-CA-Server/Development/PycharmProjects/TVM-Management/Apps/err.log'
+    prod_errors = '/Volumes/HD-Data-CA-Server/Development/PycharmProjects/TVM-Management/Apps/Logs/gui_err.log'
+    process_run = '/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Logs/30M-Process.log'
+    plex_cleanup = '/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Logs/Plex-Cleanup.log'
+
+
 def refresh_console(sender, data):
     mode = get_data('mode')
     if mode == 'Test':
-        logfile = '/Volumes/HD-Data-CA-Server/Development/PycharmProjects/TVM-Management/Apps/out.log'
+        logfile = logfiles.test_console
     else:
-        logfile = '/Volumes/HD-Data-CA-Server/Development/PycharmProjects/TVM-Management/Apps/Logs/gui.log'
+        logfile = logfiles.prod_console
     try:
         file = open(logfile, 'r')
     except IOError as err:
         log_warning(f'Console log file IOError: {err}')
+        open(logfile, 'a').close()
         return
     log_info(f'refresh console file: {sender}, {data}')
     consolelines = file.readlines()
@@ -29,13 +39,14 @@ def refresh_console(sender, data):
 def refresh_errors(sender, data):
     mode = get_data('mode')
     if mode == 'Test':
-        logfile = '/Volumes/HD-Data-CA-Server/Development/PycharmProjects/TVM-Management/Apps/err.log'
+        logfile = logfiles.test_errors
     else:
-        logfile = '/Volumes/HD-Data-CA-Server/Development/PycharmProjects/TVM-Management/Apps/Logs/gui_err.log'
+        logfile = logfiles.prod_errors
     try:
         file = open(logfile, 'r')
     except IOError as err:
         log_warning(f'Error log file IOError: {err}')
+        open(logfile, 'a').close()
         return
     log_info(f'refresh error log: {sender}, {data}')
     errorlines = file.readlines()
@@ -47,7 +58,14 @@ def refresh_errors(sender, data):
     
 
 def refresh_run_log(sender, data):
-    file = open('/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Logs/30M-Process.log', 'r')
+    try:
+        file = open(logfiles.process_run, 'r')
+    except IOError as err:
+        log_warning(f'Error log file IOError: {err}')
+        table = []
+        set_value('run_plex_cleanup_table', table)
+        open(logfiles.process_run, 'a').close()
+        return
     log_info(f'refresh Run Log: {sender}, {data}')
     lines = file.readlines()
     table = []
@@ -58,13 +76,14 @@ def refresh_run_log(sender, data):
     
 
 def refresh_plex_cleanup_log(sender, data):
-    logfile = '/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Logs/Plex-Cleanup.log'
+    logfile = logfiles.plex_cleanup
     try:
         file = open(logfile, 'r')
     except IOError as err:
         log_warning(f'Error log file IOError: {err}')
         table = []
         set_value('run_plex_cleanup_table', table)
+        open(logfile, 'a').close()
         return
     log_info(f'refresh Plex Cleanup log: {sender}, {data}')
     lines = file.readlines()
@@ -75,14 +94,61 @@ def refresh_plex_cleanup_log(sender, data):
     file.close()
     
     
+def remove_logfile(logfile):
+    log_info(f'Removing logfile {logfile}')
+    try:
+        os.remove(logfile)
+    except IOError as err:
+        log_warning(f'Could not remove logfile {logfile} due to {err}')
+    else:
+        log_info(f'Removed the plex {logfile}')
+        open(logfile, 'a').close()
+
+
+def empty_logfile(sender, data):
+    log_info(f'Start the empty logfile process with {sender}, {data}')
+    if sender == 'Empty Log##pcl':
+        logfile = logfiles.plex_cleanup
+        remove_logfile(logfile)
+        refresh_plex_cleanup_log(sender, data)
+        log_info(f'Calling remove_logfile for {sender} {logfile}')
+    elif sender == 'Empty Log##rl':
+        logfile = logfiles.process_run
+        remove_logfile(logfile)
+        refresh_run_log(sender, data)
+        log_info(f'Removing logfile for {sender} {logfile}')
+    elif sender == 'cccc:':
+        if get_data('mode') == 'Prod':
+            logfile = logfiles.prod_errors
+            remove_logfile(logfile)
+            refresh_errors(sender, data)
+        else:
+            logfile = logfiles.test_errors
+            remove_logfile(logfile)
+            refresh_errors(sender, data)
+    elif sender == 'ddddd:':
+        if get_data('mode') == 'Prod':
+            logfile = logfiles.prod_console
+            remove_logfile(logfile)
+            refresh_console(sender, data)
+        else:
+            logfile = logfiles.prod_console
+            remove_logfile(logfile)
+            refresh_console(sender, data)
+    else:
+        log_warning(f'Did not process the emptying, could not find {sender}')
+
+
 def empty_plex_cleanup_log(sender, data):
     try:
-        os.remove('/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Logs/Plex-Cleanup.log')
+        os.remove(logfiles.plex_cleanup)
     except IOError as err:
         log_warning(f'Could not remove clean up {err}')
+        open(logfiles.plex_cleanup, 'a').close()
     else:
         log_info(f'Removed the plex cleanup log')
-        refresh_plex_cleanup_log(sender, data)
+    
+    refresh_plex_cleanup_log(sender, data)
     
 
 def view_console(sender, data):
@@ -123,6 +189,8 @@ def run_log(sender, data):
                on_close="fs_close")
     set_style_window_title_align(0.5, 0.5)
     add_button(f'Refresh Run Log', callback='refresh_run_log')
+    add_same_line()
+    add_button(f'Empty Log##rl', callback='empty_logfile')
     add_spacing(count= 2)
     add_seperator()
     add_table(f'run_log_table',
@@ -138,7 +206,7 @@ def plex_cleanup_log(sender, data):
     set_style_window_title_align(0.5, 0.5)
     add_button(f'Refresh Plex Cleanup Log', callback='refresh_plex_cleanup_log')
     add_same_line()
-    add_button(f'Empty Log', callback='empty_plex_cleanup_log')
+    add_button(f'Empty Log##pcl', callback='empty_logfile')
     add_spacing(count=2)
     add_seperator()
     add_table(f'run_plex_cleanup_table',
@@ -208,6 +276,7 @@ def tvm_follow(fl, si):
 
 def toggle_db(sender, data):
     log_info(f'Current toggle_db mode: {get_data("mode")}')
+    close_all_windows(sender, data)
     if get_data('mode') == 'Prod':
         add_data('mode', 'Test')
         set_main_window_title('TVMaze Management - Test DB')
