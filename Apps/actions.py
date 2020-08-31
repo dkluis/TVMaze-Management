@@ -123,17 +123,15 @@ def get_eztv_api_options(imdb_id, seas, showname):
     eztv_url = execute_sql(sqltype='Fetch',
                            sql='SELECT link_prefix FROM download_options '
                                'where `providername` = "eztvAPI"')[0][0] + eztv_show[2:]
-    # print(eztv_url)
     eztv_data = requests.get(eztv_url).json()
-    # print(eztv_data)
+    if vli > 2:
+        print(f'Actions: Checking eztvAPi url: {eztv_url}')
     eztv_count = eztv_data['torrents_count']
-    # print(eztv_count)
     if eztv_count == 0:
         return download_options
     eztv_epis = eztv_data['torrents']
     for eztv_epi in eztv_epis:
         filename = str(eztv_epi['filename']).lower()
-        # tor_url = eztv_epi['torrent_url']
         mag_url = eztv_epi['magnet_url']
         size = float(eztv_epi['size_bytes']) / 1000000
         size = int(size)
