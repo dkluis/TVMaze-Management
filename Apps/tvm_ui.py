@@ -8,9 +8,9 @@ from db_lib import execute_sql
 
 class logfiles:
     test_console = '/Volumes/HD-Data-CA-Server/Development/PycharmProjects/TVM-Management/Apps/out.log'
-    prod_console = '/Volumes/HD-Data-CA-Server/Development/PycharmProjects/TVM-Management/Apps/Logs/gui.log'
+    prod_console = '/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Logs/gui.log'
     test_errors = '/Volumes/HD-Data-CA-Server/Development/PycharmProjects/TVM-Management/Apps/err.log'
-    prod_errors = '/Volumes/HD-Data-CA-Server/Development/PycharmProjects/TVM-Management/Apps/Logs/gui_err.log'
+    prod_errors = '/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Logs/gui_err.log'
     process_run = '/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Logs/30M-Process.log'
     plex_cleanup = '/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Logs/Plex-Cleanup.log'
 
@@ -117,7 +117,7 @@ def empty_logfile(sender, data):
         remove_logfile(logfile)
         refresh_run_log(sender, data)
         log_info(f'Removing logfile for {sender} {logfile}')
-    elif sender == 'cccc:':
+    elif sender == 'Empty Log##er':
         if get_data('mode') == 'Prod':
             logfile = logfiles.prod_errors
             remove_logfile(logfile)
@@ -126,7 +126,7 @@ def empty_logfile(sender, data):
             logfile = logfiles.test_errors
             remove_logfile(logfile)
             refresh_errors(sender, data)
-    elif sender == 'ddddd:':
+    elif sender == 'Empty Log##co':
         if get_data('mode') == 'Prod':
             logfile = logfiles.prod_console
             remove_logfile(logfile)
@@ -159,6 +159,8 @@ def view_console(sender, data):
         add_window(f'View Console##{sender}', start_x=1505, start_y=35, width=600, height=500, on_close="fs_close")
         set_style_window_title_align(0.5, 0.5)
         add_button(f'Refresh Console', callback='refresh_console')
+        add_same_line(spacing=10)
+        add_button(f"Empty Log##co", callback='empty_logfile')
         add_spacing(count=2)
         add_seperator()
         add_table(f'console_table',
@@ -175,6 +177,8 @@ def view_errors(sender, data):
         add_window(f'View Errors##{sender}', start_x=1505 , start_y=550, width=600, height=500, on_close="fs_close")
         set_style_window_title_align(0.5, 0.5)
         add_button(f'Refresh Error Log', callback='refresh_errors')
+        add_same_line(spacing=10)
+        add_button(f"Empty Log##er", callback='empty_logfile')
         add_spacing(count=2)
         add_seperator()
         add_table(f'errors_table',
@@ -466,6 +470,10 @@ def open_debug_windows(sender, data):
     view_errors(sender, data)
     show_logger()
     show_debug()
+    
+
+def close_about(sender, data):
+    delete_item('TVM About')
 
 
 def about(sender, data):
@@ -475,11 +483,13 @@ def about(sender, data):
     else:
         log_info(f'{data} window started')
         log_info(f'Open About TVM - sender: {sender} and data: {data}')
-        add_window('TVM About', 500, 100, start_x=365, start_y=100, movable=False, resizable=False, on_close='fs_close')
+        add_window('TVM About', 500, 100, start_x=50, start_y=50, movable=False, resizable=False, on_close='fs_close')
         set_style_window_title_align(0.5, 0.5)
-        add_spacing(count=9)
+        add_spacing(count=5)
         add_text('                          TVMaze Core V1.5')
         add_text('                          TVMaze UI   V0.1')
+        add_spacing(count=3)
+        add_button('Close##about', callback='close_about')
         end_window()
         
 
@@ -498,6 +508,10 @@ def refresh_all_shows(sender, data):
     all_shows = execute_sql(sqltype='Fetch', sql=sql)
     log_info(f'Refresh All Shows found {len(all_shows)} records')
     add_scatter_series('All Shows##plot', 'scatter', all_shows, )
+    
+    
+def end_program(sender, data):
+    delete_item('MainWindow')
 
 '''
 Main Program
@@ -505,15 +519,22 @@ Main Program
 
 add_data('selected', False)
 add_data('showid', 0)
-add_data('mode', 'Prod')
+add_data('mode', 'Test')
 
 set_theme('Gold')
-set_main_window_title('TVMaze Management - Production DB')
+set_main_window_title('TVMaze Management - Test DB')
 set_style_window_title_align(0.5, 0.5)
 set_main_window_size(2140, 1210)
 
 
 add_menu_bar("Menu")
+add_menu('TVMaze')
+add_menu_item('About TVM', callback='about')
+add_spacing(count=2)
+add_seperator()
+add_menu_item('Quit', callback='end_program')
+end_menu('TVMaze')
+
 add_menu("Shows")
 add_menu_item('Follow', callback='activate_window')
 add_menu_item('Unfollow', callback='activate_window')
@@ -562,10 +583,11 @@ add_menu_item('Open Debug Windows', callback='open_debug_windows')
 end_menu('Windows')
 
 add_menu('Help')
-add_menu_item('About TVM', callback='about')
 add_menu_item('TVM Documentation', callback='documentation')
-add_menu("Debug")
-add_menu_item("About", callback="show_about")
+add_spacing(count=2)
+add_seperator()
+add_menu("Development")
+add_menu_item("About##Dev", callback="show_about")
 add_menu_item("Metrics", callback="show_metrics")
 add_menu_item("Documentation", callback="show_documentation")
 add_menu_item('Style Editor', callback='show_style_editor')
