@@ -87,33 +87,39 @@ def empty_plex_cleanup_log(sender, data):
 
 def view_console(sender, data):
     log_info(f'View Console with {sender} and data {data}')
-    add_window(f'View Console##{sender}', on_close="fs_close")
-    set_style_window_title_align(0.5, 0.5)
-    add_button(f'Refresh Console', callback='refresh_console')
-    add_spacing(count=2)
-    add_seperator()
-    add_table(f'console_table',
-              headers=['Console - Info'])
-    refresh_console(sender, data)
-    end_window()
+    if does_item_exist(f'View Console##{sender}'):
+        log_info(f'View Console##{sender} already running')
+    else:
+        add_window(f'View Console##{sender}', start_x=1505, start_y=35, width=600, height=500, on_close="fs_close")
+        set_style_window_title_align(0.5, 0.5)
+        add_button(f'Refresh Console', callback='refresh_console')
+        add_spacing(count=2)
+        add_seperator()
+        add_table(f'console_table',
+                  headers=['Console - Info'])
+        refresh_console(sender, data)
+        end_window()
 
 
 def view_errors(sender, data):
     log_info(f'View Errors with {sender} and data {data}')
-    add_window(f'View Errors##{sender}', on_close="fs_close")
-    set_style_window_title_align(0.5, 0.5)
-    add_button(f'Refresh Error Log', callback='refresh_errors')
-    add_spacing(count=2)
-    add_seperator()
-    add_table(f'errors_table',
-              headers=['Error - Info'])
-    refresh_errors(sender, data)
-    end_window()
+    if does_item_exist(f'View Errors##{sender}'):
+        log_info(f'View Errors##{sender} already running')
+    else:
+        add_window(f'View Errors##{sender}', start_x=1505 , start_y=550, width=600, height=500, on_close="fs_close")
+        set_style_window_title_align(0.5, 0.5)
+        add_button(f'Refresh Error Log', callback='refresh_errors')
+        add_spacing(count=2)
+        add_seperator()
+        add_table(f'errors_table',
+                  headers=['Error - Info'])
+        refresh_errors(sender, data)
+        end_window()
     
     
 def run_log(sender, data):
     log_info(f'View Run Log with {sender} and data {data}')
-    add_window(f'View Run Log##{sender}', 1250, 750, start_x=15, start_y=35, resizable=True, movable=True,
+    add_window(f'View Run Log##{sender}', 1875, 750, start_x=15, start_y=35, resizable=True, movable=True,
                on_close="fs_close")
     set_style_window_title_align(0.5, 0.5)
     add_button(f'Refresh Run Log', callback='refresh_run_log')
@@ -367,33 +373,67 @@ def activate_window(sender, data):
     
 def show_windows(sender, data):
     log_info('Show Windows activated')
-    all_windows = get_windows(sender, data)
+    all_windows = get_windows()
     add_data('open_windows', all_windows)
     for window in all_windows:
         win = window.split('##')[0]
         log_info(f'Open window found: {win}')
+    show_logger()
+    
+
+def close_all_windows(sender, data):
+    log_info('Close Windows activated')
+    all_windows = get_windows()
+    for window in all_windows:
+        log(f'Processing to close: {window}')
+        if 'MainWindow' in window:
+            continue
+        log_info(f'Closing window found: {window}')
+        delete_item(window)
         
+        
+def open_debug_windows(sender, data):
+    view_console(sender, data)
+    view_errors(sender, data)
+    show_logger()
+    show_debug()
+
 
 def about(sender, data):
     data = 'TVM About'
     if does_item_exist(data):
         log_info(f'{data} already running')
-        # show_item(data)
     else:
         log_info(f'{data} window started')
         log_info(f'Open About TVM - sender: {sender} and data: {data}')
         add_window('TVM About', 500, 100, start_x=365, start_y=100, movable=False, resizable=False, on_close='fs_close')
+        set_style_window_title_align(0.5, 0.5)
         add_spacing(count=9)
         add_text('                          TVMaze Core V1.5')
         add_text('                          TVMaze UI   V0.1')
         end_window()
-    
+        
+
+def stats_interactive(sender, data):
+    log_info(f'Interactive Statistics {is_item_visible("Graphs")}')
+    if get_data('Graphs') == '':
+        hide_item('Graphs')
+        add_data('Graphs', 'hidden')
+    else:
+        show_item('Graphs')
+        add_data('Graphs', '')
+
+
+def refresh_all_shows(sender, data):
+    sql = f'select statepoch, tvmshows from statistics where statrecind = "TVMaze"'
+    all_shows = execute_sql(sqltype='Fetch', sql=sql)
+    log_info(f'Refresh All Shows found {len(all_shows)} records')
+    add_scatter_series('All Shows##plot', 'scatter', all_shows, )
 
 '''
 Main Program
 '''
-        
-        
+
 add_data('selected', False)
 add_data('showid', 0)
 add_data('mode', 'Prod')
@@ -401,6 +441,8 @@ add_data('mode', 'Prod')
 set_theme('Gold')
 set_main_window_title('TVMaze Management - Production DB')
 set_style_window_title_align(0.5, 0.5)
+set_main_window_size(2140, 1210)
+
 
 add_menu_bar("Menu")
 add_menu("Shows")
@@ -442,25 +484,41 @@ add_menu_item('Warning', callback='set_logging_W')
 add_menu_item('Error', callback='set_logging_E')
 add_menu_item('Off', callback='set_logging_O')
 end_menu('Log Level')
-add_menu("Debug")
-add_menu_item("About", callback="show_about")
-add_menu_item("Metrics", callback="show_metrics")
-add_menu_item("Documentation", callback="show_documentation")
-add_menu_item("Debug##UI", callback="show_debug")
-end_menu('Debug')
 end_menu('Tools')
 
 add_menu('Windows')
-add_menu_item('Open Windows', callback='show_windows')
+add_menu_item('Log Open Windows', callback='show_windows')
+add_menu_item('Close All', callback='close_all_windows')
+add_menu_item('Open Debug Windows', callback='open_debug_windows')
 end_menu('Windows')
 
 add_menu('Help')
 add_menu_item('About TVM', callback='about')
 add_menu_item('TVM Documentation', callback='documentation')
+add_menu("Debug")
+add_menu_item("About", callback="show_about")
+add_menu_item("Metrics", callback="show_metrics")
+add_menu_item("Documentation", callback="show_documentation")
+add_menu_item('Style Editor', callback='show_style_editor')
+add_menu_item("Debug##UI", callback="show_debug")
+end_menu('Debug')
 end_menu('Help')
 
 end_menu_bar('Menu')
 add_seperator()
-    
+
+add_tab_bar('Graphs')
+add_tab('All Shows')
+add_button('Refresh##all', callback='refresh_all_shows')
+add_seperator()
+add_spacing(count=5)
+add_plot('All Shows##plot', 'Time', 'Shows')
+end_tab()
+add_tab('Followed Shows')
+add_button('Refresh##followed', callback='refresh_followed_shows')
+end_tab()
+end_tab_bar()
+hide_item('Graphs')
+add_data('Graphs', 'hidden')
 
 start_dearpygui()
