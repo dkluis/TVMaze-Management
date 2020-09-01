@@ -247,10 +247,10 @@ def find_shows(si, sn):
     log_info(f'Find Shows SQL with showid {si} and showname {sn}')
     showid = get_data('showid')
     if showid != 0:
-        sql = f'select showid, showname, network, type, showstatus, status, premiered ' \
+        sql = f'select showid, showname, network, type, showstatus, status, premiered, download ' \
               f'from shows where `showid` = {si}'
     else:
-        sql = f'select showid, showname, network, type, showstatus, status, premiered ' \
+        sql = f'select showid, showname, network, type, showstatus, status, premiered, download ' \
               f'from shows where `showname` like "{sn}" order by premiered desc'
     if get_data('mode') == 'Prod':
         fs = execute_sql(sqltype='Fetch', sql=sql)
@@ -289,12 +289,14 @@ def toggle_db(sender, data):
         add_data('mode', 'Prod')
         set_main_window_title('TVMaze Management - Production DB')
         log_info('Switched to Production Mode')
+    main_callback('Shows', None)
 
 
 def fs_close(sender, data):
     log_info(f'Close item (window): sender {sender} and data {data}')
     delete_item(sender)
     # hide_item(sender)
+    
 
 def table_click(sender, data):
     log_info(f'Table Click with sender {sender} and data {data}')
@@ -390,6 +392,8 @@ def find_show(sender, data):
     add_button(f'Clear##{sender}', callback='clear_fs_show')
     add_same_line(spacing=10)
     add_button(f'Search##{sender}', callback='fill_fs_table')
+    add_same_line(spacing=250)
+    add_button(f'Try Out##{sender}', callback=f'try_out')
     add_seperator()
     add_input_text(f'##SB{sender}', readonly=True, default_value='', width=750)
     add_same_line(spacing=25)
@@ -399,9 +403,13 @@ def find_show(sender, data):
     add_seperator()
     add_spacing()
     add_table(f'fs_table##{sender}',
-              headers=['Show ID', 'Show Name', 'Network', 'Type', 'Status', 'My Status', 'Premiered'],
+              headers=['Show ID', 'Show Name', 'Network', 'Type', 'Status', 'My Status', 'Premiered', 'Downloader'],
               callback=f'table_click')
     end_window()
+    
+    if {data} != 'Follow':
+        log_info("Hidding Try out")
+        hide_item('try_out')
 
 
 def fill_fs_table(sender, data):
@@ -443,33 +451,25 @@ def activate_window(sender, data):
         log_info(f'{data} window started')
         find_show(sender, data)
         
-    
-def show_windows(sender, data):
-    log_info('Show Windows activated')
-    all_windows = get_windows()
-    add_data('open_windows', all_windows)
-    for window in all_windows:
-        win = window.split('##')[0]
-        log_info(f'Open window found: {win}')
-    show_logger()
-    
 
 def close_all_windows(sender, data):
     log_info('Close Windows activated')
     all_windows = get_windows()
     for window in all_windows:
         log(f'Processing to close: {window}')
-        if 'MainWindow' in window:
+        if 'MainWindow' in window or 'Status Bar##bottom' in window:
             continue
         log_info(f'Closing window found: {window}')
         delete_item(window)
+    # delete_item('logger##standard')
+    # delete_item('debug##standard')
         
         
-def open_debug_windows(sender, data):
+def open_log_windows(sender, data):
     view_console(sender, data)
     view_errors(sender, data)
     show_logger()
-    show_debug()
+    # show_debug()
     
 
 def close_about(sender, data):
@@ -505,13 +505,33 @@ def stats_interactive(sender, data):
 
 def refresh_all_shows(sender, data):
     sql = f'select statepoch, tvmshows from statistics where statrecind = "TVMaze"'
-    all_shows = execute_sql(sqltype='Fetch', sql=sql)
+    if get_data('mode') == 'Prod':
+        all_shows = execute_sql(sqltype='Fetch', sql=sql)
+    else:
+        all_shows = execute_sql(sqltype='Fetch', sql=sql, d='Test-TVM-DB')
     log_info(f'Refresh All Shows found {len(all_shows)} records')
-    add_scatter_series('All Shows##plot', 'scatter', all_shows, )
+    add_line_series('All Shows##plot', 'scatter', all_shows)
     
     
 def end_program(sender, data):
+    log_info(f'Trying to quit MainWindow (the app TVMaze UI {sender}, {data}')
     delete_item('MainWindow')
+    
+    
+def documentation(sender, data):
+    log_info(f'Started Documentation {sender}, {data}')
+    
+    
+def main_callback(sender, data):
+    log_info(f'Main Callback activated {sender}, {data}')
+    if sender == 'Shows':
+        sql = f'select count(*) from shows where status = "New"'
+        if get_data('mode') == 'Prod':
+            count = execute_sql(sqltype='Fetch', sql=sql)
+        else:
+            count = execute_sql(sqltype='Fetch', sql=sql, d='Test-TVM-DB')
+        add_data(f'statusbar_info', f'Status Bar: {count[0][0]} new shows to evaluate')
+
 
 '''
 Main Program
@@ -526,6 +546,9 @@ set_main_window_title('TVMaze Management - Test DB')
 set_style_window_title_align(0.5, 0.5)
 set_main_window_size(2140, 1210)
 
+set_window_pos('logger##standard', 500, 925)
+set_item_width('logger##standard', 1000)
+set_item_height('logger##standard', 175)
 
 add_menu_bar("Menu")
 add_menu('TVMaze')
@@ -542,7 +565,7 @@ add_menu_item('Start Skipping', callback='activate_window')
 add_menu_item('Find Downloads', callback='activate_window')
 end_menu("Shows")
 
-add_menu('TVMaze')
+add_menu('Processes')
 add_menu('Programs')
 add_menu_item('Run Shows', callback='run_shows')
 add_menu_item('Run Episodes', callback='run_episodes')
@@ -554,7 +577,7 @@ add_menu_item('Plex Watched Log', callback='plex_watched_log')
 add_menu_item('Plex Cleanup Log', callback='plex_cleanup_log')
 end_menu('Logs')
 add_menu_item('Misc', callback='misc')
-end_menu('TVMaze')
+end_menu('Processes')
 
 add_menu('Statistics')
 add_menu_item('Overview', callback='stats_on_web')
@@ -577,9 +600,8 @@ end_menu('Log Level')
 end_menu('Tools')
 
 add_menu('Windows')
-add_menu_item('Log Open Windows', callback='show_windows')
 add_menu_item('Close All', callback='close_all_windows')
-add_menu_item('Open Debug Windows', callback='open_debug_windows')
+add_menu_item('Open all Logs', callback='open_log_windows')
 end_menu('Windows')
 
 add_menu('Help')
@@ -611,5 +633,15 @@ end_tab()
 end_tab_bar()
 hide_item('Graphs')
 add_data('Graphs', 'hidden')
+
+add_window('Status Bar##bottom', 2138, 50, start_x=1, start_y=1160, on_close='fs_close')
+set_style_window_title_align(0.5, 0.5)
+add_input_text('##sb_info', readonly=True, data_source='statusbar_info')
+end_window('Status Bar')
+
+set_render_callback('main_callback', 'Shows')
+add_data('statusbar_info', "Status Bar:")
+main_callback('Shows', None)
+
 
 start_dearpygui()
