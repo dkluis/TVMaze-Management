@@ -20,7 +20,7 @@ def func_find_shows(si, sn):
     log_info(f'Find Shows SQL with showid {si} and showname {sn}')
     if si == 0 and sn == 'New':
         sql = f'select showid, showname, network, type, showstatus, status, premiered, download ' \
-              f'from shows where status = "New"'
+              f'from shows where status = "New" or status = "Undecided" order by premiered'
     else:
         showid = get_data('shows_showid')
         if showid != 0:
@@ -54,12 +54,16 @@ def graph_execute_get_data(sql, sender, pi):
     log_info(f'Filling the plot data for {sender} with {sql}')
     if get_data('mode') == 'Prod':
         data = execute_sql(sqltype='Fetch', sql=sql)
+        log_info('Getting Prod Data')
     else:
         data = execute_sql(sqltype='Fetch', sql=sql, d='Test-TVM-DB')
+        log_info('Getting Test Data')
     plot_index = sender
     if sender == 'Other Shows':
         plot_index = pi
     add_line_series(f'{sender}##plot', plot_index, data)
+    # ToDo Figure graph call back from auto refresh option
+    # set_render_callback('graph_render_callback')
 
 
 def graph_get_data(sender):
@@ -75,7 +79,7 @@ def graph_get_data(sender):
         graph_refresh_other('Other Shows')
         return
     else:
-        add_line_series(f'{sender}##plot', sender, data)
+        add_line_series(f'{sender}##plot', "Unknown", data)
         return
     graph_execute_get_data(sql, sender, data)
 
@@ -83,7 +87,7 @@ def graph_get_data(sender):
 def graph_refresh(sender, data):
     log_info(f'Refreshing Graph Data for {sender}')
     if '##' in sender:
-        requester = str(sender).split('##')[1]
+        requester = func_breakout_window(sender, 1)
     else:
         requester = sender
     graph_get_data(requester)
@@ -99,12 +103,19 @@ def graph_refresh_other(sender):
     graph_execute_get_data(sql, 'Other Shows', 'Running')
     sql = f'select statepoch, myshowstbd from statistics where statrecind = "TVMaze"'
     graph_execute_get_data(sql, 'Other Shows', 'TBD')
+    
+    
+# Todo part of the render callback todo
+"""
+def graph_render_callback(sender, data):
+    log_info(f'Graph Render Callback Triggered {sender} {data}')
+"""
 
 
 def main_callback(sender, data):
     log_info(f'Main Callback activated {sender}, {data}')
     if sender == 'Shows':
-        sql = f'select count(*) from shows where status = "New"'
+        sql = f'select count(*) from shows where status = "New" or status = "Undecided"'
         if get_data('mode') == 'Prod':
             count = execute_sql(sqltype='Fetch', sql=sql)
         else:
@@ -228,11 +239,12 @@ def window_shows(sender, data):
             add_label_text(f'##uw{sender}', value='Tried to create an undefined Show Window')
         end_window()
         set_style_window_title_align(0.5, 0.5)
+        if sender == 'Eval New Shows':
+            show_fill_table(f'Search##{sender}', None)
         log_info(f'Create item (window): "{window}"')
 
 
 # Main Program
-
 
 add_data('shows_ds_new_shows', '0')
 add_data('mode', 'Test')
@@ -269,6 +281,10 @@ add_menu('Tools')
 add_menu_item('Toggle Database to', callback='func_toggle_db')
 add_same_line(xoffset=140)
 add_label_text(f'##db', value='Test', data_source='db_opposite', color=[250, 250, 0, 250])
+end_menu()
+
+end_menu_bar()
+
 
 set_render_callback('main_callback', 'Shows')
 
