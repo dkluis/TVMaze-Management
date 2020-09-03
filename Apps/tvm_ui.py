@@ -219,28 +219,20 @@ def plex_cleanup_log(sender, data):
     end_window()
     
 
-def set_logging_T(sender, data):
-    set_log_level(mvTRACE)
-
-
-def set_logging_D(sender, data):
-    set_log_level(mvDEBUG)
-
-
-def set_logging_I(sender, data):
-    set_log_level(mvINFO)
-
-
-def set_logging_W(sender, data):
-    set_log_level(mvWARNING)
-
-
-def set_logging_E(sender, data):
-    set_log_level(mvERROR)
-
-
-def set_logging_O(sender, data):
-    set_log_level(mvOFF)
+def set_logging_level(sender, data):
+    log_info(F'Set log level to {sender}')
+    if sender == 'Trace':
+        set_log_level(mvTRACE)
+    elif sender == 'Debug##LL':
+        set_log_level(mvDEBUG)
+    elif sender == 'Info':
+        set_log_level(mvINFO)
+    elif sender == 'Warning':
+        set_log_level(mvWARNING)
+    elif sender == 'Error':
+        set_log_level(mvERROR)
+    elif sender == 'Off':
+        set_log_level(mvOFF)
 
 
 def find_shows(si, sn):
@@ -531,6 +523,11 @@ def main_callback(sender, data):
         else:
             count = execute_sql(sqltype='Fetch', sql=sql, d='Test-TVM-DB')
         add_data(f'statusbar_info', f'Status Bar: {count[0][0]} new shows to evaluate')
+        
+
+def tvm_calendar(sender, data):
+    log_info('TVM Calendar started in Safari')
+    subprocess.call("open -a safari  https://www.tvmaze.com/calendar", shell=True)
 
 
 '''
@@ -553,6 +550,9 @@ set_item_height('logger##standard', 175)
 add_menu_bar("Menu")
 add_menu('TVMaze')
 add_menu_item('About TVM', callback='about')
+add_spacing(count=2)
+add_seperator()
+add_menu_item('Calendar (Web)', callback='tvm_calendar')
 add_spacing(count=2)
 add_seperator()
 add_menu_item('Quit', callback='end_program')
@@ -590,12 +590,12 @@ add_menu_item('View Console', callback='view_console')
 add_menu_item('View Script Errors', callback='view_errors')
 add_menu_item(f"Toggle Production & Test", callback='toggle_db')
 add_menu("Log Level")
-add_menu_item('Trace', callback='set_logging_T')
-add_menu_item('Debug##LL', callback='set_logging_D')
-add_menu_item('Info', callback='set_logging_I')
-add_menu_item('Warning', callback='set_logging_W')
-add_menu_item('Error', callback='set_logging_E')
-add_menu_item('Off', callback='set_logging_O')
+add_menu_item('Trace', callback='set_logging_level')
+add_menu_item('Debug##LL', callback='set_logging_level')
+add_menu_item('Info', callback='set_logging_level')
+add_menu_item('Warning', callback='set_logging_level')
+add_menu_item('Error', callback='set_logging_level')
+add_menu_item('Off', callback='set_logging_level')
 end_menu('Log Level')
 end_menu('Tools')
 
@@ -614,7 +614,7 @@ add_menu_item("Metrics", callback="show_metrics")
 add_menu_item("Documentation", callback="show_documentation")
 add_menu_item('Style Editor', callback='show_style_editor')
 add_menu_item("Debug##UI", callback="show_debug")
-end_menu('Debug')
+end_menu('Development')
 end_menu('Help')
 
 end_menu_bar('Menu')
@@ -641,7 +641,6 @@ end_window('Status Bar')
 
 set_render_callback('main_callback', 'Shows')
 add_data('statusbar_info', "Status Bar:")
-main_callback('Shows', None)
-
+# main_callback('Shows', None)
 
 start_dearpygui()
