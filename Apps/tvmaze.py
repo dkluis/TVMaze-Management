@@ -26,6 +26,7 @@ def func_exec_sql(func, sql):
         res = execute_sql(sqltype=func, sql=sql, d='Test-TVM-DB')
     log_info(f'SQL {sql} executed {res}')
 
+
 def func_find_shows(si, sn):
     log_info(f'Find Shows SQL with showid {si} and showname {sn}')
     if si == 0 and sn == 'New':
@@ -49,12 +50,12 @@ def func_find_shows(si, sn):
 
 
 def func_tvm_f_u(fl, si):
-    log_info(f'TVmaze update {fl}, {si}')
+    log_info(f'TVMaze update {fl}, {si}')
     api = f'https://api.tvmaze.com/v1/user/follows/shows/{si}'
     if fl == "F":
         shows = requests.put(api,
                              headers={'Authorization':
-                                          'Basic RGlja0tsdWlzOlRUSFlfQ2hIeUF5SU1fV1ZZRmUwcDhrWTkxTkE1WUNH'})
+                                      'Basic RGlja0tsdWlzOlRUSFlfQ2hIeUF5SU1fV1ZZRmUwcDhrWTkxTkE1WUNH'})
         if shows.status_code != 200:
             log_error(f"Web error trying to follow show: {si}, {shows.status_code}")
             return False
@@ -63,7 +64,7 @@ def func_tvm_f_u(fl, si):
     elif fl == "U":
         shows = requests.delete(api,
                                 headers={'Authorization':
-                                             'Basic RGlja0tsdWlzOlRUSFlfQ2hIeUF5SU1fV1ZZRmUwcDhrWTkxTkE1WUNH'})
+                                         'Basic RGlja0tsdWlzOlRUSFlfQ2hIeUF5SU1fV1ZZRmUwcDhrWTkxTkE1WUNH'})
         if shows.status_code != 200 and shows.status_code != 404:
             log_error(f"Web error trying to unfollow show: {si}, {shows.status_code}")
             return False
@@ -89,7 +90,7 @@ def func_toggle_db(sender, data):
     
 def func_toggle_theme(sender, data):
     ot = get_data('theme_opposite')
-    set_theme(ot)
+    set_theme(str(ot))
     if ot == 'Dark':
         add_data('theme_opposite', 'Gold')
     else:
@@ -233,7 +234,7 @@ def program_mainwindow():
     add_spacing(count=1)
     add_seperator()
     add_spacing(count=1)
-    add_menu_item('All Show Graphs', callback='window_shows_all_graphs')
+    add_menu_item('All Graphs##Shows', callback='window_shows_all_graphs')
     end_menu()
     end_menu()
     
@@ -246,6 +247,10 @@ def program_mainwindow():
     add_menu_item('Episodes to Get', callback='window_graphs')
     add_menu_item('Episodes to Watch', callback='window_graphs')
     add_menu_item('Upcoming Episodes', callback='window_graphs')
+    add_spacing(count=1)
+    add_seperator()
+    add_spacing(count=1)
+    add_menu_item('All Graphs##episodes', callback='window_episodes_all_graphs')
     end_menu()
     end_menu()
     
@@ -375,7 +380,34 @@ def window_close_all(sender, data):
         log_info(f'Closing window found: {window}')
         delete_item(window)
         
-        
+
+def window_episodes_all_graphs(sender, data):
+    window_graphs('All Episodes', None)
+    set_window_pos('All Episodes##graphs', 15, 35)
+    set_item_width('All Episodes##graphs', 690)
+    set_item_height('All Episodes##graphs', 515)
+    window_graphs('Skipped Episodes', None)
+    set_window_pos('Skipped Episodes##graphs', 720, 35)
+    set_item_width('Skipped Episodes##graphs', 690)
+    set_item_height('Skipped Episodes##graphs', 515)
+    window_graphs('Watched Episodes', None)
+    set_window_pos('Watched Episodes##graphs', 1420, 35)
+    set_item_width('Watched Episodes##graphs', 690)
+    set_item_height('Watched Episodes##graphs', 515)
+    window_graphs('Episodes to Get', None)
+    set_window_pos('Episodes to Get##graphs', 15, 570)
+    set_item_width('Episodes to Get##graphs', 690)
+    set_item_height('Episodes to Get##graphs', 515)
+    window_graphs('Episodes to Watch', None)
+    set_window_pos('Episodes to Watch##graphs', 720, 570)
+    set_item_width('Episodes to Watch##graphs', 690)
+    set_item_height('Episodes to Watch##graphs', 515)
+    window_graphs('Upcoming Episodes', None)
+    set_window_pos('Upcoming Episodes##graphs', 1420, 570)
+    set_item_width('Upcoming Episodes##graphs', 690)
+    set_item_height('Upcoming Episodes##graphs', 515)
+
+
 def window_get_pos(sender, data):
     all_windows = get_windows()
     log_info(f'Log Open Window Positions for {all_windows}')
@@ -456,22 +488,22 @@ def window_shows(sender, data):
         
         
 def window_shows_all_graphs(sender, data):
-        window_graphs('Other Shows', None)
-        set_window_pos('Other Shows##graphs', 830, 600)
-        set_item_width('Other Shows##graphs', 800)
-        set_item_height('Other Shows##graphs', 550)
-        window_graphs('In Development Shows', None)
-        set_window_pos('In Development Shows##graphs', 15, 600)
-        set_item_width('In Development Shows##graphs', 800)
-        set_item_height('In Development Shows##graphs', 550)
-        window_graphs('Followed Shows', None)
-        set_window_pos('Followed Shows##graphs', 830, 35)
-        set_item_width('Followed Shows##graphs', 800)
-        set_item_height('Followed Shows##graphs', 550)
-        window_graphs('All Shows', None)
-        set_window_pos('All Shows##graphs', 15, 35)
-        set_item_width('All Shows##graphs', 800)
-        set_item_height('All Shows##graphs', 550)
+    window_graphs('Other Shows', None)
+    set_window_pos('Other Shows##graphs', 830, 600)
+    set_item_width('Other Shows##graphs', 800)
+    set_item_height('Other Shows##graphs', 550)
+    window_graphs('In Development Shows', None)
+    set_window_pos('In Development Shows##graphs', 15, 600)
+    set_item_width('In Development Shows##graphs', 800)
+    set_item_height('In Development Shows##graphs', 550)
+    window_graphs('Followed Shows', None)
+    set_window_pos('Followed Shows##graphs', 830, 35)
+    set_item_width('Followed Shows##graphs', 800)
+    set_item_height('Followed Shows##graphs', 550)
+    window_graphs('All Shows', None)
+    set_window_pos('All Shows##graphs', 15, 35)
+    set_item_width('All Shows##graphs', 800)
+    set_item_height('All Shows##graphs', 550)
 
 
 def window_tests(sender, data):
