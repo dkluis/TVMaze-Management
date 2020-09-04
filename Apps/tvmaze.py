@@ -1,7 +1,25 @@
+"""
+
+tvmaze.py   The App that is the UI to all TVMaze function.
+
+Usage:
+  actions.py [-p]
+  actions.py -h | --help
+  actions.py --version
+
+Options:
+  -h --help      Show this screen
+  -p             Start in Production mode, otherwise it starts in Test mode.
+                 Production or Test DB and Production or Test Log Files
+
+"""
+
 from dearpygui.dearpygui import *
 import subprocess
 import os
 import requests
+from docopt import docopt
+import time
 
 from tvm_lib import execute_sql
 
@@ -184,9 +202,7 @@ def program_callback(sender, data):
 
 def program_data():
     add_data('shows_ds_new_shows', '0')
-    add_data('mode', 'Test')
     add_data('shows_showid', 0)
-    add_data('db_opposite', "Production DB")
     add_data('selected', False)
     add_data('theme_opposite', 'Dark')
     add_data('label##All Shows', "All the shows that are available on TVMaze")
@@ -203,7 +219,10 @@ def program_data():
 
 
 def program_mainwindow():
-    set_main_window_title(f'TVMaze Management - Test DB')
+    if get_data('mode') == 'Test':
+        set_main_window_title(f'TVMaze Management - Test DB')
+    else:
+        set_main_window_title('TVMaze Management - Production DB')
     set_style_window_title_align(0.5, 0.5)
     set_main_window_size(2140, 1210)
     set_theme('Gold')
@@ -528,6 +547,19 @@ def window_tests(sender, data):
 
 
 # Program
+
+print()
+print(f'{time.strftime("%D %T")} TVMaze UI >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Started')
+options = docopt(__doc__, version='TVMaze V1')
+if options['-p']:
+    add_data('mode', 'Prod')
+    add_data('db_opposite', "Test DB")
+    print('Starting in Production Mode')
+else:
+    add_data('mode', 'Test')
+    add_data('db_opposite', "Production DB")
+    print('Starting in Test Mode')
+
 
 program_data()
 program_mainwindow()
