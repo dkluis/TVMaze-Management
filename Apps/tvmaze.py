@@ -1,24 +1,27 @@
 """
-
 tvmaze.py   The App that is the UI to all TVMaze function.
-
 Usage:
-  actions.py [-p]
+  actions.py [-p] [-d] [--th=<theme>]
   actions.py -h | --help
   actions.py --version
 
 Options:
   -h --help      Show this screen
-  -p             Start in Production mode, otherwise it starts in Test mode.
+  -p             Start in Production mode, otherwise the UI starts in Test mode.
                  Production or Test DB and Production or Test Log Files
-
+  -d             Auto started the standard Debug and Logger windows
+  --th=<theme>   Level of verbosity *******  NOT IMPLEMENTED YET  *******
+                   D = Dark Theme, G = Gold Theme  [default: G]
+  --version      Show version.
 """
+
+from docopt import docopt
 
 from dearpygui.dearpygui import *
 import subprocess
 import os
 import requests
-from docopt import docopt
+
 import time
 
 from tvm_lib import execute_sql
@@ -244,7 +247,7 @@ def program_mainwindow():
     add_spacing(count=1)
     add_seperator()
     add_spacing(count=1)
-    add_menu_item('Show Maintenance', callback='window_shows')
+    add_menu_item('Maintenance', callback='window_shows')
     add_menu('Graphs##shows')
     add_menu_item('All Shows', callback='window_graphs')
     add_menu_item('Followed Shows', callback='window_graphs')
@@ -283,12 +286,21 @@ def program_mainwindow():
     add_spacing(count=1)
     add_seperator()
     add_spacing(count=1)
-    add_menu_item('Test Window for Tabs', callback='window_tests')
+    add_menu_item('Show Logger', callback='window_standards')
+    if options['-d']:
+        add_spacing(count=1)
+        add_seperator()
+        add_spacing(count=1)
+        add_menu('Debug Mode')
+        add_menu_item('Show Debugger', callback='window_standards')
+        add_menu_item('Show Source Code', callback='window_standards')
+        add_menu_item('Get Open Window Positions', callback='window_get_pos')
+        add_menu_item('Test Window for Tabs', callback='window_tests')
+        end_menu()
     end_menu()
     
     add_menu('Windows')
     add_menu_item('Close Open Windows', callback='window_close_all')
-    add_menu_item('Get Open Window Positions', callback='window_get_pos')
     end_menu()
     
     end_menu_bar()
@@ -306,7 +318,7 @@ def show_fill_table(sender, data):
         set_value(f'##show_showname{window}', 'Nothing was entered in Show ID or Showname')
     
     log_info(f'showid: {showid} - showname: {showname}')
-    if window == 'Show Maintenance':
+    if window == 'Maintenance':
         found_shows = func_find_shows(showid, showname)
     else:
         found_shows = func_find_shows(0, 'New')
@@ -449,10 +461,6 @@ def window_graphs(sender, data):
         set_style_window_title_align(0.5, 0.5)
         graph_refresh(sender, data)
         log_info(f'Create item (window): "{window}"')
-        
-        
-def window_quit(sender, data):
-    stop_dearpygui()
     
     
 def window_episodes(sender, data):
@@ -460,12 +468,16 @@ def window_episodes(sender, data):
     log_info(f'Window Shows {sender}')
 
 
+def window_quit(sender, data):
+    stop_dearpygui()
+
+
 def window_shows(sender, data):
     window = f'{sender}##window'
     log_info(f'Window Shows {sender}')
     if not does_item_exist(window):
         add_window(window, 1250, 600, start_x=15, start_y=35, resizable=False, movable=True, on_close="window_close")
-        if sender == 'Show Maintenance' or sender == 'Eval New Shows':
+        if sender == 'Maintenance' or sender == 'Eval New Shows':
             add_input_int(f'Show ID##{sender}', default_value=0, width=250)
             add_input_text(f'Show Name##{sender}', hint='Use % as wild-card', width=250)
             add_button(f'Clear##{sender}', callback='show_maint_clear')
@@ -523,6 +535,22 @@ def window_shows_all_graphs(sender, data):
     set_window_pos('All Shows##graphs', 15, 35)
     set_item_width('All Shows##graphs', 800)
     set_item_height('All Shows##graphs', 550)
+    
+    
+def window_standards(sender, data):
+    if sender == 'Show Logger':
+        show_logger()
+        set_window_pos('logger##standard', 1120, 1015)
+        set_item_width('logger##standard', 1000)
+        set_item_height('logger##standard', 175)
+    elif sender == 'Show Debugger':
+        show_debug()
+        set_window_pos('debug##standard', 1555, 445)
+    elif sender == 'Show Source Code':
+        show_source('/Volumes/HD-Data-CA-Server/Development/PycharmProjects/TVM-Management/Apps/tvmaze.py')
+        set_window_pos('source##standard', 520, 35)
+        set_item_width('source##standard', 975)
+        set_item_height('source##standard', 955)
 
 
 def window_tests(sender, data):
@@ -548,7 +576,6 @@ def window_tests(sender, data):
 
 # Program
 
-print()
 print(f'{time.strftime("%D %T")} TVMaze UI >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Started')
 options = docopt(__doc__, version='TVMaze V1')
 if options['-p']:
@@ -559,16 +586,15 @@ else:
     add_data('mode', 'Test')
     add_data('db_opposite', "Production DB")
     print('Starting in Test Mode')
+if options['-d']:
+    print('Starting in Debug Mode')
 
 
 program_data()
 program_mainwindow()
-
-show_logger()
-set_window_pos('logger##standard', 500, 925)
-set_item_width('logger##standard', 1000)
-set_item_height('logger##standard', 175)
-show_debug()
-set_window_pos('debug##standard', 50, 800)
+if options['-d']:
+    window_standards('Show Logger', None)
+    window_standards('Show Debugger', None)
+    
 
 start_dearpygui()
