@@ -9,7 +9,7 @@ Options:
   -h --help      Show this screen
   -p             Start in Production mode, otherwise the UI starts in Test mode.
                  Production or Test DB and Production or Test Log Files
-  -d             Auto started the standard Debug and Logger windows
+  -d             Auto start the standard Debug and standard Logger windows
   --th=<theme>   Level of verbosity *******  NOT IMPLEMENTED YET  *******
                    D = Dark Theme, G = Gold Theme  [default: G]
   --version      Show version.
