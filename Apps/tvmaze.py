@@ -48,6 +48,12 @@ def func_exec_sql(func, sql):
     log_info(f'SQL {sql} executed {res}')
 
 
+def func_filter_graph_sql(sql, g_filter):
+    if g_filter == 'Last 7 days':
+        sql = f'{sql} and statdate > "2020-08-28"'
+    return sql
+
+
 def func_find_shows(si, sn):
     log_info(f'Find Shows SQL with showid {si} and showname {sn}')
     if si == 0 and sn == 'New':
@@ -129,12 +135,12 @@ def graph_execute_get_data(sql, sender, pi):
     plot_index = sender
     if sender == 'Other Shows':
         plot_index = pi
-    add_line_series(f'{sender}##plot', plot_index, data)
+    add_line_series(f'{sender}##plot', f'{plot_index}', data)
     # ToDo Figure graph call back from auto refresh option
     # set_render_callback('graph_render_callback')
 
 
-def graph_get_data(sender):
+def graph_get_data(sender, g_filter):
     log_info(f'Grabbing the graphs for {sender}')
     data = []
     if sender == 'All Shows':
@@ -156,33 +162,39 @@ def graph_get_data(sender):
     elif sender == "Skipped Episodes":
         sql = f'select statepoch, myepisodesskipped from statistics where statrecind = "TVMaze"'
     elif sender == 'Other Shows':
-        graph_refresh_other('Other Shows')
+        graph_refresh_other('Other Shows', g_filter)
         return
     else:
         add_line_series(f'{sender}##plot', "Unknown", data)
         return
+    sql = func_filter_graph_sql(sql, g_filter)
     graph_execute_get_data(sql, sender, data)
 
 
 def graph_refresh(sender, data):
-    log_info(f'Refreshing Graph Data for {sender}')
+    g_filter = ''
     if '##' in sender:
         requester = func_breakout_window(sender, 1)
+        g_filter = func_breakout_window(sender, 0)
     else:
         requester = sender
-    graph_get_data(requester)
+    log_info(f'Refreshing Graph Data for {requester} with filter {g_filter}')
+    graph_get_data(requester, g_filter)
 
 
-def graph_refresh_other(sender):
+def graph_refresh_other(sender, g_filter):
     log_info(f'Graph refresh for all Others')
     if sender != 'Other Shows':
         return
     sql = f'select statepoch, myshowsended from statistics where statrecind = "TVMaze"'
-    graph_execute_get_data(sql, 'Other Shows', 'Ended')
+    sql = func_filter_graph_sql(sql, g_filter)
+    graph_execute_get_data(sql, 'Other Shows', f'Ended')
     sql = f'select statepoch, myshowsrunning from statistics where statrecind = "TVMaze"'
-    graph_execute_get_data(sql, 'Other Shows', 'Running')
+    sql = func_filter_graph_sql(sql, g_filter)
+    graph_execute_get_data(sql, 'Other Shows', f'Running')
     sql = f'select statepoch, myshowstbd from statistics where statrecind = "TVMaze"'
-    graph_execute_get_data(sql, 'Other Shows', 'TBD')
+    sql = func_filter_graph_sql(sql, g_filter)
+    graph_execute_get_data(sql, 'Other Shows', f'TBD')
     
     
 # Todo part of the render callback todo
@@ -293,7 +305,11 @@ def program_mainwindow():
         add_spacing(count=1)
         add_menu('Debug Mode')
         add_menu_item('Show Debugger', callback='window_standards')
+        add_menu_item('Show Documentation', callback='window_standards')
         add_menu_item('Show Source Code', callback='window_standards')
+        add_spacing(count=1)
+        add_seperator()
+        add_spacing(count=1)
         add_menu_item('Get Open Window Positions', callback='window_get_pos')
         add_menu_item('Test Window for Tabs', callback='window_tests')
         end_menu()
@@ -453,13 +469,15 @@ def window_graphs(sender, data):
     window = f'{sender}##graphs'
     if not does_item_exist(window):
         add_window(window, 1250, 600, start_x=15, start_y=35, resizable=True, movable=True, on_close="window_close")
-        add_button(f'Refresh##{sender}', callback='graph_refresh')
+        add_button(f'All days##{sender}', callback='graph_refresh')
+        add_same_line()
+        add_button(f'Last 7 days##{sender}', callback='graph_refresh')
         add_same_line()
         add_label_text(f'##{sender}', "", data_source=f'label##{sender}', color=[250, 250, 0, 250])
         add_plot(f'{sender}##plot')
         end_window()
         set_style_window_title_align(0.5, 0.5)
-        graph_refresh(sender, data)
+        # graph_refresh(sender, data)
         log_info(f'Create item (window): "{window}"')
     
     
@@ -551,6 +569,11 @@ def window_standards(sender, data):
         set_window_pos('source##standard', 520, 35)
         set_item_width('source##standard', 975)
         set_item_height('source##standard', 955)
+    elif sender == 'Show Documentation':
+        show_documentation()
+        set_window_pos('documentation##standard', 540, 135)
+        set_item_width('documentation##standard', 800)
+        set_item_height('documentation##standard', 700)
 
 
 def window_tests(sender, data):
