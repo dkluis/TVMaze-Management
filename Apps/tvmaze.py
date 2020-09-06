@@ -70,21 +70,23 @@ def func_find_shows(si, sn):
     return fs
 
 
-def func_tvm_f_u(fl, si):
+def func_tvm_update(fl, si):
     log_info(f'TVMaze update {fl}, {si}')
     api = f'{tvm_apis.followed_shows}/{si}'
     if fl == "F":
-        shows = execute_tvm_request(api, req_type='get', code=True, err=False)
+        shows = execute_tvm_request(api, req_type='put', code=True)
         if not shows:
             log_error(f"Web error trying to follow show: {si}")
             return False
         success = 'Followed'
         download = 'Multi'
     elif fl == "U":
-        shows = execute_tvm_request(api, req_type='put', code=True, err=False)
+        shows = execute_tvm_request(api, req_type='delete', code=True)
+        print(api, shows)
         if not shows:
             log_error(f"Web error trying to unfollow show: {si}")
             return False
+        print(shows)
         success = 'Skipped'
         download = None
     sql = f'update shows set status = "{success}", download = "{download}" where `showid` = {si}'
@@ -348,14 +350,20 @@ def show_maint_clear(sender, data):
 
 def shows_table_click(sender, data):
     log_info(f'Shows Table Click {sender} {data}')
+    show_options = ''
     win = func_sender_breakup(sender, 1)
     row_cell = get_table_selections(f'shows_table##{win}')
     row = row_cell[0][0]
     add_data('selected', True)
     showid = get_value(f'shows_table##{win}')[row][0]
+    show_status = get_value(f'shows_table##{win}')[row][5]
+    if show_status == 'New':
+        show_options = '-> Use: Follow, Not Interested or Undecided'
     add_data('showid', showid)
-    showname = get_value(f'shows_table##{win}')[row][1]
-    set_value(f'##show_showname{win}', f"Selected Show: {showid}, {showname}")
+    showname = str(get_value(f'shows_table##{win}')[row][1])[:20]
+    # Todo - add logic to display the mode of the show like: Currently Skipping Episodes
+    # Todo - and or change the availability of buttons.
+    set_value(f'##show_showname{win}', f"Selected Show: {showid}, {showname} {show_options}")
     set_value(f'Show ID##{win}', int(showid))
     set_value(f'Show Name##{win}', showname)
     log_info(f'Table Click for row cell {row_cell} selected showid {showid}')
@@ -368,8 +376,8 @@ def tvmaze_calendar(sender, data):
     subprocess.call("open -a safari  https://www.tvmaze.com/calendar", shell=True)
     
 
-def tvmaze_f_u_show(sender, data):
-    log_info(f'TVMaze follow unfollow {sender}, {data}')
+def tvmaze_update(sender, data):
+    log_info(f'TVMaze update {sender}, {data}')
     win = func_sender_breakup(sender, 1)
     function = func_sender_breakup(sender, 0)
     selected = get_data('selected')
@@ -378,11 +386,11 @@ def tvmaze_f_u_show(sender, data):
         set_value(f'##show_showname{win}', 'No Show was selected yet, nothing to do yet')
     else:
         if function == 'Follow':
-            result = func_tvm_f_u('F', si)
+            result = func_tvm_update('F', si)
             log_info(f'TVMaze Follow result: {result}')
             set_value(f'##show_showname{win}', f'Show {si} update on TVMaze and set Follow = {result}')
         elif function == 'Unfollow':
-            result = func_tvm_f_u('U', si)
+            result = func_tvm_update('U', si)
             log_info(f'TVMaze Unfollow result: {result}')
             set_value(f'##show_showname{win}', f'Show {si} update on TVMaze and set Unfollow = {result}')
     
@@ -495,19 +503,24 @@ def window_shows(sender, data):
                 add_same_line(spacing=10)
                 add_button(f'View on TVMaze##{sender}', callback='tvmaze_view_show')
                 add_same_line(spacing=10)
-                add_button(f'Follow##{sender}', callback='tvmaze_f_u_show')
+                add_button(f'Follow##{sender}', callback='tvmaze_update', tip='Start Following selected show')
                 add_same_line(spacing=10)
-                add_button(f'Unfollow##{sender}', callback='tvmaze_f_u_show',
-                           tip='Unfollow show, delete viewing history')
+                add_button(f'Unfollow##{sender}', callback='tvmaze_update',
+                           tip='Unfollow selected show and deleted episode info')
                 add_same_line(spacing=10)
-                add_button(f'Start Skipping##{sender}', callback=f'shows_skipping',
-                           tip='Start Skipping, leave episode history intact')
+                add_button(f'Episode Skipping##{sender}', callback=f'tvmaze_update',
+                           tip='Do not acquire episodes going forward')
                 add_same_line(spacing=10)
-                add_button(f'Skip##{sender}', callback='shows_skip', tip='Set new show to Skipped')
+                add_button(f'Not Interested##{sender}', callback='tvmaze_update', tip='Set new show to Skipped')
                 add_same_line(spacing=10)
-                add_button(f'Undecided##{sender}', callback='shows_undecided',
+                add_button(f'Undecided##{sender}', callback='tvmaze_update',
                            tip='Keep show on Evaluate list for later determination')
-                add_button(f'Find on the Web##{sender}', callback='shows_find_on_web')
+                add_label_text(f'##{sender}', ' ')
+                add_same_line(spacing=643)
+                add_button(f'Find on the Web##{sender}', callback='shows_find_on_web',
+                           tip='find the websites where to get the show')
+                add_same_line(spacing=10)
+                add_button(f'Acquire Change', callback='tvmaze_update', tip='Set the website where to get the show')
                 add_seperator()
                 add_spacing()
                 add_table(f'shows_table##{sender}',
