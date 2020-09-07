@@ -16,14 +16,15 @@ Options:
 """
 
 from docopt import docopt
-
 from dearpygui.wrappers import *
 
 import subprocess
 import os
+from datetime import datetime, timedelta
 
 from tvm_lib import execute_sql
 from tvm_api_lib import *
+from db_lib import tvm_views
 
 
 def func_db_opposite():
@@ -40,19 +41,21 @@ def func_exec_sql(func, sql):
     else:
         res = execute_sql(sqltype=func, sql=sql, d='Test-TVM-DB')
     log_info(f'SQL {sql} executed {res}')
+    return res
 
 
 def func_filter_graph_sql(sql, g_filter):
     if g_filter == 'Last 7 days':
-        sql = f'{sql} and statdate > "2020-08-28"'
+        d = datetime.today() + timedelta(days=-7)
+        stat_date = str(d)[:10]
+        sql = f'{sql} and statdate > "{stat_date}"'
     return sql
 
 
 def func_find_shows(si, sn):
     log_info(f'Find Shows SQL with showid {si} and showname {sn}')
     if si == 0 and sn == 'New':
-        sql = f'select showid, showname, network, type, showstatus, status, premiered, download ' \
-              f'from shows where status = "New" or status = "Undecided" order by download, showid'
+        sql = tvm_views.shows_to_review_tvmaze
     else:
         showid = get_data('shows_showid')
         if showid != 0:
@@ -80,19 +83,31 @@ def func_tvm_update(fl, si):
             return False
         success = 'Followed'
         download = 'Multi'
+        sql = f'update shows set status = "{success}", download = "{download}" where `showid` = {si}'
     elif fl == "U":
         shows = execute_tvm_request(api, req_type='delete', code=True)
-        print(api, shows)
         if not shows:
             log_error(f"Web error trying to unfollow show: {si}")
             return False
-        print(shows)
         success = 'Skipped'
         download = None
-    sql = f'update shows set status = "{success}", download = "{download}" where `showid` = {si}'
+        sql = f'update shows set status = "{success}", download = "{download}" where `showid` = {si}'
+    elif fl == 'UD':
+        success = 'Undecided'
+        d = datetime.today() + timedelta(days=14)
+        download = str(d)[:10]
+        sql = f'update shows set status = "{success}", download = "{download}" where `showid` = {si}'
+    else:
+        log_info(f'Not implement {fl} option')
+        return False
+    
     sql = sql.replace('"None"', 'NULL')
-    func_exec_sql('Commit', sql)
-    return True
+    result = func_exec_sql('Commit', sql)
+    if result:
+        return True
+    else:
+        log_error(f'Update of the DB failed: {sql}, {result}')
+        return False
 
 
 def func_toggle_db(sender, data):
@@ -357,7 +372,7 @@ def shows_table_click(sender, data):
     add_data('selected', True)
     showid = get_value(f'shows_table##{win}')[row][0]
     show_status = get_value(f'shows_table##{win}')[row][5]
-    if show_status == 'New':
+    if show_status == 'New' or show_status == 'Undecided':
         show_options = '-> Use: Follow, Not Interested or Undecided'
     add_data('showid', showid)
     showname = str(get_value(f'shows_table##{win}')[row][1])[:20]
@@ -392,6 +407,10 @@ def tvmaze_update(sender, data):
         elif function == 'Unfollow':
             result = func_tvm_update('U', si)
             log_info(f'TVMaze Unfollow result: {result}')
+            set_value(f'##show_showname{win}', f'Show {si} update on TVMaze and set Unfollow = {result}')
+        elif function == 'Undecided':
+            result = func_tvm_update('UD', si)
+            log_info(f'TVMaze Undecided result: {result}')
             set_value(f'##show_showname{win}', f'Show {si} update on TVMaze and set Unfollow = {result}')
     
 
