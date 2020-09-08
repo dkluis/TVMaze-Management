@@ -342,6 +342,11 @@ class tvm_views:
                              "WHERE (status = 'New' AND record_updated <= CURRENT_DATE) OR " \
                              "(status = 'Undecided' and download <= CURRENT_DATE) " \
                              "ORDER by download, showid;"
+    shows_to_review_count = "SELECT count(*) " \
+                             "FROM shows " \
+                             "WHERE (status = 'New' AND record_updated <= CURRENT_DATE) OR " \
+                             "(status = 'Undecided' and download <= CURRENT_DATE) " \
+                             "ORDER by download, showid;"
     eps_to_download = "SELECT e.*, s.download, s.alt_showname, s.imdb FROM episodes e " \
                       "JOIN shows s on e.showid = s.showid " \
                       "WHERE mystatus is NULL and airdate is not NULL and airdate <= subdate(current_date, 1) " \
