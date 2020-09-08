@@ -34,12 +34,56 @@ from tvm_api_lib import *
 from db_lib import tvm_views
 
 
+class logfiles:
+    test_console = '/Volumes/HD-Data-CA-Server/Development/PycharmProjects/TVM-Management/Apps/out.log'
+    prod_console = '/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Logs/gui.log'
+    test_errors = '/Volumes/HD-Data-CA-Server/Development/PycharmProjects/TVM-Management/Apps/err.log'
+    prod_errors = '/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Logs/gui_err.log'
+    process_run = '/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Logs/30M-Process.log'
+    plex_cleanup = '/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Logs/Plex-Cleanup.log'
+
+
 def func_db_opposite():
     log_info(f'Retrieving Mode {get_data("mode")}')
     if get_data('mode') == 'Prod':
         add_data('db_opposite', 'Test DB')
     else:
         add_data('db_opposite', "Production DB")
+        
+        
+def func_empty_logfile(sender, data):
+    win = func_sender_breakup(sender, 1)
+    log_info(f'Start the empty logfile process with {sender}, {data}')
+    if win == 'Empty Log##pcl':
+        logfile = logfiles.plex_cleanup
+        func_remove_logfile(logfile)
+        window_refresh_plex_cleanup_log(sender, data)
+        log_info(f'Calling remove_logfile for {sender} {logfile}')
+    elif win == 'Run Log':
+        logfile = logfiles.process_run
+        func_remove_logfile(logfile)
+        window_logs_refresh(sender, data)
+        log_info(f'Removing Run Log: {logfile}')
+    elif sender == 'Empty Log##er':
+        if get_data('mode') == 'Prod':
+            logfile = logfiles.prod_errors
+            func_remove_logfile(logfile)
+            window_logs_refresh(sender, data)
+        else:
+            logfile = logfiles.test_errors
+            func_remove_logfile(logfile)
+            window_logs_refresh(sender, data)
+    elif sender == 'Empty Log##co':
+        if get_data('mode') == 'Prod':
+            logfile = logfiles.prod_console
+            func_remove_logfile(logfile)
+            window_logs_refresh(sender, data)
+        else:
+            logfile = logfiles.prod_console
+            func_remove_logfile(logfile)
+            window_logs_refresh(sender, data)
+    else:
+        log_warning(f'Did not process the emptying, could not find {sender}')
         
 
 def func_exec_sql(func, sql):
@@ -83,6 +127,17 @@ def func_find_shows(si, sn):
 def func_login(sender, data):
     log_info(f'Function Login: s {sender} d {data}')
     return
+
+
+def func_remove_logfile(logfile):
+    log_info(f'Removing logfile {logfile}')
+    try:
+        os.remove(logfile)
+    except IOError as err:
+        log_warning(f'Could not remove logfile {logfile} due to {err}')
+    else:
+        log_info(f'Removed the plex {logfile}')
+        open(logfile, 'a').close()
 
 
 def func_sender_breakup(sender, pos):
@@ -319,6 +374,10 @@ def program_mainwindow():
                 add_separator()
                 add_spacing(count=1)
                 add_menu_item('All Graphs##episodes', callback=window_episodes_all_graphs)
+        with menu('Logs'):
+            add_menu_item('Run Log', callback=window_logs)
+            add_menu_item('Terminal Log', callback=window_logs)
+            add_menu_item('Script Errors', callback=window_logs)
         with menu('Tools'):
             add_menu_item('Toggle Database to', callback=func_toggle_db)
             add_same_line(xoffset=140)
@@ -510,6 +569,75 @@ def window_close_all(sender, data):
             continue
         log_info(f'Closing window found: {win}')
         delete_item(win)
+        
+        
+def window_logs(sender, data):
+    log_info(f'View Logs Window -> s {sender} d {data}')
+    if does_item_exist(f'{sender}##window'):
+        log_info(f'{sender}##window already running')
+    else:
+        with window(f'{sender}##window', start_x=1505, start_y=35, width=600, height=500, on_close=window_close):
+            set_style_window_title_align(0.5, 0.5)
+            add_button(f'Refresh##{sender}', callback=window_logs_refresh)
+            add_same_line(spacing=10)
+            add_button(f"Empty Log##{sender}", callback=func_empty_logfile)
+            add_spacing(count=2)
+            add_separator()
+            add_table(f'log_table##{sender}',
+                      headers=['Console - Info'])
+            # ToDo Fix the initial refresh of the log data table
+            # window_logs_refresh(sender, data)
+
+
+def window_logs_refresh(sender, data):
+    win = func_sender_breakup(sender, 1)
+    function = func_sender_breakup(sender, 0)
+    log_info(f'Log Refresh s {sender}, d {data}, f {function}, w {win}')
+    mode = get_data('mode')
+    if win == 'Run Log':
+        logfile = logfiles.process_run
+    elif win == 'Terminal Log':
+        if mode == 'Test':
+            logfile = logfiles.test_console
+        else:
+            logfile = logfiles.prod_console
+    elif win == 'Script Errors':
+        if mode == 'Test':
+            logfile = logfiles.test_errors
+        else:
+            logfile = logfiles.prod_errors
+    try:
+        file = open(logfile, 'r')
+    except IOError as err:
+        log_warning(f'Console log file IOError: {err}')
+        open(logfile, 'a').close()
+        return
+    log_info(f'refresh console file: {sender}, {data}')
+    consolelines = file.readlines()
+    table = []
+    for line in consolelines:
+        table.append([line.replace("\n", "")])
+    set_value(f'log_table##{win}', table)
+    file.close()
+    
+    
+def window_refresh_plex_cleanup_log(sender, data):
+    logfile = logfiles.plex_cleanup
+    try:
+        file = open(logfile, 'r')
+    except IOError as err:
+        log_warning(f'Error log file IOError: {err}')
+        table = []
+        set_value('run_plex_cleanup_table', table)
+        open(logfile, 'a').close()
+        return
+    log_info(f'refresh Plex Cleanup log: {sender}, {data}')
+    lines = file.readlines()
+    table = []
+    for line in lines:
+        table.append([line.replace("\n", "")])
+    set_value('run_plex_cleanup_table', table)
+    file.close()
         
 
 def window_episodes_all_graphs(sender, data):
