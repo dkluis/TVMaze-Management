@@ -1,9 +1,9 @@
 """
 tvmaze.py   The App that is the UI to all TVMaze function.
 Usage:
-  tvmaze.py [-p] [-e] [--th=<theme>]
-  tvmaze.py [-p] [-s] [--th=<theme>]
-  tvmaze.py -p   [-m] [--th=<theme>]
+  tvmaze.py [-p] [-e] [-l] [--th=<theme>]
+  tvmaze.py [-p] [-s] [-l] [--th=<theme>]
+  tvmaze.py -p   [-m] [-l] [--th=<theme>]
   tvmaze.py -d
   tvmaze.py -h | --help
   tvmaze.py --version
@@ -50,6 +50,24 @@ def func_db_opposite():
     else:
         add_data('db_opposite', "Production DB")
         
+
+def func_buttons(sender, func, buttons=[]):
+    log_info(f'Function Buttons s {sender} f {func}, b {buttons}')
+    if func == 'Hide':
+        for button in buttons:
+            log_info(f'Hiding button {button}')
+            hide_item(f'{button}##{sender}')
+    elif func == 'Show':
+        log_info(f'Showing buttons for {sender}')
+        if sender == 'Maintenance':
+            buttons = ['Follow', 'Unfollow', 'Episode Skipping', 'Not Interested', 'Undecided', 'Change Getter']
+            log_info(f'Buttons are {buttons}')
+            for button in buttons:
+                log_info(f'Showing button {button}')
+                show_item(f'{button}##{sender}')
+    else:
+        log_error(f'None existing function code {func}')
+            
         
 def func_empty_logfile(sender, data):
     win = func_sender_breakup(sender, 1)
@@ -125,8 +143,19 @@ def func_find_shows(si, sn):
 
 
 def func_login(sender, data):
-    log_info(f'Function Login: s {sender} d {data}')
-    return
+    log_info(f'Password Checker s {sender}, d {data}')
+    if get_value('Password') == 'password':
+        delete_item('Login Window')
+        func_recursively_show_main('MainWindow')
+        
+
+def func_recursively_show_main(container):
+    for item in get_item_children(container):
+        if get_item_children(item):
+            show_item(item)
+            func_recursively_show_main(item)
+        else:
+            show_item(item)
 
 
 def func_remove_logfile(logfile):
@@ -343,6 +372,10 @@ def program_mainwindow():
             add_spacing(count=1)
             add_separator()
             add_spacing(count=1)
+            add_menu_item('Log Out', callback=tvmaze_logout)
+            add_spacing(count=1)
+            add_separator()
+            add_spacing(count=1)
             add_menu_item('Quit', callback=window_quit)
         with menu('Shows'):
             add_menu_item('Eval New Shows')
@@ -405,11 +438,11 @@ def program_mainwindow():
         with menu('Windows'):
             add_menu_item('Close Open Windows', callback=window_close_all)
     set_render_callback(program_callback, 'Shows')
-    if options['-s']:
+    if options['-s'] and not options['-l']:
         window_shows_all_graphs('All Graphs', 'set_item_callback')
-    elif options['-e']:
+    elif options['-e'] and not options['-l']:
         window_episodes_all_graphs('All Graphs', 'set_item_callback')
-    elif options['-m']:
+    elif options['-m'] and not options['-l']:
         window_shows('Maintenance', 'set_item_callback')
     if options['-d']:
         window_standards('Show Logger', '')
@@ -425,7 +458,6 @@ def show_fill_table(sender, data):
     showname = get_value(f'Show Name##{win}')
     if showid == 0 and showname == '' and button == 'Search':
         set_value(f'##show_showname{win}', 'Nothing was entered in Show ID or Showname')
-    
     log_info(f'showid: {showid} - showname: {showname}')
     if button == 'Search':
         found_shows = func_find_shows(showid, showname)
@@ -438,6 +470,7 @@ def show_fill_table(sender, data):
             table_row.append(field)
         table.append(table_row)
     set_value(f'shows_table##{win}', table)
+    func_buttons(sender=win, func='Show')
     
     
 def shows_find_on_web(sender, data):
@@ -453,6 +486,7 @@ def show_maint_clear(sender, data):
     set_value(f'##show_name{win}', '')
     add_data('selected', False)
     set_value(f'##show_showname{win}', "")
+    func_buttons(sender=win, func='Show')
 
 
 def shows_table_click(sender, data):
@@ -464,8 +498,23 @@ def shows_table_click(sender, data):
     add_data('selected', True)
     showid = get_value(f'shows_table##{win}')[row][0]
     show_status = get_value(f'shows_table##{win}')[row][5]
+    my_status = get_value(f'shows_table##{win}')[row][7]
+    func_buttons(win, 'Show')
     if show_status == 'New' or show_status == 'Undecided':
-        show_options = '-> Use: Follow, Not Interested or Undecided'
+        # show_options = '-> Use: Follow, Not Interested or Undecided'
+        func_buttons(sender=win, func='Hide',
+                     buttons=['Unfollow', 'Episode Skipping', 'Change Getter'])
+    elif show_status == 'Followed' and my_status == 'Skip':
+        func_buttons(sender=win, func='Hide',
+                     buttons=['Follow', 'Episode Skipping', 'Not Interested', 'Undecided'])
+    elif show_status == 'Followed':
+        func_buttons(sender=win, func='Hide',
+                     buttons=['Follow', 'Not Interested', 'Undecided'])
+    elif show_status == 'Skipped':
+        func_buttons(sender=win, func='Hide',
+                     buttons=['Unfollow', 'Episode Skipping', 'Not Interested', 'Undecided', 'Change Getter'])
+    else:
+        func_buttons(sender=win, func='Show')
     add_data('showid', showid)
     showname = str(get_value(f'shows_table##{win}')[row][1])[:20]
     # Todo - add logic to display the mode of the show like: Currently Skipping Episodes
@@ -493,6 +542,11 @@ def tvmaze_change_downloader(sender, data):
         ind = get_value(f'rbutton##Maintenance')
         log_info(f'Radio button ind {ind}')
     delete_item(f'{win}')
+    
+    
+def tvmaze_logout(sender, data):
+    hide_item('MainWindow', children_only=True)
+    window_login()
     
 
 def tvmaze_update(sender, data):
@@ -570,6 +624,15 @@ def window_close_all(sender, data):
         log_info(f'Closing window found: {win}')
         delete_item(win)
         
+
+def window_login():
+    # with window('Login Window', title_bar=False, movable=False, autosize=True, resizable=False):
+    with window('Login Window', start_x=900, start_y=400 ,title_bar=False,
+                movable=False, autosize=True, resizable=False):
+        add_input_text('Username', hint='Your email address')
+        add_input_text('Password', hint='Password is "password" for now', password=True)
+        add_button('Submit', callback=func_login)
+        
         
 def window_logs(sender, data):
     log_info(f'View Logs Window -> s {sender} d {data}')
@@ -584,7 +647,7 @@ def window_logs(sender, data):
             add_spacing(count=2)
             add_separator()
             add_table(f'log_table##{sender}',
-                      headers=['Console - Info'])
+                      headers=[f'{sender} - Info'])
             # ToDo Fix the initial refresh of the log data table
             # window_logs_refresh(sender, data)
 
@@ -705,7 +768,7 @@ def window_shows(sender, data):
     win = f'{sender}##window'
     log_info(f'Window Shows {sender}')
     if not does_item_exist(win):
-        with window(win, 1250, 600, start_x=15, start_y=35, resizable=False, movable=True, on_close=window_close):
+        with window(win, 1500, 750, start_x=15, start_y=35, resizable=False, movable=True, on_close=window_close):
             if sender == 'Maintenance':
                 add_input_int(f'Show ID##{sender}', default_value=0, width=250)
                 add_input_text(f'Show Name##{sender}', hint='Use % as wild-card', width=250)
@@ -719,6 +782,9 @@ def window_shows(sender, data):
                 add_same_line(spacing=10)
                 add_button(f'View on TVMaze##{sender}', callback=tvmaze_view_show)
                 add_same_line(spacing=10)
+                add_button(f'Find on the Web##{sender}', callback=shows_find_on_web,
+                           tip='find the websites where to get the show')
+                add_same_line(spacing=10)
                 add_button(f'Follow##{sender}', callback=tvmaze_update, tip='Start Following selected show')
                 add_same_line(spacing=10)
                 add_button(f'Unfollow##{sender}', callback=tvmaze_update,
@@ -731,10 +797,8 @@ def window_shows(sender, data):
                 add_same_line(spacing=10)
                 add_button(f'Undecided##{sender}', callback=tvmaze_update,
                            tip='Keep show on Evaluate list for later determination')
-                add_label_text(f'##{sender}', ' ')
-                add_same_line(spacing=643)
-                add_button(f'Find on the Web##{sender}', callback=shows_find_on_web,
-                           tip='find the websites where to get the show')
+                # add_label_text(f'##{sender}', ' ')
+                # add_same_line(spacing=643)
                 add_same_line(spacing=10)
                 add_button(f'Change Getter##{sender}', callback=tvmaze_update,
                            tip='Set the website where to get the show')
@@ -833,5 +897,7 @@ if options['-s']:
 
 program_data()
 program_mainwindow()
+if options['-l']:
+    tvmaze_logout('', '')
     
 start_dearpygui()
