@@ -125,6 +125,11 @@ def func_find_shows(si, sn):
     log_info(f'Find Shows SQL with showid {si} and showname {sn}')
     if si == 0 and sn == 'New':
         sql = tvm_views.shows_to_review_tvmaze
+    elif sn == 'Shows Due':
+        sql = f'select DISTINCT a.showid, a.showname, a.network, a.type, a.showstatus, a.status, a.premiered, ' \
+              f'a.download from shows a join episodes e on e.showid = a.showid ' \
+              f'where e.mystatus is NULL and e.airdate is not NULL and e.airdate <= current_date ' \
+              f'and download != "Skip" ORDER BY showid;'
     else:
         showid = get_data('shows_showid')
         if showid != 0:
@@ -140,6 +145,16 @@ def func_find_shows(si, sn):
     else:
         fs = execute_sql(sqltype='Fetch', sql=sql, d='Test-TVM-DB')
     return fs
+
+
+def func_get_getter(getters):
+    log_info(f'Get Getters {getters}')
+    links = []
+    for getter in getters:
+        link = execute_sql(sqltype='Fetch', sql=f"SELECT * from download_options "
+                                               f"WHERE `providername` = '{getter}'")
+        links.append(link)
+    return links
 
 
 def func_login(sender, data):
@@ -177,8 +192,8 @@ def func_sender_breakup(sender, pos):
     return win
 
 
-def func_set_downloader(sender, data):
-    log_info(f'Set Downloader {sender}, {data}')
+def func_set_getter(sender, data):
+    log_info(f'Set getter {sender}, {data}')
     opt = get_value('rbutton')
     log_info(f'Data Sources {get_data(f"get_options##{opt}")}, {get_data(f"get_options_sec##{opt}")}')
     
@@ -461,8 +476,13 @@ def show_fill_table(sender, data):
     log_info(f'showid: {showid} - showname: {showname}')
     if button == 'Search':
         found_shows = func_find_shows(showid, showname)
-    else:
+    elif button == 'Evaluate Shows':
         found_shows = func_find_shows(0, 'New')
+    elif button == 'Shows Due':
+        found_shows = func_find_shows(0, 'Shows Due')
+    else:
+        log_error(f'Unknown Button Pressed to fill the table b {button}')
+        
     table = []
     for rec in found_shows:
         table_row = []
@@ -474,7 +494,29 @@ def show_fill_table(sender, data):
     
     
 def shows_find_on_web(sender, data):
-    log_info(f'Find Show on the Web s {sender} d {data}')
+    win = func_sender_breakup(sender, 1)
+    function = func_sender_breakup(sender, 0)
+    selected = get_data('selected')
+    showid = get_value(f'Show ID##{win}')
+    log_info(f'Shows Find On the Web s {sender}, d {data}, w "{win}", f "{function}", si {showid}')
+    if not selected:
+        set_value(f'##show_showname{win}', 'No Show was selected yet, nothing to do yet')
+    else:
+        links = func_get_getter(getters=['rarbg', 'piratebay', 'eztv', 'magnetdl'])
+        showinfo = execute_sql(sqltype='Fetch', sql=f'select * from shows where `showid` = {showid}')[0]
+        for link in links:
+            li = link[0]
+            if not li[2]:
+                sfx = ''
+            else:
+                sfx = str(li[2])
+            if "magnetdl" in li[1]:
+                link_str = f'{li[1]}{str(showinfo[1][0]).lower()}/'
+            else:
+                link_str = li[1]
+            full_link = f'{link_str}{str(showinfo[1]).replace(" ", li[3]).lower()}{sfx}'
+            start_find = 'open -a safari ' + full_link
+            os.system(start_find)
 
 
 def show_maint_clear(sender, data):
@@ -532,7 +574,7 @@ def tvmaze_calendar(sender, data):
     subprocess.call("open -a safari  https://www.tvmaze.com/calendar", shell=True)
     
     
-def tvmaze_change_downloader(sender, data):
+def tvmaze_change_getter(sender, data):
     win = func_sender_breakup(sender, 1)
     function = func_sender_breakup(sender, 0)
     log_info(f'Change where to get s {sender}, d {data}, w {win}, f{function}')
@@ -597,14 +639,14 @@ def window_change_getters(sender, data):
                 start_x=805, start_y=140, resizable=False):
         add_radio_button(f'Getters##{win}',
                          ['Multiple', 'ShowRSS', 'rarbgAPI', 'eztvAPI', 'Piratebay', 'eztv'],
-                         default_value=0, callback=func_set_downloader,
+                         default_value=0, callback=func_set_getter,
                          tip='Multiple will use rarbgAPI, eztvAPI, Piratebay and eztv.')
         add_spacing(count=1)
         add_separator()
         add_spacing(count=3)
-        add_button(f'Cancel##{win}', callback=tvmaze_change_downloader)
+        add_button(f'Cancel##{win}', callback=tvmaze_change_getter)
         add_same_line(spacing=12)
-        add_button(f"Submit##{win}", callback=tvmaze_change_downloader)
+        add_button(f"Submit##{win}", callback=tvmaze_change_getter)
         add_spacing(count=1)
     
 
@@ -777,6 +819,8 @@ def window_shows(sender, data):
                 add_button(f'Search##{sender}', callback=show_fill_table)
                 add_same_line(spacing=10)
                 add_button(f'Evaluate Shows##{sender}', callback=show_fill_table)
+                add_same_line(spacing=10)
+                add_button(f'Shows Due##{sender}', callback=show_fill_table)
                 add_separator()
                 add_input_text(f'##show_showname{sender}', readonly=True, default_value='', width=650)
                 add_same_line(spacing=10)
@@ -806,7 +850,7 @@ def window_shows(sender, data):
                 add_spacing()
                 add_table(f'shows_table##{sender}',
                           headers=['Show ID', 'Show Name', 'Network', 'Type', 'Status', 'My Status', 'Premiered',
-                                   'Downloader'],
+                                   'Getter'],
                           callback=shows_table_click)
             else:
                 add_label_text(f'##uw{sender}', value='Tried to create an undefined Show Window')
