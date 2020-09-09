@@ -222,6 +222,10 @@ def func_tvm_update(fl, si):
         d = datetime.today() + timedelta(days=14)
         download = str(d)[:10]
         sql = f'update shows set status = "{success}", download = "{download}" where `showid` = {si}'
+    elif fl == 'SK':
+        success = 'Skipped'
+        download = None
+        sql = f'update shows set status = "{success}", download = "{download}" where `showid` = {si}'
     else:
         log_info(f'Not implement {fl} option')
         return False
@@ -615,6 +619,10 @@ def tvmaze_update(sender, data):
         elif function == 'Change Getter':
             log_info(f'Starting window change getter with {sender}, {data}')
             window_change_getters(sender, si)
+        elif function == 'Not Interested':
+            result = func_tvm_update('SK', si)
+            log_info(f'TVMaze Skipping result: {result}')
+            set_value(f'##show_showname{win}', f'Show {si} update on TVMaze and set Skipped = {result}')
         else:
             log_error(f'Unknown Function: "{function}"')
 
@@ -822,7 +830,7 @@ def window_shows(sender, data):
                 add_same_line(spacing=10)
                 add_button(f'Shows Due##{sender}', callback=show_fill_table)
                 add_separator()
-                add_input_text(f'##show_showname{sender}', readonly=True, default_value='', width=650)
+                add_input_text(f'##show_showname{sender}', readonly=True, default_value='', width=450)
                 add_same_line(spacing=10)
                 add_button(f'View on TVMaze##{sender}', callback=tvmaze_view_show)
                 add_same_line(spacing=10)
