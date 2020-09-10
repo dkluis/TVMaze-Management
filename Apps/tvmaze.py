@@ -495,6 +495,7 @@ def show_fill_table(sender, data):
         table.append(table_row)
     set_value(f'shows_table##{win}', table)
     func_buttons(sender=win, func='Show')
+    show_maint_clear('fill_table##Maintenance', 'input_fields_only')
     
     
 def shows_find_on_web(sender, data):
@@ -526,13 +527,15 @@ def shows_find_on_web(sender, data):
 def show_maint_clear(sender, data):
     log_info(f'Show Maint clear {sender} {data}')
     win = func_sender_breakup(sender, 1)
+    if data != 'input_fields_only':
+        set_value(f'shows_table##{win}', [])
+        set_value(f'##show_showname{win}', "")
+        func_buttons(sender=win, func='Show')
+
     set_value(f'Show ID##{win}', 0)
     set_value(f'Show Name##{win}', '')
-    set_value(f'shows_table##{win}', [])
     set_value(f'##show_name{win}', '')
     add_data('selected', False)
-    set_value(f'##show_showname{win}', "")
-    func_buttons(sender=win, func='Show')
 
 
 def shows_table_click(sender, data):
@@ -562,7 +565,7 @@ def shows_table_click(sender, data):
     else:
         func_buttons(sender=win, func='Show')
     add_data('showid', showid)
-    showname = str(get_value(f'shows_table##{win}')[row][1])[:20]
+    showname = str(get_value(f'shows_table##{win}')[row][1])[:35]
     # Todo - add logic to display the mode of the show like: Currently Skipping Episodes
     # Todo - and or change the availability of buttons.
     set_value(f'##show_showname{win}', f"Selected Show: {showid}, {showname} {show_options}")
@@ -625,6 +628,7 @@ def tvmaze_update(sender, data):
             set_value(f'##show_showname{win}', f'Show {si} update on TVMaze and set Skipped = {result}')
         else:
             log_error(f'Unknown Function: "{function}"')
+        show_maint_clear(sender, 'input_fields_only')
 
 
 def tvmaze_view_show(sender, data):
