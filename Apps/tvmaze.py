@@ -82,7 +82,7 @@ def func_empty_logfile(sender, data):
         func_remove_logfile(logfile)
         window_logs_refresh(sender, data)
         log_info(f'Removing Run Log: {logfile}')
-    elif sender == 'Empty Log##er':
+    elif win == 'Script Errors':
         if get_data('mode') == 'Prod':
             logfile = logfiles.prod_errors
             func_remove_logfile(logfile)
@@ -91,7 +91,7 @@ def func_empty_logfile(sender, data):
             logfile = logfiles.test_errors
             func_remove_logfile(logfile)
             window_logs_refresh(sender, data)
-    elif sender == 'Empty Log##co':
+    elif win == 'Terminal Log':
         if get_data('mode') == 'Prod':
             logfile = logfiles.prod_console
             func_remove_logfile(logfile)
@@ -102,6 +102,7 @@ def func_empty_logfile(sender, data):
             window_logs_refresh(sender, data)
     else:
         log_warning(f'Did not process the emptying, could not find {sender}')
+    delete_item(f'{win}##window')
         
 
 def func_exec_sql(func, sql):
@@ -391,11 +392,11 @@ def program_mainwindow():
             add_spacing(count=1)
             add_separator()
             add_spacing(count=1)
-            add_menu_item('Log Out', callback=tvmaze_logout)
+            add_menu_item('Log Out', callback=tvmaze_logout, shortcut='cmd+L')
             add_spacing(count=1)
             add_separator()
             add_spacing(count=1)
-            add_menu_item('Quit', callback=window_quit)
+            add_menu_item('Quit', callback=window_quit, shortcut='cmd+Q')
         with menu('Shows'):
             add_menu_item('Eval New Shows')
             add_same_line(xoffset=115)
@@ -412,7 +413,7 @@ def program_mainwindow():
                 add_spacing(count=1)
                 add_separator()
                 add_spacing(count=1)
-                add_menu_item('All Graphs##Shows', callback=window_shows_all_graphs)
+                add_menu_item('All Graphs##Shows', callback=window_shows_all_graphs, shortcut='cmd+S')
         with menu('Episodes', tip='Only of Followed Shows'):
             add_menu_item('Search', callback=window_episodes)
             with menu('Graphs##episodes'):
@@ -425,7 +426,7 @@ def program_mainwindow():
                 add_spacing(count=1)
                 add_separator()
                 add_spacing(count=1)
-                add_menu_item('All Graphs##episodes', callback=window_episodes_all_graphs)
+                add_menu_item('All Graphs##episodes', callback=window_episodes_all_graphs, shortcut='cmd+E')
         with menu('Logs'):
             add_menu_item('Run Log', callback=window_logs)
             add_menu_item('Terminal Log', callback=window_logs)
@@ -595,6 +596,7 @@ def tvmaze_change_getter(sender, data):
     
 def tvmaze_logout(sender, data):
     hide_item('MainWindow', children_only=True)
+    window_close_all('', '')
     window_login()
     
 
@@ -677,7 +679,9 @@ def window_close_all(sender, data):
             continue
         log_info(f'Closing window found: {win}')
         delete_item(win)
-        
+    hide_item('debug##standard')
+    hide_item('logger#standard')
+    
 
 def window_login():
     # with window('Login Window', title_bar=False, movable=False, autosize=True, resizable=False):
