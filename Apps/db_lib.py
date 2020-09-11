@@ -48,8 +48,8 @@ def connect_mdb(h='', d='', err=True):
             database=mdb_info.db)
     except mariadb.Error as e:
         if err:
-            print(f"Connect MDB: Error connecting to MariaDB Platform: {e}")
-            print('--------------------------------------------------------------------------')
+            print(f"Connect MDB: Error connecting to MariaDB Platform: {e}", flush=True)
+            print('--------------------------------------------------------------------------', flush=True)
             sys.exit(1)
     mcur = mdb.cursor()
     mdict = {'mdb': mdb,
@@ -86,10 +86,9 @@ def execute_sql(con='', db='', cur='', batch='', h='', d='', sqltype='', sql='')
         try:
             tvmcur.execute(sql)
             if batch != "Y":
-                # print('Committing: ', sql)
                 tvmdb.commit()
         except mariadb.Error as er:
-            print('Execute SQL (Commit) Database Error: ', d, er, sql)
+            print('Execute SQL (Commit) Database Error: ', d, er, sql, flush=True)
             print('----------------------------------------------------------------------')
             if con != 'Y':
                 close_mdb(tvmdb)
@@ -102,8 +101,8 @@ def execute_sql(con='', db='', cur='', batch='', h='', d='', sqltype='', sql='')
             tvmcur.execute(sql)
             result = tvmcur.fetchall()
         except mariadb.Error as er:
-            print('Execute SQL (Fetch) Database Error: ', d, er, sql)
-            print('----------------------------------------------------------------------')
+            print('Execute SQL (Fetch) Database Error: ', d, er, sql, flush=True)
+            print('----------------------------------------------------------------------', flush=True)
             if con != 'Y':
                 close_mdb(tvmdb)
             return False, er

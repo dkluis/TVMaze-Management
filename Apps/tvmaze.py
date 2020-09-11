@@ -794,8 +794,9 @@ def window_get_pos(sender, data):
     for win in all_windows:
         if win == 'MainWindow':
             continue
-        data = get_window_pos(win)
-        log_info(f'Position for: {win} is {data[0]}, {data[1]}')
+        pos = get_window_pos(win)
+        size = get_window(win)
+        log_info(f'Position for: {win} is {pos[0]}, {pos[1]}')
 
 
 def window_graphs(sender, data):
