@@ -51,22 +51,25 @@ def func_db_opposite():
         add_data('db_opposite', "Production DB")
         
 
-def func_buttons(sender, func, buttons=[]):
+def func_buttons(sender, func, buttons=None):
     log_info(f'Function Buttons s {sender} f {func}, b {buttons}')
-    if func == 'Hide':
-        for button in buttons:
-            log_info(f'Hiding button {button}')
-            hide_item(f'{button}##{sender}')
-    elif func == 'Show':
-        log_info(f'Showing buttons for {sender}')
-        if sender == 'Maintenance':
-            buttons = ['Follow', 'Unfollow', 'Episode Skipping', 'Not Interested', 'Undecided', 'Change Getter']
-            log_info(f'Buttons are {buttons}')
+    if buttons:
+        if func == 'Hide':
             for button in buttons:
-                log_info(f'Showing button {button}')
-                show_item(f'{button}##{sender}')
+                log_info(f'Hiding button {button}')
+                hide_item(f'{button}##{sender}')
+        elif func == 'Show':
+            log_info(f'Showing buttons for {sender}')
+            if sender == 'Maintenance':
+                buttons = ['Follow', 'Unfollow', 'Episode Skipping', 'Not Interested', 'Undecided', 'Change Getter']
+                log_info(f'Buttons are {buttons}')
+                for button in buttons:
+                    log_info(f'Showing button {button}')
+                    show_item(f'{button}##{sender}')
+        else:
+            log_error(f'None existing function code {func}')
     else:
-        log_error(f'None existing function code {func}')
+        log_error(f'No buttons were provided {sender} {func}')
             
         
 def func_empty_logfile(sender, data):
@@ -153,7 +156,7 @@ def func_get_getter(getters):
     links = []
     for getter in getters:
         link = execute_sql(sqltype='Fetch', sql=f"SELECT * from download_options "
-                                               f"WHERE `providername` = '{getter}'")
+                                                f"WHERE `providername` = '{getter}'")
         links.append(link)
     return links
 
@@ -195,7 +198,7 @@ def func_sender_breakup(sender, pos):
 
 def func_set_getter(sender, data):
     log_info(f'Set getter {sender}, {data}')
-    opt = get_value('rbutton')
+    opt = get_value('getter_selected')
     log_info(f'Data Sources {get_data(f"get_options##{opt}")}, {get_data(f"get_options_sec##{opt}")}')
     
     
@@ -479,6 +482,7 @@ def show_fill_table(sender, data):
     if showid == 0 and showname == '' and button == 'Search':
         set_value(f'##show_showname{win}', 'Nothing was entered in Show ID or Showname')
     log_info(f'showid: {showid} - showname: {showname}')
+    found_shows = []
     if button == 'Search':
         found_shows = func_find_shows(showid, showname)
     elif button == 'Evaluate Shows':
@@ -589,7 +593,7 @@ def tvmaze_change_getter(sender, data):
     if function == 'Cancel':
         pass
     else:
-        ind = get_value(f'rbutton##Maintenance')
+        ind = get_value(f'getter_selected##Maintenance')
         log_info(f'Radio button ind {ind}')
     delete_item(f'{win}')
     
@@ -685,7 +689,7 @@ def window_close_all(sender, data):
 
 def window_login():
     # with window('Login Window', title_bar=False, movable=False, autosize=True, resizable=False):
-    with window('Login Window', start_x=900, start_y=400 ,title_bar=False,
+    with window('Login Window', start_x=900, start_y=400, title_bar=False,
                 movable=False, autosize=True, resizable=False):
         add_input_text('Username', hint='Your email address')
         add_input_text('Password', hint='Password is "password" for now', password=True)
@@ -715,6 +719,7 @@ def window_logs_refresh(sender, data):
     function = func_sender_breakup(sender, 0)
     log_info(f'Log Refresh s {sender}, d {data}, f {function}, w {win}')
     mode = get_data('mode')
+    logfile = ''
     if win == 'Run Log':
         logfile = logfiles.process_run
     elif win == 'Terminal Log':
@@ -815,7 +820,7 @@ def window_graphs(sender, data):
     
 def window_episodes(sender, data):
     win = f'{sender}##window'
-    log_info(f'Window Shows {sender}')
+    log_info(f'Window Shows {sender} {win}')
 
 
 def window_quit(sender, data):
