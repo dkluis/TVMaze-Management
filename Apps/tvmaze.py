@@ -1,10 +1,9 @@
 """
 tvmaze.py   The App that is the UI to all TVMaze function.
 Usage:
-  tvmaze.py [-p] [-e] [-l] [--th=<theme>]
-  tvmaze.py [-p] [-s] [-l] [--th=<theme>]
-  tvmaze.py -p   [-m] [-l] [--th=<theme>]
-  tvmaze.py -d
+  tvmaze.py [-p] [-e] [-l] [-d] [--th=<theme>]
+  tvmaze.py [-p] [-s] [-l] [-d] [--th=<theme>]
+  tvmaze.py -p   [-m] [-l] [-d] [--th=<theme>]
   tvmaze.py -h | --help
   tvmaze.py --version
 
@@ -427,6 +426,8 @@ def program_mainwindow():
                 add_separator()
                 add_spacing(count=1)
                 add_menu_item('All Graphs##episodes', callback=window_episodes_all_graphs, shortcut='cmd+E')
+        with menu('Process'):
+            add_menu_item('Get Shows', callback=tvmaze_processes)
         with menu('Logs'):
             add_menu_item('Run Log', callback=window_logs)
             add_menu_item('Terminal Log', callback=window_logs)
@@ -442,19 +443,18 @@ def program_mainwindow():
             add_separator()
             add_spacing(count=1)
             add_menu_item('Show Logger', callback=window_standards)
-            if options['-d']:
+            add_spacing(count=1)
+            add_separator()
+            add_spacing(count=1)
+            with menu('Debug Mode'):
+                add_menu_item('Show Debugger', callback=window_standards)
+                add_menu_item('Show Documentation', callback=window_standards)
+                add_menu_item('Show Source Code', callback=window_standards)
                 add_spacing(count=1)
                 add_separator()
                 add_spacing(count=1)
-                with menu('Debug Mode'):
-                    add_menu_item('Show Debugger', callback=window_standards)
-                    add_menu_item('Show Documentation', callback=window_standards)
-                    add_menu_item('Show Source Code', callback=window_standards)
-                    add_spacing(count=1)
-                    add_separator()
-                    add_spacing(count=1)
-                    add_menu_item('Get Open Window Positions', callback=window_get_pos)
-                    add_menu_item('Test Window for Tabs', callback=window_tests)
+                add_menu_item('Get Open Window Positions', callback=window_get_pos)
+                add_menu_item('Test Window for Tabs', callback=window_tests)
         with menu('Windows'):
             add_menu_item('Close Open Windows', callback=window_close_all)
     set_render_callback(program_callback, 'Shows')
@@ -599,6 +599,20 @@ def tvmaze_logout(sender, data):
     window_close_all('', '')
     window_login()
     
+    
+def tvmaze_processes(sender, data):
+    log_info(f'TVMaze processes Started s {sender}, d {data}')
+    if get_data('mode') == 'Prod':
+        loc = '/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Apps'
+    else:
+        loc = '/Volumes/HD-Data-CA-Server/Development/PycharmProjects/TVM-Management/Apps'
+    if sender == 'Get Shows':
+        action = f"python3 {loc}/actions.py -d "
+    run_async_function(subprocess.call(action, shell=True), data)
+    log_info(f'TVMaze processes ASYNC Finished s {action}')
+    window_logs('Terminal Log', '')
+    window_logs('Script Errors', '')
+    
 
 def tvmaze_update(sender, data):
     win = func_sender_breakup(sender, 1)
@@ -697,7 +711,17 @@ def window_logs(sender, data):
     if does_item_exist(f'{sender}##window'):
         log_info(f'{sender}##window already running')
     else:
-        with window(f'{sender}##window', start_x=1505, start_y=35, width=600, height=500, on_close=window_close):
+        if sender == 'Run Log':
+            width = 1955
+            height = 600
+            sx = 135
+            sy = 35
+        else:
+            width = 600
+            height = 500
+            sx = 1505
+            sy = 35
+        with window(f'{sender}##window', start_x=sx, start_y=sy, width=width, height=height, on_close=window_close):
             set_style_window_title_align(0.5, 0.5)
             add_button(f'Refresh##{sender}', callback=window_logs_refresh)
             add_same_line(spacing=10)
@@ -791,13 +815,15 @@ def window_episodes_all_graphs(sender, data):
 def window_get_pos(sender, data):
     all_windows = get_windows()
     log_info(f'Log Open Window Positions for {all_windows}')
-    for win in all_windows:
-        if win == 'MainWindow':
-            continue
-        pos = get_window_pos(win)
-        size = get_window(win)
-        log_info(f'Position for: {win} is {pos[0]}, {pos[1]}')
-
+    if len(all_windows) >= 2:
+        for win in all_windows:
+            if win == 'MainWindow':
+                continue
+            pos = get_window_pos(win)
+            height = get_item_height(win)
+            width = get_item_width(win)
+            log_info(f'Position for: {win} is {pos[0]}, {pos[1]}, width {width}, height {height}')
+    
 
 def window_graphs(sender, data):
     win = f'{sender}##graphs'
