@@ -49,27 +49,6 @@ class paths:
         self.cleanup = lp + 'Cleanup.log'
         self.watched = lp + 'Watched.log'
     
-    def log_path(self):
-        return self.log_path
-    
-    def app_path(self):
-        return self.app_path
-    
-    def console(self):
-        return self.console
-    
-    def errors(self):
-        return self.errors
-    
-    def process(self):
-        return self.process
-    
-    def cleanup(self):
-        return self.cleanup
-    
-    def watched(self):
-        return self.watched
-
 
 class getters:
     list = ['Multi', 'ShowRSS', 'rarbgAPI', 'eztvAPI', 'piratebay', 'magnetdl', 'eztv', 'Skip']

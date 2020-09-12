@@ -24,18 +24,6 @@ class mdbi:
                 self.db = 'Test-TVM-DB'
         else:
             self.db = d
-    
-    def db(self):
-        return self.db
-    
-    def host(self):
-        return self.host
-    
-    def user(self):
-        return self.user
-    
-    def password(self):
-        return self.password
 
 
 def connect_mdb(h='', d='', err=True):
