@@ -39,8 +39,8 @@ class paths:
             lp = '/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Logs/'
             ap = '/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Apps/'
         else:
-            lp = '/Volumes/HD-Data-CA-Server/Development/PycharmProjects/TVM-Management/Apps/'
-            ap = '/Volumes/HD-Data-CA-Server/Development/PycharmProjects/TVM-Management/Apps/'
+            lp = '/Volumes/HD-Data-CA-Server/Development/PycharmProjects/TVM-Management/Logs/'
+            ap = '/Volumes/HD-Data-CA-Server/Development/PycharmProjects/TVM-Management/Logs'
         self.log_path = lp
         self.app_path = ap
         self.console = lp + 'TVMaze.log'
@@ -595,10 +595,6 @@ def tvmaze_logout(sender, data):
 
 def tvmaze_processes(sender, data):
     log_info(f'TVMaze processes Started s {sender}, d {data}')
-    if get_data('mode') == 'Prod':
-        loc = '/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Apps'
-    else:
-        loc = '/Volumes/HD-Data-CA-Server/Development/PycharmProjects/TVM-Management/Apps'
     paths_info = paths(get_data('mode'))
     loc = paths_info.app_path
     if sender == 'Get Shows':
@@ -908,7 +904,8 @@ def window_standards(sender, data):
         show_debug()
         set_window_pos('debug##standard', 1555, 445)
     elif sender == 'Show Source Code':
-        show_source('/Volumes/HD-Data-CA-Server/Development/PycharmProjects/TVM-Management/Apps/tvmaze.py')
+        paths_info = paths(get_data('mode'))
+        show_source(f'{paths_info.app_path}tvmaze.py')
         set_window_pos('source##standard', 520, 35)
         set_item_width('source##standard', 975)
         set_item_height('source##standard', 955)
@@ -921,7 +918,7 @@ def window_standards(sender, data):
 
 def window_tests(sender, data):
     win = f'{sender}##window'
-    log_info(f'Window Shows {sender}')
+    log_info(f'Window Shows s {sender}, d {data}')
     if not does_item_exist(win):
         with window(win, 1250, 600, start_x=15, start_y=35,
                     resizable=False, movable=True, on_close=window_close):
