@@ -152,10 +152,23 @@ def func_get_getter(getters):
     links = []
     for getter in getters:
         link = execute_sql(sqltype='Fetch', sql=f"SELECT * from download_options "
-                                               f"WHERE `providername` = '{getter}'")
+                                                f"WHERE `providername` = '{getter}'")
         links.append(link)
     return links
 
+
+def func_log_filter(sender, data):
+    log_info(f'Func Log Filter s {sender}, d {data}')
+    win = func_sender_breakup(sender, 1)
+    filter_table = get_value(f'log_table##{win}')
+    if len(get_value(f'##{win}ft')) != 0:
+        new_table = []
+        for row in filter_table:
+            if str(get_value(f'##{win}ft')).lower() in str(row).lower():
+                new_table.append(row)
+        set_value(f'log_table##{win}', new_table)
+    set_value(f'##{win}ft', '')
+        
 
 def func_login(sender, data):
     log_info(f'Password Checker s {sender}, d {data}')
@@ -726,6 +739,9 @@ def window_logs(sender, data):
             add_button(f'Refresh##{sender}', callback=window_logs_refresh)
             add_same_line(spacing=10)
             add_button(f"Empty Log##{sender}", callback=func_empty_logfile)
+            add_button(f"Filter##{sender}", callback=func_log_filter)
+            add_same_line(spacing=10)
+            add_input_text(f'##{sender}ft', hint='No wildcards, case does not matter')
             add_spacing(count=2)
             add_separator()
             add_table(f'log_table##{sender}',
