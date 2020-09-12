@@ -33,16 +33,44 @@ from tvm_api_lib import *
 from db_lib import tvm_views
 
 
-class logfiles:
-    prod_path = '/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Logs/'
-    test_path = '/Volumes/HD-Data-CA-Server/Development/PycharmProjects/TVM-Management/Apps/'
-    console = 'TVMaze.log'
-    errors = 'Errors.log'
-    process = 'Process.log'
-    cleanup = 'Cleanup.log'
-    watched = 'Watched.log'
+class paths:
+    def __init__(self, mode):
+        if mode == 'Prod':
+            lp = '/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Logs/'
+            ap = '/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Apps/'
+        else:
+            lp = '/Volumes/HD-Data-CA-Server/Development/PycharmProjects/TVM-Management/Apps/'
+            ap = '/Volumes/HD-Data-CA-Server/Development/PycharmProjects/TVM-Management/Apps/'
+        self.log_path = lp
+        self.app_path = ap
+        self.console = lp + 'TVMaze.log'
+        self.errors = lp + 'Errors.log'
+        self.process = lp + 'Process.log'
+        self.cleanup = lp + 'Cleanup.log'
+        self.watched = lp + 'Watched.log'
     
+    def log_path(self):
+        return self.log_path
     
+    def app_path(self):
+        return self.app_path
+    
+    def console(self):
+        return self.console
+    
+    def errors(self):
+        return self.errors
+    
+    def process(self):
+        return self.process
+    
+    def cleanup(self):
+        return self.cleanup
+    
+    def watched(self):
+        return self.watched
+
+
 class getters:
     list = ['Multi', 'ShowRSS', 'rarbgAPI', 'eztvAPI', 'piratebay', 'magnetdl', 'eztv', 'Skip']
 
@@ -53,7 +81,7 @@ def func_db_opposite():
         add_data('db_opposite', 'Test DB')
     else:
         add_data('db_opposite', "Production DB")
-        
+
 
 def func_buttons(sender, func, buttons=[]):
     log_info(f'Function Buttons s {sender} f {func}, b {buttons}')
@@ -71,37 +99,30 @@ def func_buttons(sender, func, buttons=[]):
                 show_item(f'{button}##{sender}')
     else:
         log_error(f'None existing function code {func}')
-            
-        
+
+
 def func_empty_logfile(sender, data):
     win = func_sender_breakup(sender, 1)
     log_info(f'Start the empty logfile process with {sender}, {data}')
+    paths_info = paths(get_data['mode'])
     if win == 'Cleanup Log':
-        logfile = logfiles.prod_path + logfiles.cleanup
+        logfile = paths_info.cleanup
         func_remove_logfile(logfile)
         log_info(f'Removing Cleanup Log {logfile}')
     elif win == 'Processing Log':
-        logfile = logfiles.prod_path + logfiles.process
+        logfile = paths_info.process
         func_remove_logfile(logfile)
         log_info(f'Removing Run Log: {logfile}')
     elif win == 'Python Errors':
-        if get_data('mode') == 'Prod':
-            logfile = logfiles.prod_path + logfiles.errors
-            func_remove_logfile(logfile)
-        else:
-            logfile = logfiles.test_path + logfiles.errors
-            func_remove_logfile(logfile)
+        logfile = paths_info.errors
+        func_remove_logfile(logfile)
     elif win == 'TVMaze Log':
-        if get_data('mode') == 'Prod':
-            logfile = logfiles.prod_path + logfiles.console
-            func_remove_logfile(logfile)
-        else:
-            logfile = logfiles.console + logfiles.console
-            func_remove_logfile(logfile)
+        logfile = paths_info.console
+        func_remove_logfile(logfile)
     else:
         log_warning(f'Did not process the emptying, could not find {sender}')
     delete_item(f'{win}##window')
-        
+
 
 def func_exec_sql(f, s):
     if get_data('mode') == 'Prod':
@@ -163,14 +184,14 @@ def func_log_filter(sender, data):
                 new_table.append(row)
         set_value(f'log_table##{win}', new_table)
     set_value(f'##{win}ft', '')
-        
+
 
 def func_login(sender, data):
     log_info(f'Password Checker s {sender}, d {data}')
     if get_value('Password') == 'password':
         delete_item('Login Window')
         func_recursively_show_main('MainWindow')
-        
+
 
 def func_recursively_show_main(container):
     for item in get_item_children(container):
@@ -251,8 +272,8 @@ def func_toggle_db(sender, data):
         add_data('db_opposite', 'Test DB')
         set_main_window_title(f'TVMaze Management - Production DB')
     log_info(f'Toggled the DB access')
-    
-    
+
+
 def func_toggle_theme(sender, data):
     ot = get_data('theme_opposite')
     set_theme(str(ot))
@@ -260,7 +281,7 @@ def func_toggle_theme(sender, data):
         add_data('theme_opposite', 'Gold')
     else:
         add_data('theme_opposite', 'Dark')
-        
+
 
 def graph_execute_get_data(sql, sender, pi, g_filter):
     log_info(f'Filling the plot data for {sender} with {sql} and {g_filter}')
@@ -335,8 +356,8 @@ def graph_refresh_other(sender, g_filter):
     sql = f'select statepoch, myshowstbd from statistics where statrecind = "TVMaze"'
     sql = func_filter_graph_sql(sql, g_filter)
     graph_execute_get_data(sql, 'Other Shows', f'TBD', g_filter)
-    
-    
+
+
 # Todo part of the render callback todo
 """
 def graph_render_callback(sender, data):
@@ -421,7 +442,7 @@ def program_mainwindow():
                 add_spacing(count=1)
                 add_menu_item('All Graphs##episodes', callback=window_episodes_all_graphs, shortcut='cmd+E')
         with menu('Process'):
-            add_menu_item('Get Shows', callback=tvmaze_processes)
+            add_menu_item('Get Episodes', callback=tvmaze_processes)
         with menu('Logs'):
             add_menu_item('Cleanup Log', callback=window_logs)
             add_menu_item('Processing Log', callback=window_logs)
@@ -462,7 +483,7 @@ def program_mainwindow():
     if options['-d']:
         window_standards('Show Logger', '')
         window_standards('Show Debugger', '')
-        
+
 
 def show_fill_table(sender, data):
     log_info(f'Fill Show Table {sender} {data}')
@@ -482,7 +503,7 @@ def show_fill_table(sender, data):
         found_shows = func_find_shows(0, 'Shows Due')
     else:
         log_error(f'Unknown Button Pressed to fill the table b {button}')
-        
+    
     table = []
     for rec in found_shows:
         table_row = []
@@ -492,8 +513,8 @@ def show_fill_table(sender, data):
     set_value(f'shows_table##{win}', table)
     func_buttons(sender=win, func='Show')
     show_maint_clear('fill_table##Maintenance', 'input_fields_only')
-    
-    
+
+
 def shows_find_on_web(sender, data):
     win = func_sender_breakup(sender, 1)
     function = func_sender_breakup(sender, 0)
@@ -527,7 +548,7 @@ def show_maint_clear(sender, data):
         set_value(f'shows_table##{win}', [])
         set_value(f'##show_showname{win}', "")
         func_buttons(sender=win, func='Show')
-
+    
     set_value(f'Show ID##{win}', 0)
     set_value(f'Show Name##{win}', '')
     set_value(f'##show_name{win}', '')
@@ -568,13 +589,13 @@ def shows_table_click(sender, data):
     log_info(f'Table Click for row cell {row_cell} selected showid {showid}')
     for sel in row_cell:
         set_table_selection(f'shows_table##{win}', sel[0], sel[1], False)
-        
-        
+
+
 def tvmaze_calendar(sender, data):
     log_info('TVM Calendar started in Safari')
     subprocess.call("open -a safari  https://www.tvmaze.com/calendar", shell=True)
-    
-    
+
+
 def tvmaze_change_getter(sender, si):
     win = func_sender_breakup(sender, 1)
     function = func_sender_breakup(sender, 0)
@@ -585,27 +606,29 @@ def tvmaze_change_getter(sender, si):
         sql = f'update shows set download = "{getters.list[ind]}" where `showid` = {si}'
         func_exec_sql('Commit', sql)
     delete_item(f'Getters##w{win}')
-    
-    
+
+
 def tvmaze_logout(sender, data):
     hide_item('MainWindow', children_only=True)
     window_close_all('', '')
     window_login()
-    
-    
+
+
 def tvmaze_processes(sender, data):
     log_info(f'TVMaze processes Started s {sender}, d {data}')
     if get_data('mode') == 'Prod':
         loc = '/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Apps'
     else:
         loc = '/Volumes/HD-Data-CA-Server/Development/PycharmProjects/TVM-Management/Apps'
+    paths_info = paths(get_data('mode'))
+    loc = paths_info.app_path
     if sender == 'Get Shows':
-        action = f"python3 {loc}/actions.py -d "
+        action = f"python3 {loc}actions.py -d "
     run_async_function(subprocess.call(action, shell=True), data)
     log_info(f'TVMaze processes ASYNC Finished s {action}')
     window_logs('TVMaze Log', '')
     window_logs('Python Errors', '')
-    
+
 
 def tvmaze_update(sender, data):
     win = func_sender_breakup(sender, 1)
@@ -650,8 +673,8 @@ def tvmaze_view_show(sender, data):
         tvm_link = f"https://www.tvmaze.com/shows/{si}"
         follow_str = 'open -a safari ' + tvm_link
         os.system(follow_str)
-        
-        
+
+
 def window_change_getters(sender, si):
     function = func_sender_breakup(sender, 0)
     win = func_sender_breakup(sender, 1)
@@ -668,14 +691,13 @@ def window_change_getters(sender, si):
         add_same_line(spacing=12)
         add_button(f"Submit##{win}", callback=tvmaze_change_getter, callback_data=si)
         add_spacing(count=1)
-    
-    
+
 
 def window_close(sender, data):
     win = f'{sender}'
     delete_item(win)
     log_info(f'Delete item (window): "{win}"')
-    
+
 
 def window_close_all(sender, data):
     log_info('Close Open Windows')
@@ -688,17 +710,17 @@ def window_close_all(sender, data):
         delete_item(win)
     hide_item('debug##standard')
     hide_item('logger#standard')
-    
+
 
 def window_login():
     # with window('Login Window', title_bar=False, movable=False, autosize=True, resizable=False):
-    with window('Login Window', start_x=900, start_y=400 ,title_bar=False,
+    with window('Login Window', start_x=900, start_y=400, title_bar=False,
                 movable=False, autosize=True, resizable=False):
         add_input_text('Username', hint='Your email address')
         add_input_text('Password', hint='Password is "password" for now', password=True)
         add_button('Submit', callback=func_login)
-        
-        
+
+
 def window_logs(sender, data):
     log_info(f'View Logs Window -> s {sender} d {data}')
     if does_item_exist(f'{sender}##window'):
@@ -733,21 +755,15 @@ def window_logs_refresh(sender, data):
     win = func_sender_breakup(sender, 1)
     function = func_sender_breakup(sender, 0)
     log_info(f'Log Refresh s {sender}, d {data}, f {function}, w {win}')
-    mode = get_data('mode')
+    paths_info = paths(get_data('mode'))
     if win == 'Processing Log':
-        logfile = logfiles.prod_path + logfiles.process
+        logfile = paths_info.process
     elif win == 'TVMaze Log':
-        if mode == 'Test':
-            logfile = logfiles.test_path + logfiles.console
-        else:
-            logfile = logfiles.prod_path + logfiles.console
+        logfile = paths_info.console
     elif win == 'Python Errors':
-        if mode == 'Test':
-            logfile = logfiles.test_path + logfiles.errors
-        else:
-            logfile = logfiles.test_path + logfiles.errors
+        logfile = paths_info.errors
     elif win == 'Cleanup Log':
-        logfile = logfiles.prod_path + logfiles.cleanup
+        logfile = paths_info.cleanup
     else:
         log_error(f'Refresh for {sender} not defined')
     try:
@@ -763,8 +779,8 @@ def window_logs_refresh(sender, data):
         table.append([line.replace("\n", "")])
     set_value(f'log_table##{win}', table)
     file.close()
-    
-    
+
+
 def window_episodes_all_graphs(sender, data):
     window_graphs('All Episodes', None)
     set_window_pos('All Episodes##graphs', 15, 35)
@@ -803,7 +819,7 @@ def window_get_pos(sender, data):
             height = get_item_height(win)
             width = get_item_width(win)
             log_info(f'Position for: {win} is {pos[0]}, {pos[1]}, width {width}, height {height}')
-    
+
 
 def window_graphs(sender, data):
     win = f'{sender}##graphs'
@@ -818,8 +834,8 @@ def window_graphs(sender, data):
         set_style_window_title_align(0.5, 0.5)
         graph_refresh(sender, 'Last 7 days')
         log_info(f'Create item (window): "{win}"')
-    
-    
+
+
 def window_episodes(sender, data):
     win = f'{sender}##window'
     log_info(f'Window Shows {sender}')
@@ -877,13 +893,13 @@ def window_shows(sender, data):
                           callback=shows_table_click)
             else:
                 add_label_text(f'##uw{sender}', value='Tried to create an undefined Show Window')
-
+        
         set_style_window_title_align(0.5, 0.5)
         if sender == 'Eval New Shows':
             show_fill_table(f'Search##{sender}', None)
         log_info(f'Create item (window): "{win}"')
-        
-        
+
+
 def window_shows_all_graphs(sender, data):
     window_graphs('Other Shows', None)
     set_window_pos('Other Shows##graphs', 830, 600)
@@ -901,8 +917,8 @@ def window_shows_all_graphs(sender, data):
     set_window_pos('All Shows##graphs', 15, 35)
     set_item_width('All Shows##graphs', 800)
     set_item_height('All Shows##graphs', 550)
-    
-    
+
+
 def window_standards(sender, data):
     if sender == 'Show Logger':
         show_logger()
@@ -938,7 +954,7 @@ def window_tests(sender, data):
                         add_text('some other text')
             else:
                 add_label_text(f'##uw{sender}', value='Tried to create an undefined Show Window')
-                
+        
         set_style_window_title_align(0.5, 0.5)
     log_info(f'Create item (window): "{win}"')
 
@@ -964,7 +980,8 @@ if options['-s']:
 
 program_data()
 program_mainwindow()
+
 if options['-l']:
     tvmaze_logout('', '')
-    
+
 start_dearpygui()
