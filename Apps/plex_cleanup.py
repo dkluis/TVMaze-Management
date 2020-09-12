@@ -148,6 +148,6 @@ for d in listofdirs:
         print(f'Removed {d}')
     except OSError as err:
         if vli:
-            print(f'Error Occurred Deleting Directory {d} with {err}')
+            print(f'Error Occurred Deleting Directory {err}')
         if str(err)[:10] != '[Errno 66]' and str(err)[:9] != '[Errno 2]':
             print(err)

@@ -41,6 +41,10 @@ class logfiles:
     process = 'Process.log'
     cleanup = 'Cleanup.log'
     watched = 'Watched.log'
+    
+    
+class getters:
+    list = ['Multi', 'ShowRSS', 'rarbgAPI', 'eztvAPI', 'piratebay', 'magnetdl', 'eztv', 'Skip']
 
 
 def func_db_opposite():
@@ -72,45 +76,39 @@ def func_buttons(sender, func, buttons=[]):
 def func_empty_logfile(sender, data):
     win = func_sender_breakup(sender, 1)
     log_info(f'Start the empty logfile process with {sender}, {data}')
-    if win == 'Plex Cleanup':
+    if win == 'Cleanup Log':
         logfile = logfiles.prod_path + logfiles.cleanup
         func_remove_logfile(logfile)
-        window_refresh_plex_cleanup_log(sender, data)
-        log_info(f'Calling remove_logfile for {sender} {logfile}')
+        log_info(f'Removing Cleanup Log {logfile}')
     elif win == 'Processing Log':
         logfile = logfiles.prod_path + logfiles.process
         func_remove_logfile(logfile)
-        window_logs_refresh(sender, data)
         log_info(f'Removing Run Log: {logfile}')
     elif win == 'Python Errors':
         if get_data('mode') == 'Prod':
             logfile = logfiles.prod_path + logfiles.errors
             func_remove_logfile(logfile)
-            window_logs_refresh(sender, data)
         else:
             logfile = logfiles.test_path + logfiles.errors
             func_remove_logfile(logfile)
-            window_logs_refresh(sender, data)
     elif win == 'TVMaze Log':
         if get_data('mode') == 'Prod':
             logfile = logfiles.prod_path + logfiles.console
             func_remove_logfile(logfile)
-            window_logs_refresh(sender, data)
         else:
             logfile = logfiles.console + logfiles.console
             func_remove_logfile(logfile)
-            window_logs_refresh(sender, data)
     else:
         log_warning(f'Did not process the emptying, could not find {sender}')
     delete_item(f'{win}##window')
         
 
-def func_exec_sql(func, sql):
+def func_exec_sql(f, s):
     if get_data('mode') == 'Prod':
-        res = execute_sql(sqltype=func, sql=sql)
+        res = execute_sql(sqltype=f, sql=s)
     else:
-        res = execute_sql(sqltype=func, sql=sql, d='Test-TVM-DB')
-    log_info(f'SQL {sql} executed {res}')
+        res = execute_sql(sqltype=f, sql=s, d='Test-TVM-DB')
+    log_info(f'SQL {f} {s} executed {res}')
     return res
 
 
@@ -141,10 +139,7 @@ def func_find_shows(si, sn):
                   f'from shows where `showname` like "{sn}" order by premiered desc'
         else:
             return []
-    if get_data('mode') == 'Prod':
-        fs = execute_sql(sqltype='Fetch', sql=sql)
-    else:
-        fs = execute_sql(sqltype='Fetch', sql=sql, d='Test-TVM-DB')
+    fs = func_exec_sql('Fetch', sql)
     return fs
 
 
@@ -152,8 +147,7 @@ def func_get_getter(getters):
     log_info(f'Get Getters {getters}')
     links = []
     for getter in getters:
-        link = execute_sql(sqltype='Fetch', sql=f"SELECT * from download_options "
-                                                f"WHERE `providername` = '{getter}'")
+        link = func_exec_sql('Fetch', f"SELECT * from download_options WHERE `providername` = '{getter}'")
         links.append(link)
     return links
 
@@ -206,12 +200,6 @@ def func_sender_breakup(sender, pos):
     return win
 
 
-def func_set_getter(sender, data):
-    log_info(f'Set getter {sender}, {data}')
-    opt = get_value('rbutton')
-    log_info(f'Data Sources {get_data(f"get_options##{opt}")}, {get_data(f"get_options_sec##{opt}")}')
-    
-    
 def func_tvm_update(fl, si):
     log_info(f'TVMaze update {fl}, {si}')
     api = f'{tvm_apis.followed_shows}/{si}'
@@ -276,12 +264,7 @@ def func_toggle_theme(sender, data):
 
 def graph_execute_get_data(sql, sender, pi, g_filter):
     log_info(f'Filling the plot data for {sender} with {sql} and {g_filter}')
-    if get_data('mode') == 'Prod':
-        data = execute_sql(sqltype='Fetch', sql=sql)
-        log_info('Getting Prod Data')
-    else:
-        data = execute_sql(sqltype='Fetch', sql=sql, d='Test-TVM-DB')
-        log_info('Getting Test Data')
+    data = func_exec_sql('Fetch', sql)
     plot_index = sender
     if sender == 'Other Shows':
         plot_index = pi
@@ -365,10 +348,7 @@ def program_callback(sender, data):
     log_info(f'Main Callback activated {sender}, {data}')
     if sender == 'Shows':
         sql = tvm_views.shows_to_review_count
-        if get_data('mode') == 'Prod':
-            count = execute_sql(sqltype='Fetch', sql=sql)
-        else:
-            count = execute_sql(sqltype='Fetch', sql=sql, d='Test-TVM-DB')
+        count = func_exec_sql('Fetch', sql)
         add_data('shows_ds_new_shows', f': {str(count[0][0])}')
 
 
@@ -443,10 +423,10 @@ def program_mainwindow():
         with menu('Process'):
             add_menu_item('Get Shows', callback=tvmaze_processes)
         with menu('Logs'):
-            add_menu_item('Processing Log', callback=window_logs)
-            add_menu_item('TVMaze Log', callback=window_logs)
-            add_menu_item('Python Errors', callback=window_logs)
             add_menu_item('Cleanup Log', callback=window_logs)
+            add_menu_item('Processing Log', callback=window_logs)
+            add_menu_item('Python Errors', callback=window_logs)
+            add_menu_item('TVMaze Log', callback=window_logs)
         with menu('Tools'):
             add_menu_item('Toggle Database to', callback=func_toggle_db)
             add_same_line(xoffset=140)
@@ -524,7 +504,7 @@ def shows_find_on_web(sender, data):
         set_value(f'##show_showname{win}', 'No Show was selected yet, nothing to do yet')
     else:
         links = func_get_getter(getters=['rarbg', 'piratebay', 'eztv', 'magnetdl'])
-        showinfo = execute_sql(sqltype='Fetch', sql=f'select * from shows where `showid` = {showid}')[0]
+        showinfo = func_exec_sql('Fetch', f'select * from shows where `showid` = {showid}')[0]
         for link in links:
             li = link[0]
             if not li[2]:
@@ -582,8 +562,6 @@ def shows_table_click(sender, data):
         func_buttons(sender=win, func='Show')
     add_data('showid', showid)
     showname = str(get_value(f'shows_table##{win}')[row][1])[:35]
-    # Todo - add logic to display the mode of the show like: Currently Skipping Episodes
-    # Todo - and or change the availability of buttons.
     set_value(f'##show_showname{win}', f"Selected Show: {showid}, {showname} {show_options}")
     set_value(f'Show ID##{win}', int(showid))
     set_value(f'Show Name##{win}', showname)
@@ -597,16 +575,16 @@ def tvmaze_calendar(sender, data):
     subprocess.call("open -a safari  https://www.tvmaze.com/calendar", shell=True)
     
     
-def tvmaze_change_getter(sender, data):
+def tvmaze_change_getter(sender, si):
     win = func_sender_breakup(sender, 1)
     function = func_sender_breakup(sender, 0)
-    log_info(f'Change where to get s {sender}, d {data}, w {win}, f{function}')
-    if function == 'Cancel':
-        pass
-    else:
-        ind = get_value(f'rbutton##Maintenance')
-        log_info(f'Radio button ind {ind}')
-    delete_item(f'{win}')
+    log_info(f'Change where to get s {sender}, showid {si}, w {win}, f {function}')
+    if function == 'Submit':
+        ind = get_value(f'Getters##Maintenance')
+        log_info(f'Getter Selected {getters.list[ind]}')
+        sql = f'update shows set download = "{getters.list[ind]}" where `showid` = {si}'
+        func_exec_sql('Commit', sql)
+    delete_item(f'Getters##w{win}')
     
     
 def tvmaze_logout(sender, data):
@@ -674,23 +652,23 @@ def tvmaze_view_show(sender, data):
         os.system(follow_str)
         
         
-def window_change_getters(sender, data):
+def window_change_getters(sender, si):
     function = func_sender_breakup(sender, 0)
     win = func_sender_breakup(sender, 1)
-    log_info(f'Trying to create window Change Getter with f {function}, w {win}, d {data}')
-    with window(f'Getters_Window##{win}', on_close=window_close, width=131, height=177,
-                start_x=805, start_y=140, resizable=False):
+    log_info(f'Trying to create window Change Getter with f {function}, w {win}, showid {si}')
+    with window(f'Getters##w{win}', on_close=window_close, autosize=True,
+                start_x=670, start_y=290, resizable=False):
         add_radio_button(f'Getters##{win}',
-                         ['Multiple', 'ShowRSS', 'rarbgAPI', 'eztvAPI', 'Piratebay', 'eztv'],
-                         default_value=0, callback=func_set_getter,
+                         getters.list, default_value=0,
                          tip='Multiple will use rarbgAPI, eztvAPI, Piratebay and eztv.')
         add_spacing(count=1)
         add_separator()
         add_spacing(count=3)
         add_button(f'Cancel##{win}', callback=tvmaze_change_getter)
         add_same_line(spacing=12)
-        add_button(f"Submit##{win}", callback=tvmaze_change_getter)
+        add_button(f"Submit##{win}", callback=tvmaze_change_getter, callback_data=si)
         add_spacing(count=1)
+    
     
 
 def window_close(sender, data):
@@ -787,25 +765,6 @@ def window_logs_refresh(sender, data):
     file.close()
     
     
-def window_refresh_plex_cleanup_log(sender, data):
-    logfile = logfiles.prod_path + logfiles.cleanup
-    try:
-        file = open(logfile, 'r')
-    except IOError as err:
-        log_warning(f'Error log file IOError: {err}')
-        table = []
-        set_value('run_plex_cleanup_table', table)
-        open(logfile, 'a').close()
-        return
-    log_info(f'refresh Plex Cleanup log: {sender}, {data}')
-    lines = file.readlines()
-    table = []
-    for line in lines:
-        table.append([line.replace("\n", "")])
-    set_value('run_plex_cleanup_table', table)
-    file.close()
-        
-
 def window_episodes_all_graphs(sender, data):
     window_graphs('All Episodes', None)
     set_window_pos('All Episodes##graphs', 15, 35)
