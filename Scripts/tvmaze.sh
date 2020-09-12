@@ -21,4 +21,4 @@ PYTHONPATH=/Library/Frameworks/Python.framework/Versions/3.8/lib/python3.8/site-
 export PYTHONPATH
 
 # echo "$(date) TVMaze Episode Downloads"
-python3 tvmaze.py -p >>$TVMLogs/gui.log 2>>$TVMLogs/gui_err.log &
+python3 tvmaze.py -p >>$TVMLogs/TVMaze.log 2>>$TVMLogs/Errors.log &

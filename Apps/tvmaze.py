@@ -34,12 +34,13 @@ from db_lib import tvm_views
 
 
 class logfiles:
-    test_console = '/Volumes/HD-Data-CA-Server/Development/PycharmProjects/TVM-Management/Apps/out.log'
-    prod_console = '/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Logs/gui.log'
-    test_errors = '/Volumes/HD-Data-CA-Server/Development/PycharmProjects/TVM-Management/Apps/err.log'
-    prod_errors = '/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Logs/gui_err.log'
-    process_run = '/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Logs/30M-Process.log'
-    plex_cleanup = '/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Logs/Plex-Cleanup.log'
+    prod_path = '/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Logs/'
+    test_path = '/Volumes/HD-Data-CA-Server/Development/PycharmProjects/TVM-Management/Apps/'
+    console = 'TVMaze.log'
+    errors = 'Errors.log'
+    process = 'Process.log'
+    cleanup = 'Cleanup.log'
+    watched = 'Watched.log'
 
 
 def func_db_opposite():
@@ -71,32 +72,32 @@ def func_buttons(sender, func, buttons=[]):
 def func_empty_logfile(sender, data):
     win = func_sender_breakup(sender, 1)
     log_info(f'Start the empty logfile process with {sender}, {data}')
-    if win == 'Empty Log##pcl':
-        logfile = logfiles.plex_cleanup
+    if win == 'Plex Cleanup':
+        logfile = logfiles.prod_path + logfiles.cleanup
         func_remove_logfile(logfile)
         window_refresh_plex_cleanup_log(sender, data)
         log_info(f'Calling remove_logfile for {sender} {logfile}')
-    elif win == 'Run Log':
-        logfile = logfiles.process_run
+    elif win == 'Processing Log':
+        logfile = logfiles.prod_path + logfiles.process
         func_remove_logfile(logfile)
         window_logs_refresh(sender, data)
         log_info(f'Removing Run Log: {logfile}')
-    elif win == 'Script Errors':
+    elif win == 'Python Errors':
         if get_data('mode') == 'Prod':
-            logfile = logfiles.prod_errors
+            logfile = logfiles.prod_path + logfiles.errors
             func_remove_logfile(logfile)
             window_logs_refresh(sender, data)
         else:
-            logfile = logfiles.test_errors
+            logfile = logfiles.test_path + logfiles.errors
             func_remove_logfile(logfile)
             window_logs_refresh(sender, data)
-    elif win == 'Terminal Log':
+    elif win == 'TVMaze Log':
         if get_data('mode') == 'Prod':
-            logfile = logfiles.prod_console
+            logfile = logfiles.prod_path + logfiles.console
             func_remove_logfile(logfile)
             window_logs_refresh(sender, data)
         else:
-            logfile = logfiles.prod_console
+            logfile = logfiles.console + logfiles.console
             func_remove_logfile(logfile)
             window_logs_refresh(sender, data)
     else:
@@ -442,9 +443,10 @@ def program_mainwindow():
         with menu('Process'):
             add_menu_item('Get Shows', callback=tvmaze_processes)
         with menu('Logs'):
-            add_menu_item('Run Log', callback=window_logs)
-            add_menu_item('Terminal Log', callback=window_logs)
-            add_menu_item('Script Errors', callback=window_logs)
+            add_menu_item('Processing Log', callback=window_logs)
+            add_menu_item('TVMaze Log', callback=window_logs)
+            add_menu_item('Python Errors', callback=window_logs)
+            add_menu_item('Cleanup Log', callback=window_logs)
         with menu('Tools'):
             add_menu_item('Toggle Database to', callback=func_toggle_db)
             add_same_line(xoffset=140)
@@ -623,8 +625,8 @@ def tvmaze_processes(sender, data):
         action = f"python3 {loc}/actions.py -d "
     run_async_function(subprocess.call(action, shell=True), data)
     log_info(f'TVMaze processes ASYNC Finished s {action}')
-    window_logs('Terminal Log', '')
-    window_logs('Script Errors', '')
+    window_logs('TVMaze Log', '')
+    window_logs('Python Errors', '')
     
 
 def tvmaze_update(sender, data):
@@ -724,7 +726,7 @@ def window_logs(sender, data):
     if does_item_exist(f'{sender}##window'):
         log_info(f'{sender}##window already running')
     else:
-        if sender == 'Run Log':
+        if sender == 'Processing Log':
             width = 1955
             height = 600
             sx = 135
@@ -746,8 +748,7 @@ def window_logs(sender, data):
             add_separator()
             add_table(f'log_table##{sender}',
                       headers=[f'{sender} - Info'])
-            # ToDo Fix the initial refresh of the log data table
-            # window_logs_refresh(sender, data)
+            window_logs_refresh(f'Refresh##{sender}', data)
 
 
 def window_logs_refresh(sender, data):
@@ -755,18 +756,22 @@ def window_logs_refresh(sender, data):
     function = func_sender_breakup(sender, 0)
     log_info(f'Log Refresh s {sender}, d {data}, f {function}, w {win}')
     mode = get_data('mode')
-    if win == 'Run Log':
-        logfile = logfiles.process_run
-    elif win == 'Terminal Log':
+    if win == 'Processing Log':
+        logfile = logfiles.prod_path + logfiles.process
+    elif win == 'TVMaze Log':
         if mode == 'Test':
-            logfile = logfiles.test_console
+            logfile = logfiles.test_path + logfiles.console
         else:
-            logfile = logfiles.prod_console
-    elif win == 'Script Errors':
+            logfile = logfiles.prod_path + logfiles.console
+    elif win == 'Python Errors':
         if mode == 'Test':
-            logfile = logfiles.test_errors
+            logfile = logfiles.test_path + logfiles.errors
         else:
-            logfile = logfiles.prod_errors
+            logfile = logfiles.test_path + logfiles.errors
+    elif win == 'Cleanup Log':
+        logfile = logfiles.prod_path + logfiles.cleanup
+    else:
+        log_error(f'Refresh for {sender} not defined')
     try:
         file = open(logfile, 'r')
     except IOError as err:
@@ -783,7 +788,7 @@ def window_logs_refresh(sender, data):
     
     
 def window_refresh_plex_cleanup_log(sender, data):
-    logfile = logfiles.plex_cleanup
+    logfile = logfiles.prod_path + logfiles.cleanup
     try:
         file = open(logfile, 'r')
     except IOError as err:
