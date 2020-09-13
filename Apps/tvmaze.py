@@ -35,19 +35,21 @@ from db_lib import tvm_views
 
 class paths:
     def __init__(self, mode):
+        log_prod = '/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Logs/'
         if mode == 'Prod':
-            lp = '/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Logs/'
+            lp = log_prod
             ap = '/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Apps/'
         else:
             lp = '/Volumes/HD-Data-CA-Server/Development/PycharmProjects/TVM-Management/Logs/'
-            ap = '/Volumes/HD-Data-CA-Server/Development/PycharmProjects/TVM-Management/Logs'
+            ap = '/Volumes/HD-Data-CA-Server/Development/PycharmProjects/TVM-Management/Apps/'
         self.log_path = lp
         self.app_path = ap
         self.console = lp + 'TVMaze.log'
         self.errors = lp + 'Errors.log'
-        self.process = lp + 'Process.log'
-        self.cleanup = lp + 'Cleanup.log'
-        self.watched = lp + 'Watched.log'
+        self.process = log_prod + 'Process.log'
+        self.cleanup = log_prod + 'Cleanup.log'
+        self.watched = log_prod + 'Watched.log'
+        self.transmission = log_prod + "Transmission.log"
     
 
 class getters:
@@ -83,7 +85,7 @@ def func_buttons(sender, func, buttons=[]):
 def func_empty_logfile(sender, data):
     win = func_sender_breakup(sender, 1)
     log_info(f'Start the empty logfile process with {sender}, {data}')
-    paths_info = paths(get_data['mode'])
+    paths_info = paths(get_data('mode'))
     if win == 'Cleanup Log':
         logfile = paths_info.cleanup
         func_remove_logfile(logfile)
@@ -443,6 +445,7 @@ def program_mainwindow():
             add_menu_item('Cleanup Log', callback=window_logs)
             add_menu_item('Processing Log', callback=window_logs)
             add_menu_item('Python Errors', callback=window_logs)
+            add_menu_item('Transmission Log', callback=window_logs)
             add_menu_item('TVMaze Log', callback=window_logs)
         with menu('Tools'):
             add_menu_item('Toggle Database to', callback=func_toggle_db)
@@ -758,6 +761,8 @@ def window_logs_refresh(sender, data):
         logfile = paths_info.errors
     elif win == 'Cleanup Log':
         logfile = paths_info.cleanup
+    elif win == 'Transmission Log':
+        logfile = paths_info.transmission
     else:
         log_error(f'Refresh for {sender} not defined')
     try:
