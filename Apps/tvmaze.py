@@ -133,10 +133,10 @@ def func_find_shows(si, sn):
         showid = get_data('shows_showid')
         if showid != 0:
             sql = f'select showid, showname, network, type, showstatus, status, premiered, download ' \
-                  f'from shows where `showid` = {si}'
+                  f'from shows where `showid` = {si} order by showid'
         elif sn != '':
             sql = f'select showid, showname, network, type, showstatus, status, premiered, download ' \
-                  f'from shows where `showname` like "{sn}" order by premiered desc'
+                  f'from shows where `showname` like "{sn}" order by showname, premiered desc'
         else:
             return []
     fs = func_exec_sql('Fetch', sql)
@@ -151,6 +151,23 @@ def func_get_getter(getters):
         links.append(link)
     return links
 
+
+def func_key_login(sender, data):
+    log_info(f'Login Key Press detected s {sender} d {data}')
+    if data == mvKey_Return:
+        func_login(sender, data)
+        
+
+def func_key_main(sender, data):
+    log_info(f'Main Window Key detected s {sender} d {data}')
+    
+        
+def func_key_shows(sender, data):
+    win = func_sender_breakup(sender, 1)
+    log_info(f'Shows Key Press detected s {sender} d {data} w {win}')
+    if data == mvKey_Return:
+        show_fill_table(f'Search##{sender}', data)
+        
 
 def func_log_filter(sender, data):
     log_info(f'Func Log Filter s {sender}, d {data}')
@@ -453,6 +470,8 @@ def program_mainwindow():
         with menu('Windows'):
             add_menu_item('Close Open Windows', callback=window_close_all)
     set_render_callback(program_callback, 'Shows')
+    # set_key_down_callback(func_key_main)
+    # set_key_press_callback(func_key_main)
     if options['-s'] and not options['-l']:
         window_shows_all_graphs('All Graphs', 'set_item_callback')
     elif options['-e'] and not options['-l']:
@@ -688,12 +707,12 @@ def window_close_all(sender, data):
 
 
 def window_login():
-    # with window('Login Window', title_bar=False, movable=False, autosize=True, resizable=False):
     with window('Login Window', start_x=900, start_y=400, title_bar=False,
                 movable=False, autosize=True, resizable=False):
         add_input_text('Username', hint='Your email address')
         add_input_text('Password', hint='Password is "password" for now', password=True)
         add_button('Submit', callback=func_login)
+    set_key_release_callback(func_key_login, handler=f'Login Window')
 
 
 def window_logs(sender, data):
@@ -870,6 +889,7 @@ def window_shows(sender, data):
                 add_label_text(f'##uw{sender}', value='Tried to create an undefined Show Window')
         
         set_style_window_title_align(0.5, 0.5)
+        set_key_press_callback(func_key_shows, handler=win)
         if sender == 'Eval New Shows':
             show_fill_table(f'Search##{sender}', None)
         log_info(f'Create item (window): "{win}"')
