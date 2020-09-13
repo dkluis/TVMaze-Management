@@ -165,10 +165,17 @@ def func_key_main(sender, data):
     
         
 def func_key_shows(sender, data):
-    win = func_sender_breakup(sender, 1)
-    log_info(f'Shows Key Press detected s {sender} d {data} w {win}')
+    function = func_sender_breakup(sender, 1)
+    log_info(f'Shows Key Press detected s {sender} d {data} w {function}')
     if data == mvKey_Return:
         show_fill_table(f'Search##{sender}', data)
+        
+        
+def func_key_logs(sender, data):
+    function = func_sender_breakup(sender, 0)
+    log_info(f'Logs Key Press detected s {sender} d {data} w {function}')
+    if data == mvKey_Return:
+        func_log_filter(f'Filter##{function}', data)
         
 
 def func_log_filter(sender, data):
@@ -181,7 +188,7 @@ def func_log_filter(sender, data):
             if str(get_value(f'##{win}ft')).lower() in str(row).lower():
                 new_table.append(row)
         set_value(f'log_table##{win}', new_table)
-    set_value(f'##{win}ft', '')
+        set_value(f'##{win}ft', '')
 
 
 def func_login(sender, data):
@@ -189,6 +196,10 @@ def func_login(sender, data):
     if get_value('Password') == 'password':
         delete_item('Login Window')
         func_recursively_show_main('MainWindow')
+    else:
+        set_value('##Error', 'Wrong Username or Password')
+        # ToDo figure out style and color for set_item
+        set_item_color('##Error', style=mvGuiCol_Text, color=[250, 0, 0])
 
 
 def func_recursively_show_main(container):
@@ -465,6 +476,7 @@ def program_mainwindow():
                 add_menu_item('Show Debugger', callback=window_standards)
                 add_menu_item('Show Documentation', callback=window_standards)
                 add_menu_item('Show Source Code', callback=window_standards)
+                add_menu_item('Show Style Editor', callback=show_style_editor)
                 add_spacing(count=1)
                 add_separator()
                 add_spacing(count=1)
@@ -473,6 +485,11 @@ def program_mainwindow():
         with menu('Windows'):
             add_menu_item('Close Open Windows', callback=window_close_all)
     set_render_callback(program_callback, 'Shows')
+    #add_additional_font("/System/Library/Fonts/Supplemental/Courier New Bold.ttf", 13)
+    #add_additional_font("/System/Library/Fonts/Supplemental/Courier New Bold.ttf", 13, 'cyrillic')
+    #add_additional_font("/System/Library/Fonts/Supplemental/Courier New Bold.ttf", 13, 'hebrew')
+    add_additional_font("/Users/dick/Library/Fonts/NotoMono-Regular.ttf", 14)
+    add_additional_font("/Users/dick/Library/Fonts/NotoMono-Regular.ttf", 14, 'cyrillic')
     # set_key_down_callback(func_key_main)
     # set_key_press_callback(func_key_main)
     if options['-s'] and not options['-l']:
@@ -712,9 +729,11 @@ def window_close_all(sender, data):
 def window_login():
     with window('Login Window', start_x=900, start_y=400, title_bar=False,
                 movable=False, autosize=True, resizable=False):
-        add_input_text('Username', hint='Your email address')
-        add_input_text('Password', hint='Password is "password" for now', password=True)
+        add_input_text('Username', hint='Your email address', width=250)
+        add_input_text('Password', hint='Password is "password" for now', password=True, width=250)
         add_button('Submit', callback=func_login)
+        add_same_line(spacing=5)
+        add_label_text('##Error', '')
     set_key_release_callback(func_key_login, handler=f'Login Window')
 
 
@@ -746,6 +765,8 @@ def window_logs(sender, data):
             add_table(f'log_table##{sender}',
                       headers=[f'{sender} - Info'])
             window_logs_refresh(f'Refresh##{sender}', data)
+        set_key_press_callback(func_key_logs, handler=f'{sender}##window')
+        
 
 
 def window_logs_refresh(sender, data):
@@ -778,6 +799,7 @@ def window_logs_refresh(sender, data):
         table.append([line.replace("\n", "")])
     set_value(f'log_table##{win}', table)
     file.close()
+    set_value(f'##{win}ft', '')
 
 
 def window_episodes_all_graphs(sender, data):
