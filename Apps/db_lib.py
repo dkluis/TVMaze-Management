@@ -324,7 +324,8 @@ class tvm_views:
                       "FROM shows " \
                       "WHERE (status = 'New' AND record_updated <= CURRENT_DATE) OR " \
                       "(status = 'Undecided' and download <= CURRENT_DATE);"
-    shows_to_review_tvmaze = "SELECT showid, showname, network, type, showstatus, status, premiered, download " \
+    shows_to_review_tvmaze = "SELECT showid, showname, network, language, type, showstatus, status, premiered, " \
+                             "download, imdb, thetvdb " \
                              "FROM shows " \
                              "WHERE (status = 'New' AND record_updated <= CURRENT_DATE) OR " \
                              "(status = 'Undecided' and download <= CURRENT_DATE) " \

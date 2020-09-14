@@ -127,17 +127,20 @@ def func_find_shows(si, sn):
     if si == 0 and sn == 'New':
         sql = tvm_views.shows_to_review_tvmaze
     elif sn == 'Shows Due':
-        sql = f'select DISTINCT a.showid, a.showname, a.network, a.type, a.showstatus, a.status, a.premiered, ' \
-              f'a.download from shows a join episodes e on e.showid = a.showid ' \
+        sql = f'select DISTINCT a.showid, a.showname, a.network, a.language, a.type, a.showstatus, ' \
+              f'a.status, a.download, a.premiered, a.imdb, a.thetvdb ' \
+              f'from shows a join episodes e on e.showid = a.showid ' \
               f'where e.mystatus is NULL and e.airdate is not NULL and e.airdate <= current_date ' \
               f'and download != "Skip" ORDER BY showid;'
     else:
         showid = get_data('shows_showid')
         if showid != 0:
-            sql = f'select showid, showname, network, type, showstatus, status, premiered, download ' \
+            sql = f'select showid, showname, network, language, type, showstatus, status, premiered, download, ' \
+                  f'imdb, thetvdb ' \
                   f'from shows where `showid` = {si} order by showid'
         elif sn != '':
-            sql = f'select showid, showname, network, type, showstatus, status, premiered, download ' \
+            sql = f'select showid, showname, network, type, language, showstatus, status, premiered, download, ' \
+                  f'imdb, thetvdb ' \
                   f'from shows where `showname` like "{sn}" order by showname, premiered desc'
         else:
             return []
@@ -918,8 +921,8 @@ def window_shows(sender, data):
                 add_separator()
                 add_spacing()
                 add_table(f'shows_table##{sender}',
-                          headers=['Show ID', 'Show Name', 'Network', 'Type', 'Status', 'My Status', 'Premiered',
-                                   'Getter'],
+                          headers=['Show ID', 'Show Name', 'Network', 'Language' ,'Type', 'Status', 'My Status',
+                                   'Premiered', 'Getter', 'IMDB', 'TheTVDB'],
                           callback=shows_table_click)
             else:
                 add_label_text(f'##uw{sender}', value='Tried to create an undefined Show Window')
