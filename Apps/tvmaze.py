@@ -50,7 +50,7 @@ class paths:
         self.cleanup = log_prod + 'Cleanup.log'
         self.watched = log_prod + 'Watched.log'
         self.transmission = log_prod + "Transmission.log"
-    
+
 
 class getters:
     list = ['Multi', 'ShowRSS', 'rarbgAPI', 'eztvAPI', 'piratebay', 'magnetdl', 'eztv', 'Skip']
@@ -158,25 +158,25 @@ def func_key_login(sender, data):
     log_info(f'Login Key Press detected s {sender} d {data}')
     if data == mvKey_Return:
         func_login(sender, data)
-        
+
 
 def func_key_main(sender, data):
     log_info(f'Main Window Key detected s {sender} d {data}')
-    
-        
+
+
 def func_key_shows(sender, data):
     function = func_sender_breakup(sender, 1)
     log_info(f'Shows Key Press detected s {sender} d {data} w {function}')
     if data == mvKey_Return:
         show_fill_table(f'Search##{sender}', data)
-        
-        
+
+
 def func_key_logs(sender, data):
     function = func_sender_breakup(sender, 0)
     log_info(f'Logs Key Press detected s {sender} d {data} w {function}')
     if data == mvKey_Return:
         func_log_filter(f'Filter##{function}', data)
-        
+
 
 def func_log_filter(sender, data):
     log_info(f'Func Log Filter s {sender}, d {data}')
@@ -421,7 +421,7 @@ def program_mainwindow():
             add_spacing(count=1)
             add_menu_item('Quit', callback=window_quit, shortcut='cmd+Q')
         with menu('Shows'):
-            add_menu_item('Eval New Shows')
+            add_menu_item('Eval New Shows', callback=window_shows)
             add_same_line(xoffset=115)
             add_label_text('##no_new_shows', value='0', data_source='shows_ds_new_shows', color=[250, 250, 0, 250])
             add_spacing(count=1)
@@ -485,11 +485,13 @@ def program_mainwindow():
         with menu('Windows'):
             add_menu_item('Close Open Windows', callback=window_close_all)
     set_render_callback(program_callback, 'Shows')
-    #add_additional_font("/System/Library/Fonts/Supplemental/Courier New Bold.ttf", 13)
-    #add_additional_font("/System/Library/Fonts/Supplemental/Courier New Bold.ttf", 13, 'cyrillic')
-    #add_additional_font("/System/Library/Fonts/Supplemental/Courier New Bold.ttf", 13, 'hebrew')
-    add_additional_font("/Users/dick/Library/Fonts/NotoMono-Regular.ttf", 14)
-    add_additional_font("/Users/dick/Library/Fonts/NotoMono-Regular.ttf", 14, 'cyrillic')
+
+    add_additional_font("/System/Library/Fonts/Menlo.ttc", 14,
+                        custom_glyph_ranges=[[0x370, 0x377], [0x400, 0x4ff], [0x530, 0x58f], [0x10a0, 0x10ff],
+                                             [0x30a0, 0x30ff], [0x0590, 0x05ff]])
+    # add_additional_font("/Users/dick/Library/Fonts/ProggyClean.ttf", 14,
+    # add_additional_font("/Users/dick/Library/Fonts/unifont-13.0.03.ttf", 14,
+    #                    custom_glyph_ranges=[[0x370, 0x377], [0x400, 0x4ff], [0x530, 0x58f], [0x10a0, 0x10ff]])
     # set_key_down_callback(func_key_main)
     # set_key_press_callback(func_key_main)
     if options['-s'] and not options['-l']:
@@ -766,7 +768,6 @@ def window_logs(sender, data):
                       headers=[f'{sender} - Info'])
             window_logs_refresh(f'Refresh##{sender}', data)
         set_key_press_callback(func_key_logs, handler=f'{sender}##window')
-        
 
 
 def window_logs_refresh(sender, data):
@@ -867,6 +868,12 @@ def window_quit(sender, data):
 
 
 def window_shows(sender, data):
+    if sender == 'Eval New Shows':
+        sender = 'Maintenance'
+        ens = True
+    else:
+        ens = False
+    
     win = f'{sender}##window'
     log_info(f'Window Shows {sender}')
     if not does_item_exist(win):
@@ -917,8 +924,8 @@ def window_shows(sender, data):
         
         set_style_window_title_align(0.5, 0.5)
         set_key_press_callback(func_key_shows, handler=win)
-        if sender == 'Eval New Shows':
-            show_fill_table(f'Search##{sender}', None)
+        if ens:
+            show_fill_table(f'Evaluate Shows##{sender}', None)
         log_info(f'Create item (window): "{win}"')
 
 
