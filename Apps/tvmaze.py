@@ -171,7 +171,7 @@ def func_key_shows(sender, data):
     function = func_sender_breakup(sender, 1)
     log_info(f'Shows Key Press detected s {sender} d {data} w {function}')
     if data == mvKey_Return:
-        show_fill_table(f'Search##{sender}', data)
+        shows_fill_table(f'Search##{sender}', data)
 
 
 def func_key_logs(sender, data):
@@ -295,6 +295,50 @@ def func_toggle_theme(sender, data):
         add_data('theme_opposite', 'Dark')
 
 
+def epis_fill_table(sender, data):
+    log_info(f'Fill Episode Table {sender} {data}')
+    win = func_sender_breakup(sender, 1)
+    button = func_sender_breakup(sender, 0)
+    showid = get_value(f'Show ID##{win}')
+    add_data('epi_showid', showid)
+    showname = get_value(f'Show Name##{win}')
+    if showid == 0 and showname == '' and button == 'Search':
+        set_value(f'##epi_showname{win}', 'Nothing was entered in Show ID or Showname')
+    log_info(f'showid: {showid} - showname: {showname}')
+    if button == 'Search':
+        found_shows = func_find_shows(showid, showname)
+    elif button == 'Evaluate Shows':
+        found_shows = func_find_shows(0, 'New')
+    elif button == 'Shows Due':
+        found_shows = func_find_shows(0, 'Shows Due')
+    else:
+        log_error(f'Unknown Button Pressed to fill the table b {button}')
+    
+    table = []
+    for rec in found_shows:
+        table_row = []
+        for field in rec:
+            table_row.append(field)
+        table.append(table_row)
+    set_value(f'shows_table##{win}', table)
+    func_buttons(sender=win, func='Show')
+    epis_view_clear('fill_table##View', 'input_fields_only')
+
+
+def epis_view_clear(sender, data):
+    log_info(f'Epi Maint clear {sender} {data}')
+    win = func_sender_breakup(sender, 1)
+    if data != 'input_fields_only':
+        set_value(f'shows_table##{win}', [])
+        set_value(f'##show_showname{win}', "")
+        func_buttons(sender=win, func='Show')
+    
+    set_value(f'Show ID##{win}', 0)
+    set_value(f'Show Name##{win}', '')
+    set_value(f'##show_name{win}', '')
+    add_data(f'selected##{win}', False)
+
+
 def graph_execute_get_data(sql, sender, pi, g_filter):
     log_info(f'Filling the plot data for {sender} with {sql} and {g_filter}')
     data = func_exec_sql('Fetch', sql)
@@ -388,7 +432,8 @@ def program_callback(sender, data):
 def program_data():
     add_data('shows_ds_new_shows', '0')
     add_data('shows_showid', 0)
-    add_data('selected', False)
+    add_data(f'selected##Maintenance', False)
+    add_data(f'selected##View', False)
     add_data('theme_opposite', 'Dark')
     add_data('label##All Shows', "All the shows that are available on TVMaze")
     add_data('label##Followed Shows', "Only the followed shows")
@@ -441,7 +486,7 @@ def program_mainwindow():
                 add_spacing(count=1)
                 add_menu_item('All Graphs##Shows', callback=window_shows_all_graphs, shortcut='cmd+S')
         with menu('Episodes', tip='Only of Followed Shows'):
-            add_menu_item('Search', callback=window_episodes)
+            add_menu_item('View', callback=window_episodes)
             with menu('Graphs##episodes'):
                 add_menu_item('All Episodes', callback=window_graphs)
                 add_menu_item('Skipped Episodes', callback=window_graphs)
@@ -490,7 +535,7 @@ def program_mainwindow():
     set_render_callback(program_callback, 'Shows')
 
     # add_additional_font("/System/Library/Fonts/Menlo.ttc", 14,
-    add_additional_font("/Users/dick/Library/Fonts/KlokanTechNotoSans-Bold.ttf", 15,
+    add_additional_font("/Users/dick/Library/Fonts/KlokanTechNotoSans-Bold.ttf", 16,
                         custom_glyph_ranges=[[0x370, 0x377], [0x400, 0x4ff], [0x530, 0x58f], [0x10a0, 0x10ff],
                                              [0x30a0, 0x30ff], [0x0590, 0x05ff]])
     # add_additional_font("/Users/dick/Library/Fonts/ProggyClean.ttf", 14,
@@ -509,7 +554,7 @@ def program_mainwindow():
         window_standards('Show Debugger', '')
 
 
-def show_fill_table(sender, data):
+def shows_fill_table(sender, data):
     log_info(f'Fill Show Table {sender} {data}')
     win = func_sender_breakup(sender, 1)
     button = func_sender_breakup(sender, 0)
@@ -536,13 +581,13 @@ def show_fill_table(sender, data):
         table.append(table_row)
     set_value(f'shows_table##{win}', table)
     func_buttons(sender=win, func='Show')
-    show_maint_clear('fill_table##Maintenance', 'input_fields_only')
+    shows_maint_clear('fill_table##Maintenance', 'input_fields_only')
 
 
 def shows_find_on_web(sender, data):
     win = func_sender_breakup(sender, 1)
     function = func_sender_breakup(sender, 0)
-    selected = get_data('selected')
+    selected = get_data(f'selected##{win}')
     showid = get_value(f'Show ID##{win}')
     log_info(f'Shows Find On the Web s {sender}, d {data}, w "{win}", f "{function}", si {showid}')
     if not selected:
@@ -565,7 +610,7 @@ def shows_find_on_web(sender, data):
             os.system(start_find)
 
 
-def show_maint_clear(sender, data):
+def shows_maint_clear(sender, data):
     log_info(f'Show Maint clear {sender} {data}')
     win = func_sender_breakup(sender, 1)
     if data != 'input_fields_only':
@@ -576,7 +621,7 @@ def show_maint_clear(sender, data):
     set_value(f'Show ID##{win}', 0)
     set_value(f'Show Name##{win}', '')
     set_value(f'##show_name{win}', '')
-    add_data('selected', False)
+    add_data(f'selected##{win}', False)
 
 
 def shows_table_click(sender, data):
@@ -585,13 +630,13 @@ def shows_table_click(sender, data):
     win = func_sender_breakup(sender, 1)
     row_cell = get_table_selections(f'shows_table##{win}')
     row = row_cell[0][0]
-    add_data('selected', True)
+    add_data(f'selected##{win}', True)
     showid = get_value(f'shows_table##{win}')[row][0]
-    show_status = get_value(f'shows_table##{win}')[row][5]
+    show_status = get_value(f'shows_table##{win}')[row][6]
     my_status = get_value(f'shows_table##{win}')[row][7]
+    log_info(f'Show Table Click id {showid}, status {show_status}, my status {my_status}')
     func_buttons(win, 'Show')
     if show_status == 'New' or show_status == 'Undecided':
-        # show_options = '-> Use: Follow, Not Interested or Undecided'
         func_buttons(sender=win, func='Hide',
                      buttons=['Unfollow', 'Episode Skipping', 'Change Getter'])
     elif show_status == 'Followed' and my_status == 'Skip':
@@ -653,7 +698,7 @@ def tvmaze_processes(sender, data):
 def tvmaze_update(sender, data):
     win = func_sender_breakup(sender, 1)
     function = func_sender_breakup(sender, 0)
-    selected = get_data('selected')
+    selected = get_data(f'selected##{win}')
     si = get_value(f'Show ID##{win}')
     log_info(f'TVMaze update s {sender}, d {data}, w "{win}", f "{function}", si {si}')
     if not selected:
@@ -680,12 +725,12 @@ def tvmaze_update(sender, data):
             set_value(f'##show_showname{win}', f'Show {si} update on TVMaze and set Skipped = {result}')
         else:
             log_error(f'Unknown Function: "{function}"')
-        show_maint_clear(sender, 'input_fields_only')
+        shows_maint_clear(sender, 'input_fields_only')
 
 
 def tvmaze_view_show(sender, data):
     win = func_sender_breakup(sender, 1)
-    selected = get_data('selected')
+    selected = get_data(f'selected##{win}')
     if not selected:
         set_value(f'##show_showname{win}', 'No Show was selected yet, nothing to do yet')
     else:
@@ -730,6 +775,50 @@ def window_close_all(sender, data):
         delete_item(win)
     hide_item('debug##standard')
     hide_item('logger#standard')
+
+
+def window_episodes(sender, data):
+    win = f'{sender}##window'
+    log_info(f'Window Shows {sender}')
+    if not does_item_exist(win):
+        with window(win, 1500, 750, start_x=30, start_y=70, resizable=False, movable=True, on_close=window_close):
+            add_input_int(f'Show ID##{sender}', default_value=0, width=250)
+            add_input_text(f'Show Name##{sender}', hint='Use % as wild-card', width=250)
+            add_button(f'Clear##{sender}', callback=epis_view_clear)
+            add_same_line(spacing=10)
+            add_button(f'Search##{sender}', callback=epis_fill_table)
+            with group('View Options', horizontal=True):
+                add_label_text(f'##cbl{sender}', 'Select Options:')
+                add_checkbox(f'Test##{sender}')
+                add_checkbox(f'Test2##{sender}')
+        set_style_window_title_align(0.5, 0.5)
+
+
+def window_episodes_all_graphs(sender, data):
+    window_graphs('All Episodes', None)
+    set_window_pos('All Episodes##graphs', 15, 35)
+    set_item_width('All Episodes##graphs', 690)
+    set_item_height('All Episodes##graphs', 515)
+    window_graphs('Skipped Episodes', None)
+    set_window_pos('Skipped Episodes##graphs', 720, 35)
+    set_item_width('Skipped Episodes##graphs', 690)
+    set_item_height('Skipped Episodes##graphs', 515)
+    window_graphs('Watched Episodes', None)
+    set_window_pos('Watched Episodes##graphs', 1420, 35)
+    set_item_width('Watched Episodes##graphs', 690)
+    set_item_height('Watched Episodes##graphs', 515)
+    window_graphs('Episodes to Get', None)
+    set_window_pos('Episodes to Get##graphs', 15, 570)
+    set_item_width('Episodes to Get##graphs', 690)
+    set_item_height('Episodes to Get##graphs', 515)
+    window_graphs('Episodes to Watch', None)
+    set_window_pos('Episodes to Watch##graphs', 720, 570)
+    set_item_width('Episodes to Watch##graphs', 690)
+    set_item_height('Episodes to Watch##graphs', 515)
+    window_graphs('Upcoming Episodes', None)
+    set_window_pos('Upcoming Episodes##graphs', 1420, 570)
+    set_item_width('Upcoming Episodes##graphs', 690)
+    set_item_height('Upcoming Episodes##graphs', 515)
 
 
 def window_login():
@@ -808,33 +897,6 @@ def window_logs_refresh(sender, data):
     set_value(f'##{win}ft', '')
 
 
-def window_episodes_all_graphs(sender, data):
-    window_graphs('All Episodes', None)
-    set_window_pos('All Episodes##graphs', 15, 35)
-    set_item_width('All Episodes##graphs', 690)
-    set_item_height('All Episodes##graphs', 515)
-    window_graphs('Skipped Episodes', None)
-    set_window_pos('Skipped Episodes##graphs', 720, 35)
-    set_item_width('Skipped Episodes##graphs', 690)
-    set_item_height('Skipped Episodes##graphs', 515)
-    window_graphs('Watched Episodes', None)
-    set_window_pos('Watched Episodes##graphs', 1420, 35)
-    set_item_width('Watched Episodes##graphs', 690)
-    set_item_height('Watched Episodes##graphs', 515)
-    window_graphs('Episodes to Get', None)
-    set_window_pos('Episodes to Get##graphs', 15, 570)
-    set_item_width('Episodes to Get##graphs', 690)
-    set_item_height('Episodes to Get##graphs', 515)
-    window_graphs('Episodes to Watch', None)
-    set_window_pos('Episodes to Watch##graphs', 720, 570)
-    set_item_width('Episodes to Watch##graphs', 690)
-    set_item_height('Episodes to Watch##graphs', 515)
-    window_graphs('Upcoming Episodes', None)
-    set_window_pos('Upcoming Episodes##graphs', 1420, 570)
-    set_item_width('Upcoming Episodes##graphs', 690)
-    set_item_height('Upcoming Episodes##graphs', 515)
-
-
 def window_get_pos(sender, data):
     all_windows = get_windows()
     log_info(f'Log Open Window Positions for {all_windows}')
@@ -863,11 +925,6 @@ def window_graphs(sender, data):
         log_info(f'Create item (window): "{win}"')
 
 
-def window_episodes(sender, data):
-    win = f'{sender}##window'
-    log_info(f'Window Shows {sender}')
-
-
 def window_quit(sender, data):
     stop_dearpygui()
 
@@ -886,13 +943,13 @@ def window_shows(sender, data):
             if sender == 'Maintenance':
                 add_input_int(f'Show ID##{sender}', default_value=0, width=250)
                 add_input_text(f'Show Name##{sender}', hint='Use % as wild-card', width=250)
-                add_button(f'Clear##{sender}', callback=show_maint_clear)
+                add_button(f'Clear##{sender}', callback=shows_maint_clear)
                 add_same_line(spacing=10)
-                add_button(f'Search##{sender}', callback=show_fill_table)
+                add_button(f'Search##{sender}', callback=shows_fill_table)
                 add_same_line(spacing=10)
-                add_button(f'Evaluate Shows##{sender}', callback=show_fill_table)
+                add_button(f'Evaluate Shows##{sender}', callback=shows_fill_table)
                 add_same_line(spacing=10)
-                add_button(f'Shows Due##{sender}', callback=show_fill_table)
+                add_button(f'Shows Due##{sender}', callback=shows_fill_table)
                 add_separator()
                 add_input_text(f'##show_showname{sender}', readonly=True, default_value='', width=450)
                 add_same_line(spacing=10)
@@ -930,7 +987,7 @@ def window_shows(sender, data):
         set_style_window_title_align(0.5, 0.5)
         set_key_press_callback(func_key_shows, handler=win)
         if ens:
-            show_fill_table(f'Evaluate Shows##{sender}', None)
+            shows_fill_table(f'Evaluate Shows##{sender}', None)
         log_info(f'Create item (window): "{win}"')
 
 
