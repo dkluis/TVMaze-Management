@@ -486,7 +486,8 @@ def program_mainwindow():
             add_menu_item('Close Open Windows', callback=window_close_all)
     set_render_callback(program_callback, 'Shows')
 
-    add_additional_font("/System/Library/Fonts/Menlo.ttc", 14,
+    # add_additional_font("/System/Library/Fonts/Menlo.ttc", 14,
+    add_additional_font("/Users/dick/Library/Fonts/KlokanTechNotoSans-Bold.ttf", 15,
                         custom_glyph_ranges=[[0x370, 0x377], [0x400, 0x4ff], [0x530, 0x58f], [0x10a0, 0x10ff],
                                              [0x30a0, 0x30ff], [0x0590, 0x05ff]])
     # add_additional_font("/Users/dick/Library/Fonts/ProggyClean.ttf", 14,
@@ -757,8 +758,9 @@ def window_logs(sender, data):
         with window(f'{sender}##window', start_x=sx, start_y=sy, width=width, height=height, on_close=window_close):
             set_style_window_title_align(0.5, 0.5)
             add_button(f'Refresh##{sender}', callback=window_logs_refresh)
-            add_same_line(spacing=10)
-            add_button(f"Empty Log##{sender}", callback=func_empty_logfile)
+            if sender != 'Transmission Log':
+                add_same_line(spacing=10)
+                add_button(f"Empty Log##{sender}", callback=func_empty_logfile)
             add_button(f"Filter##{sender}", callback=func_log_filter)
             add_same_line(spacing=10)
             add_input_text(f'##{sender}ft', hint='No wildcards, case does not matter')
