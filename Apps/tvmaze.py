@@ -349,6 +349,7 @@ def graph_execute_get_data(sql, sender, pi, g_filter):
         plot_index = f'{plot_index} - {g_filter}'
     else:
         plot_index = f'{plot_index} - All Days'
+    # add_stem_series(f'{sender}##plot', f'{plot_index}', data)
     add_line_series(f'{sender}##plot', f'{plot_index}', data)
     # ToDo Figure graph call back from auto refresh option
     # set_render_callback('graph_render_callback')
@@ -500,6 +501,10 @@ def program_mainwindow():
                 add_menu_item('All Graphs##episodes', callback=window_episodes_all_graphs, shortcut='cmd+E')
         with menu('Process'):
             add_menu_item('Get Episodes', callback=tvmaze_processes)
+            add_spacing(count=1)
+            add_separator()
+            add_spacing(count=1)
+            add_menu_item('Transmission Files', callback=window_files)
         with menu('Logs'):
             add_menu_item('Cleanup Log', callback=window_logs)
             add_menu_item('Processing Log', callback=window_logs)
@@ -532,7 +537,7 @@ def program_mainwindow():
                 add_menu_item('Test Window for Tabs', callback=window_tests)
         with menu('Windows'):
             add_menu_item('Close Open Windows', callback=window_close_all)
-    set_render_callback(program_callback, 'Shows')
+    set_render_callback(program_callback, 'Eval New Shows')
 
     # add_additional_font("/System/Library/Fonts/Menlo.ttc", 14,
     add_additional_font("/Users/dick/Library/Fonts/KlokanTechNotoSans-Bold.ttf", 16,
@@ -819,6 +824,15 @@ def window_episodes_all_graphs(sender, data):
     set_window_pos('Upcoming Episodes##graphs', 1420, 570)
     set_item_width('Upcoming Episodes##graphs', 690)
     set_item_height('Upcoming Episodes##graphs', 515)
+    
+
+def window_files(sender, data):
+    win = f'{sender}##window'
+    log_info(f'Window Files {sender}')
+    if not does_item_exist(win):
+        with window(win, 1500, 750, start_x=30, start_y=70, resizable=False, movable=True, on_close=window_close):
+            add_button('Folder', callback=open_file_dialog())
+        set_style_window_title_align(0.5, 0.5)
 
 
 def window_login():
