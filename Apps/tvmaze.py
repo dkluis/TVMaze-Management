@@ -457,7 +457,6 @@ def program_mainwindow():
     set_style_window_title_align(0.5, 0.5)
     set_main_window_size(2140, 1210)
     set_theme('Gold')
-    
     with menu_bar('Menu Bar'):
         with menu('TVMaze'):
             add_menu_item('Calendar', callback=tvmaze_calendar, tip='Starts in Safari')
@@ -499,6 +498,7 @@ def program_mainwindow():
                 add_separator()
                 add_spacing(count=1)
                 add_menu_item('All Graphs##episodes', callback=window_episodes_all_graphs, shortcut='cmd+E')
+        add_menu_item('Top 10 Graphs', callback=window_top_10)
         with menu('Process'):
             add_menu_item('Get Episodes', callback=tvmaze_processes)
             add_spacing(count=1)
@@ -534,7 +534,6 @@ def program_mainwindow():
                 add_separator()
                 add_spacing(count=1)
                 add_menu_item('Get Open Window Positions', callback=window_get_pos)
-                add_menu_item('Test Window for Tabs', callback=window_tests)
         with menu('Windows'):
             add_menu_item('Close Open Windows', callback=window_close_all)
     set_render_callback(program_callback, 'Eval New Shows')
@@ -1046,21 +1045,42 @@ def window_standards(sender, data):
         set_item_height('documentation##standard', 700)
 
 
-def window_tests(sender, data):
+def window_top_10(sender, data):
     win = f'{sender}##window'
-    log_info(f'Window Shows s {sender}, d {data}')
+    log_info(f'Window Top 10 s {sender}, d {data}')
     if not does_item_exist(win):
-        with window(win, 1250, 600, start_x=15, start_y=35,
-                    resizable=False, movable=True, on_close=window_close):
-            if sender == 'Test Window for Tabs':
+        with window(win, 945, 945, start_x=15, start_y=35,
+                    movable=True, on_close=window_close):
+            if sender == 'Top 10 Graphs':
                 with tab_bar(f'Tab Bar##{sender}'):
-                    with tab(f'Tab1', parent=f'Tab Bar##{sender}'):
-                        add_text('some text')
-                    with tab(f'Tab2##{sender}'):
-                        add_text('some other text')
+                    with tab(f'Followed Shows - Network', parent=f'Tab Bar##{sender}'):
+                        add_radio_button(f'Shows##rd{sender}',
+                                         ['Running', 'In Development', 'To Be Determined', 'Ended'],
+                                         default_value=1)
+                        add_pie_chart(f'In Development Shows##{sender}',
+                                      normalize=True, format='%.0f')
+                        sql = 'select network, count(*) from shows ' \
+                              'where status = "Followed" and showstatus = "In Development" ' \
+                              'group by network order by count(*) desc limit 10'
+                        result = func_exec_sql('Fetch', sql)
+                        pie_data = []
+                        for res in result:
+                            rec = [res[0], res[1]]
+                            pie_data.append(rec)
+                        add_pie_chart_data(f'In Development Shows##{sender}', pie_data)
+                    with tab(f'Pie Graph - Episodes##{sender}'):
+                        add_pie_chart(f'Networks - Followed Episodes##{sender}',
+                                      normalize=True, format='%.0f')
+                        sql = 'select s.network, count(*) from episodes e ' \
+                              'join shows s on e.showid = s.showid group by s.network order by count(*) desc limit 10'
+                        result = func_exec_sql('Fetch', sql)
+                        pie_data = []
+                        for res in result:
+                            rec = [res[0], res[1]]
+                            pie_data.append(rec)
+                        add_pie_chart_data(f'Networks - Followed Episodes##{sender}', pie_data)
             else:
-                add_label_text(f'##uw{sender}', value='Tried to create an undefined Show Window')
-        
+                add_label_text(f'##uw{sender}', value='Tried to create an undefined Pie Graph Window')
         set_style_window_title_align(0.5, 0.5)
     log_info(f'Create item (window): "{win}"')
 
