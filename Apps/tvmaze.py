@@ -52,11 +52,15 @@ class paths:
         self.transmission = log_prod + "Transmission.log"
 
 
-class getters:
-    list = ['Multi', 'ShowRSS', 'rarbgAPI', 'eztvAPI', 'piratebay', 'magnetdl', 'eztv', 'Skip']
-
+class lists:
+    getters = ['Multi', 'ShowRSS', 'rarbgAPI', 'eztvAPI', 'piratebay', 'magnetdl', 'eztv', 'Skip']
+    show_statuses = ['Running', 'In Development', 'To Be Determined', 'Ended']
+    
 
 def func_db_opposite():
+    """
+    :return: The opposite DB to toggle to
+    """
     log_info(f'Retrieving Mode {get_data("mode")}')
     if get_data('mode') == 'Prod':
         add_data('db_opposite', 'Test DB')
@@ -232,6 +236,25 @@ def func_sender_breakup(sender, pos):
         win = ''
     return win
 
+
+def func_show_statuses(sender, data):
+    srd = get_value(f'srd##Top 10 Graphs')
+    log_info(f'Show Statuses s {sender}, d {data}, srd {srd}')
+    add_data(f'srd#{sender}', srd)
+    #if does_item_exist('In Development Shows##Top 10 Charts'):
+    #    clear_plot('In Development Shows##Top 10 Charts')
+    add_pie_chart(f'Shows##Top 10 Charts',
+                  normalize=True, format='%.0f', parent='Followed Shows - Network')
+    sql = 'select network, count(*) from shows ' \
+          'where status = "Followed" and showstatus = "In Development" ' \
+          'group by network order by count(*) desc limit 10'
+    result = func_exec_sql('Fetch', sql)
+    pie_data = []
+    for res in result:
+        rec = [res[0], res[1]]
+        pie_data.append(rec)
+    add_pie_chart_data(f'Shows##{sender}', pie_data)
+    
 
 def func_tvm_update(fl, si):
     log_info(f'TVMaze update {fl}, {si}')
@@ -457,6 +480,7 @@ def program_mainwindow():
     set_style_window_title_align(0.5, 0.5)
     set_main_window_size(2140, 1210)
     set_theme('Gold')
+    # add_image('TVMaze BG', '/Users/dick/Desktop/tvm-icon-1210.png')
     with menu_bar('Menu Bar'):
         with menu('TVMaze'):
             add_menu_item('Calendar', callback=tvmaze_calendar, tip='Starts in Safari')
@@ -675,8 +699,8 @@ def tvmaze_change_getter(sender, si):
     log_info(f'Change where to get s {sender}, showid {si}, w {win}, f {function}')
     if function == 'Submit':
         ind = get_value(f'Getters##Maintenance')
-        log_info(f'Getter Selected {getters.list[ind]}')
-        sql = f'update shows set download = "{getters.list[ind]}" where `showid` = {si}'
+        log_info(f'Getter Selected {lists.getters[ind]}')
+        sql = f'update shows set download = "{lists.getters[ind]}" where `showid` = {si}'
         func_exec_sql('Commit', sql)
     delete_item(f'Getters##w{win}')
 
@@ -751,7 +775,7 @@ def window_change_getters(sender, si):
     with window(f'Getters##w{win}', on_close=window_close, autosize=True,
                 start_x=670, start_y=290, resizable=False):
         add_radio_button(f'Getters##{win}',
-                         getters.list, default_value=0,
+                         lists.getters, default_value=0,
                          tip='Multiple will use rarbgAPI, eztvAPI, Piratebay and eztv.')
         add_spacing(count=1)
         add_separator()
@@ -1054,20 +1078,11 @@ def window_top_10(sender, data):
             if sender == 'Top 10 Graphs':
                 with tab_bar(f'Tab Bar##{sender}'):
                     with tab(f'Followed Shows - Network', parent=f'Tab Bar##{sender}'):
-                        add_radio_button(f'Shows##rd{sender}',
-                                         ['Running', 'In Development', 'To Be Determined', 'Ended'],
-                                         default_value=1)
-                        add_pie_chart(f'In Development Shows##{sender}',
-                                      normalize=True, format='%.0f')
-                        sql = 'select network, count(*) from shows ' \
-                              'where status = "Followed" and showstatus = "In Development" ' \
-                              'group by network order by count(*) desc limit 10'
-                        result = func_exec_sql('Fetch', sql)
-                        pie_data = []
-                        for res in result:
-                            rec = [res[0], res[1]]
-                            pie_data.append(rec)
-                        add_pie_chart_data(f'In Development Shows##{sender}', pie_data)
+                        add_label_text(f'##rdl{sender}', 'Select Show Status:')
+                        add_data(f'sss##{sender}', 1)
+                        # add_same_line(spacing=10)
+                        add_radio_button(f'srd##{sender}', lists.show_statuses, callback=func_show_statuses)
+                        func_show_statuses(sender, '')
                     with tab(f'Pie Graph - Episodes##{sender}'):
                         add_pie_chart(f'Networks - Followed Episodes##{sender}',
                                       normalize=True, format='%.0f')
