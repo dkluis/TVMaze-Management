@@ -55,11 +55,12 @@ class paths:
 class lists:
     getters = ['Multi', 'ShowRSS', 'rarbgAPI', 'eztvAPI', 'piratebay', 'magnetdl', 'eztv', 'Skip']
     show_statuses = ['Running', 'In Development', 'To Be Determined', 'Ended']
+    maintenance_buttons = ['Follow', 'Unfollow', 'Episode Skipping', 'Not Interested', 'Undecided', 'Change Getter']
     
 
 def func_db_opposite():
     """
-    :return: The opposite DB to toggle to
+    :return: The name of the opposite DB to toggle to
     """
     log_info(f'Retrieving Mode {get_data("mode")}')
     if get_data('mode') == 'Prod':
@@ -68,22 +69,28 @@ def func_db_opposite():
         add_data('db_opposite', "Production DB")
 
 
-def func_buttons(sender, func, buttons=[]):
-    log_info(f'Function Buttons s {sender} f {func}, b {buttons}')
-    if func == 'Hide':
+def func_buttons(win, fc, buttons=[]):
+    """
+    :param win:     The name of the Window where the buttons are located, currently only for win = 'Maintenance'
+    :param fc:      The fction to be executed. (Hide or Show)
+    :param buttons: A list of button widgets to hide or show, full list is in lists.maintenance_buttons
+    :return:        None
+    """
+    log_info(f'function Buttons s {win} f {fc}, b {buttons}')
+    if fc == 'Hide':
         for button in buttons:
             log_info(f'Hiding button {button}')
-            hide_item(f'{button}##{sender}')
-    elif func == 'Show':
-        log_info(f'Showing buttons for {sender}')
-        if sender == 'Maintenance':
-            buttons = ['Follow', 'Unfollow', 'Episode Skipping', 'Not Interested', 'Undecided', 'Change Getter']
+            hide_item(f'{button}##{win}')
+    elif fc == 'Show':
+        log_info(f'Showing buttons for {win}')
+        if win == 'Maintenance':
+            buttons = lists.maintenance_buttons
             log_info(f'Buttons are {buttons}')
             for button in buttons:
                 log_info(f'Showing button {button}')
-                show_item(f'{button}##{sender}')
+                show_item(f'{button}##{win}')
     else:
-        log_error(f'None existing function code {func}')
+        log_error(f'None existing function code {fc}')
 
 
 def func_empty_logfile(sender, data):
@@ -259,6 +266,7 @@ def func_show_statuses(sender, data):
 def func_tvm_update(fl, si):
     log_info(f'TVMaze update {fl}, {si}')
     api = f'{tvm_apis.followed_shows}/{si}'
+    sql = []
     if fl == "F":
         shows = execute_tvm_request(api, req_type='put', code=True)
         if not shows:
@@ -266,7 +274,7 @@ def func_tvm_update(fl, si):
             return False
         success = 'Followed'
         download = 'Multi'
-        sql = f'update shows set status = "{success}", download = "{download}" where `showid` = {si}'
+        sql.append(f'update shows set status = "{success}", download = "{download}" where `showid` = {si}')
     elif fl == "U":
         shows = execute_tvm_request(api, req_type='delete', code=True)
         if not shows:
@@ -274,28 +282,28 @@ def func_tvm_update(fl, si):
             return False
         success = 'Skipped'
         download = None
-        sql = f'update shows set status = "{success}", download = "{download}" where `showid` = {si}'
+        sql.append(f'update shows set status = "{success}", download = "{download}" where `showid` = {si}')
+        sql.append(f'delete from episodes where `showid` = {si}')
     elif fl == 'UD':
         success = 'Undecided'
         d = datetime.today() + timedelta(days=14)
         download = str(d)[:10]
-        sql = f'update shows set status = "{success}", download = "{download}" where `showid` = {si}'
+        sql.append(f'update shows set status = "{success}", download = "{download}" where `showid` = {si}')
     elif fl == 'SK':
         success = 'Skipped'
         download = None
-        sql = f'update shows set status = "{success}", download = "{download}" where `showid` = {si}'
+        sql.append(f'update shows set status = "{success}", download = "{download}" where `showid` = {si}')
     else:
         log_info(f'Not implement {fl} option')
         return False
-    
-    sql = sql.replace('"None"', 'NULL')
-    result = func_exec_sql('Commit', sql)
-    if result:
-        return True
-    else:
-        log_error(f'Update of the DB failed: {sql}, {result}')
-        return False
-
+    any_error = False
+    for esql in sql:
+        esql = esql.replace('"None"', 'NULL')
+        result = func_exec_sql('Commit', esql)
+        if not result:
+            any_error = True
+            log_error(f'Update of the DB failed: {sql}, {result}')
+    return any_error
 
 def func_toggle_db(sender, data):
     if get_data('mode') == 'Prod':
@@ -344,7 +352,7 @@ def epis_fill_table(sender, data):
             table_row.append(field)
         table.append(table_row)
     set_value(f'shows_table##{win}', table)
-    func_buttons(sender=win, func='Show')
+    func_buttons(win=win, fc='Show')
     epis_view_clear('fill_table##View', 'input_fields_only')
 
 
@@ -354,7 +362,7 @@ def epis_view_clear(sender, data):
     if data != 'input_fields_only':
         set_value(f'shows_table##{win}', [])
         set_value(f'##show_showname{win}', "")
-        func_buttons(sender=win, func='Show')
+        func_buttons(win=win, fc='Show')
     
     set_value(f'Show ID##{win}', 0)
     set_value(f'Show Name##{win}', '')
@@ -608,7 +616,7 @@ def shows_fill_table(sender, data):
             table_row.append(field)
         table.append(table_row)
     set_value(f'shows_table##{win}', table)
-    func_buttons(sender=win, func='Show')
+    func_buttons(win=win, fc='Show')
     shows_maint_clear('fill_table##Maintenance', 'input_fields_only')
 
 
@@ -644,7 +652,7 @@ def shows_maint_clear(sender, data):
     if data != 'input_fields_only':
         set_value(f'shows_table##{win}', [])
         set_value(f'##show_showname{win}', "")
-        func_buttons(sender=win, func='Show')
+        func_buttons(win=win, fc='Show')
     
     set_value(f'Show ID##{win}', 0)
     set_value(f'Show Name##{win}', '')
@@ -665,19 +673,19 @@ def shows_table_click(sender, data):
     log_info(f'Show Table Click id {showid}, status {show_status}, my status {my_status}')
     func_buttons(win, 'Show')
     if show_status == 'New' or show_status == 'Undecided':
-        func_buttons(sender=win, func='Hide',
+        func_buttons(win=win, fc='Hide',
                      buttons=['Unfollow', 'Episode Skipping', 'Change Getter'])
     elif show_status == 'Followed' and my_status == 'Skip':
-        func_buttons(sender=win, func='Hide',
+        func_buttons(win=win, fc='Hide',
                      buttons=['Follow', 'Episode Skipping', 'Not Interested', 'Undecided'])
     elif show_status == 'Followed':
-        func_buttons(sender=win, func='Hide',
+        func_buttons(win=win, fc='Hide',
                      buttons=['Follow', 'Not Interested', 'Undecided'])
     elif show_status == 'Skipped':
-        func_buttons(sender=win, func='Hide',
+        func_buttons(win=win, fc='Hide',
                      buttons=['Unfollow', 'Episode Skipping', 'Not Interested', 'Undecided', 'Change Getter'])
     else:
-        func_buttons(sender=win, func='Show')
+        func_buttons(win=win, fc='Show')
     add_data('showid', showid)
     showname = str(get_value(f'shows_table##{win}')[row][1])[:35]
     set_value(f'##show_showname{win}', f"Selected Show: {showid}, {showname} {show_options}")
