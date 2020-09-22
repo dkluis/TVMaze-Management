@@ -60,6 +60,8 @@ class lists:
 
 def func_db_opposite():
     """
+    Function to return the DB that can be toggled to
+    
     :return: The name of the opposite DB to toggle to
     """
     log_info(f'Retrieving Mode {get_data("mode")}')
@@ -69,8 +71,10 @@ def func_db_opposite():
         add_data('db_opposite', "Production DB")
 
 
-def func_buttons(win, fc, buttons=[]):
+def func_buttons(win='', fc='Show', buttons=[]):
     """
+    Function to turn buttons visible or hide them
+    
     :param win:     The name of the Window where the buttons are located, currently only for win = 'Maintenance'
     :param fc:      The fction to be executed. (Hide or Show)
     :param buttons: A list of button widgets to hide or show, full list is in lists.maintenance_buttons
@@ -93,7 +97,14 @@ def func_buttons(win, fc, buttons=[]):
         log_error(f'None existing function code {fc}')
 
 
-def func_empty_logfile(sender, data):
+def func_empty_logfile(sender='', data=''):
+    """
+    Function to empty a log file
+    
+    :param sender:  The name of the button and the window
+    :param data:    Not Used
+    :return:        None
+    """
     win = func_sender_breakup(sender, 1)
     log_info(f'Start the empty logfile process with {sender}, {data}')
     paths_info = paths(get_data('mode'))
@@ -116,7 +127,14 @@ def func_empty_logfile(sender, data):
     delete_item(f'{win}##window')
 
 
-def func_exec_sql(f, s):
+def func_exec_sql(f='', s=''):
+    """
+    Function to execute SQL which automatically figures out which DB to use
+    
+    :param f:  Type of SQL request:  'Fetch' or 'Commit'
+    :param s:  The full sql command
+    :return:   Result of the sql execution
+    """
     if get_data('mode') == 'Prod':
         res = execute_sql(sqltype=f, sql=s)
     else:

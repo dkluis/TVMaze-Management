@@ -105,7 +105,8 @@ def validate_requirements(filename, extension, epi_no, showname):
             print(f'''{time.strftime('%D %T')} Actions: '''
                   f'''Checking showname with filename {showname.replace(' ', '.').lower()} ---> {filename}.lower()''',
                   flush=True)
-        if showname.replace(' ', '.').lower() not in filename.lower():
+        # if showname.replace(' ', '.').lower() not in filename.lower():
+        if showname.replace(' ', '.').lower() != filename[0:len(showname)].lower():
             priority = 0
         else:
             if str(epi_no.lower() + ".") not in filename.lower():
