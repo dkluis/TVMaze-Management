@@ -207,6 +207,7 @@ def process_update_all_shows(mdb, mcur):
                                               tvrage=showinfo['externals']['tvrage'],
                                               thetvdb=showinfo['externals']['thetvdb'],
                                               imdb=showinfo['externals']['imdb'],
+                                              showstatus=showinfo['status'],
                                               record_updated='current_date',
                                               where=f"showid={showid}",
                                               table='shows')
@@ -222,6 +223,7 @@ def process_update_all_shows(mdb, mcur):
                                               tvrage=showinfo['externals']['tvrage'],
                                               thetvdb=showinfo['externals']['thetvdb'],
                                               imdb=showinfo['externals']['imdb'],
+                                              showstatus=showinfo['status'],
                                               record_updated='current_date',
                                               where=f"showid={showid}",
                                               table='shows')
@@ -320,26 +322,26 @@ cur = tvmaze['mcursor']
 db.autocommit = False
 
 if options['-s']:
-    print(f"{time.strftime(('%D %T'))} Shows: Starting to process all tvmaze show with updates "
+    print(f"{time.strftime('%D %T')} Shows: Starting to process all tvmaze show with updates "
           f"from page {int(options['--sp'])} to page {int(options['--ep'])} (sync)")
-    print(f'{time.strftime(("%D %T"))} Shows: Not fully implemented yet - no insert or update')
+    print(f'{time.strftime("%D %T")} Shows: Not fully implemented yet - no insert or update')
     process_all_shows(int(options['--sp']), int(options['--ep']), sync=True)
 if options['-i']:
-    print(f'{time.strftime(("%D %T"))} Shows: Starting to process all tvmaze shows for initialize only')
-    print(f'{time.strftime(("%D %T"))} Shows: Not fully implemented yet - no insert or update')
+    print(f'{time.strftime("%D %T")} Shows: Starting to process all tvmaze shows for initialize only')
+    print(f'{time.strftime("%D %T")} Shows: Not fully implemented yet - no insert or update')
     process_all_shows(0, 198, sync=False)
 if options['-u']:
     started = timer()
-    print(f'{time.strftime(("%D %T"))} Shows: Starting to process recently updated shows for insert and sync')
+    print(f'{time.strftime("%D %T")} Shows: Starting to process recently updated shows for insert and sync')
     process_update_all_shows(mdb=db, mcur=cur)
     ended = timer()
-    print(f'{time.strftime(("%D %T"))} Shows: '
+    print(f'{time.strftime("%D %T")} Shows: '
           f'The process (including calling the TVMaze APIs) took: {ended - started} seconds')
     started = timer()
-    print(f'{time.strftime(("%D %T"))} Shows: Starting to process to validate followed shows and update')
+    print(f'{time.strftime("%D %T")} Shows: Starting to process to validate followed shows and update')
     process_followed_shows()
     ended = timer()
-    print(f'{time.strftime(("%D %T"))} Shows: '
+    print(f'{time.strftime("%D %T")} Shows: '
           f'The process (including calling the TVMaze APIs) took: {ended - started} seconds')
 
 db.commit()
