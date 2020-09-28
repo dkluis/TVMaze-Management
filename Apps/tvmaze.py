@@ -157,7 +157,7 @@ def func_find_shows(si, sn):
         sql = tvm_views.shows_to_review_tvmaze
     elif sn == 'Shows Due':
         sql = f'select DISTINCT a.showid, a.showname, a.network, a.language, a.type, a.showstatus, ' \
-              f'a.status, a.download, a.premiered, a.imdb, a.thetvdb ' \
+              f'a.status, a.premiered, a.download, a.imdb, a.thetvdb ' \
               f'from shows a join episodes e on e.showid = a.showid ' \
               f'where e.mystatus is NULL and e.airdate is not NULL and e.airdate <= current_date ' \
               f'and download != "Skip" ORDER BY showid;'
@@ -631,7 +631,7 @@ def shows_fill_table(sender, data):
     for rec in found_shows:
         table_row = []
         for field in rec:
-            table_row.append(field)
+            table_row.append(str(field).replace('None', ''))
         table.append(table_row)
     set_value(f'shows_table##{win}', table)
     func_buttons(win=win, fc='Show')
