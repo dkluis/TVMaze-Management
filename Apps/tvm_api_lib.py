@@ -44,17 +44,26 @@ def execute_tvm_request(api, data='', err=True, sleep=1.25, code=False,
                                        data=data)
             else:
                 response = session.put(api, timeout=timeout)
+        elif req_type == 'delete':
+            if code:
+                response = session.delete(api,
+                                       headers={
+                                           'Authorization':
+                                               'Basic RGlja0tsdWlzOlRUSFlfQ2hIeUF5SU1fV1ZZRmUwcDhrWTkxTkE1WUNH'},
+                                       timeout=timeout)
+            else:
+                response = session.delete(api, timeout=timeout)
         else:
-            print("Unknown Request type")
+            print("Unknown Request type", flush=True)
             return False
     except requests.exceptions.Timeout:
-        print(f'Request timed out for: {api}')
+        print(f'Request timed out for: {api}', flush=True)
         return False
     except requests.exceptions.RequestException as er:
-        print(f'Request exception: {er} for: {api}')
+        print(f'Request exception: {er} for: {api}', flush=True)
         return False
     if response.status_code != 200:
         if err:
-            print(f"Error response: {response} for api call: {api}")
+            print(f"Error response: {response} for api call: {api}", flush=True)
             return False
     return response

@@ -24,18 +24,6 @@ class mdbi:
                 self.db = 'Test-TVM-DB'
         else:
             self.db = d
-    
-    def db(self):
-        return self.db
-    
-    def host(self):
-        return self.host
-    
-    def user(self):
-        return self.user
-    
-    def password(self):
-        return self.password
 
 
 def connect_mdb(h='', d='', err=True):
@@ -48,8 +36,8 @@ def connect_mdb(h='', d='', err=True):
             database=mdb_info.db)
     except mariadb.Error as e:
         if err:
-            print(f"Connect MDB: Error connecting to MariaDB Platform: {e}")
-            print('--------------------------------------------------------------------------')
+            print(f"Connect MDB: Error connecting to MariaDB Platform: {e}", flush=True)
+            print('--------------------------------------------------------------------------', flush=True)
             sys.exit(1)
     mcur = mdb.cursor()
     mdict = {'mdb': mdb,
@@ -86,10 +74,9 @@ def execute_sql(con='', db='', cur='', batch='', h='', d='', sqltype='', sql='')
         try:
             tvmcur.execute(sql)
             if batch != "Y":
-                # print('Committing: ', sql)
                 tvmdb.commit()
         except mariadb.Error as er:
-            print('Execute SQL (Commit) Database Error: ', d, er, sql)
+            print('Execute SQL (Commit) Database Error: ', d, er, sql, flush=True)
             print('----------------------------------------------------------------------')
             if con != 'Y':
                 close_mdb(tvmdb)
@@ -102,8 +89,8 @@ def execute_sql(con='', db='', cur='', batch='', h='', d='', sqltype='', sql='')
             tvmcur.execute(sql)
             result = tvmcur.fetchall()
         except mariadb.Error as er:
-            print('Execute SQL (Fetch) Database Error: ', d, er, sql)
-            print('----------------------------------------------------------------------')
+            print('Execute SQL (Fetch) Database Error: ', d, er, sql, flush=True)
+            print('----------------------------------------------------------------------', flush=True)
             if con != 'Y':
                 close_mdb(tvmdb)
             return False, er
@@ -195,12 +182,14 @@ class create_tb_key_values:
            "('plexmovd','/Volumes/HD-Data-CA-Server/PlexMedia/Movies/','Movies Main Directory')," \
            "('plexmovstr','720p,1080p,dvdscr,web-dl,web-,bluray,x264,dts-hd,acc-rarbg,solar,h264,hdtv,rarbg,-sparks," \
            "-lucidtv','Eliminate these string from the movie name')," \
-           "('plexprefs','www.torrenting.org  -  ,www.torrenting.org - ,www.Torrenting.org       ,www.torrenting.org.," \
+           "('plexprefs','www.torrenting.org  -  ,www.torrenting.org - ,www.Torrenting.org       " \
+           ",www.torrenting.org.," \
            "from [ www.torrenting.me ] -,[ www.torrenting.com ] -,www.Torrenting.com  -  ,www.torrenting.com -," \
            "www.torrenting.com,www.torrenting.me -,www.torrenting.me,www.scenetime.com  -,www.scenetime.com - ," \
            "www.scenetime.com -,www.scenetime.com,www.speed.cd - ,www.speed.cd,xxxxxxxxx'," \
            "'Prefixes to ignore for show or movies names')," \
-           "('plexprocessed','/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/TransmissionFiles/Processed/'" \
+           "('plexprocessed'," \
+           "'/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/TransmissionFiles/Processed/'" \
            ",'Directory where the Plex Processor put undetermined downloads')," \
            "('plexsd','/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/TransmissionFiles/'," \
            "'Download Source Directory')," \
@@ -335,17 +324,28 @@ class tvm_views:
                       "FROM shows " \
                       "WHERE (status = 'New' AND record_updated <= CURRENT_DATE) OR " \
                       "(status = 'Undecided' and download <= CURRENT_DATE);"
+    shows_to_review_tvmaze = "SELECT showid, showname, network, language, type, showstatus, status, premiered, " \
+                             "download, imdb, thetvdb " \
+                             "FROM shows " \
+                             "WHERE (status = 'New' AND record_updated <= CURRENT_DATE) OR " \
+                             "(status = 'Undecided' and download <= CURRENT_DATE) " \
+                             "ORDER by download, showid;"
+    shows_to_review_count = "SELECT count(*) " \
+                             "FROM shows " \
+                             "WHERE (status = 'New' AND record_updated <= CURRENT_DATE) OR " \
+                             "(status = 'Undecided' and download <= CURRENT_DATE) " \
+                             "ORDER by download, showid;"
     eps_to_download = "SELECT e.*, s.download, s.alt_showname, s.imdb FROM episodes e " \
                       "JOIN shows s on e.showid = s.showid " \
                       "WHERE mystatus is NULL and airdate is not NULL and airdate <= subdate(current_date, 1) " \
                       "and download != 'Skip' " \
-                      "ORDER BY showid asc, season asc, episode asc;"
+                      "ORDER BY showid, season, episode;"
     eps_to_check = "SELECT e.*, s.download, s.showname FROM episodes e " \
                    "JOIN shows s on e.showid = s.showid " \
                    "WHERE s.status = 'Followed' " \
                    "and s.download = 'Skip' " \
                    "and e.mystatus is NULL " \
-                   "ORDER BY s.showid asc, e.season asc, e.episode asc;"
+                   "ORDER BY s.showid, e.season, e.episode;"
 
 
 class stat_views:

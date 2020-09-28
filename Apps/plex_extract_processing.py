@@ -76,6 +76,8 @@ def find_plex_show(psn):
 
 
 def update_tvmaze_episode_status(epiid):
+    if vli > 3:
+        print(f'Updated TVMaze {epiid}')
     baseurl = 'https://api.tvmaze.com/v1/user/episodes/' + str(epiid)
     epoch_date = int(date.today().strftime("%s"))
     data = {"marked_at": epoch_date, "type": 0}
@@ -147,6 +149,8 @@ for episode in we:
     plex_season = epi[1]
     plex_epi = epi[2]
     plex_watch_date = epi[3]
+    if vli > 3:
+        print(f'Trying to find episodes for {plex_sn}, s {plex_season} epi {plex_epi}')
     found_pe = find_plex_episodes(plex_sn, plex_season, plex_epi)
     if len(found_pe) != 0:
         if found_pe[0][4]:
