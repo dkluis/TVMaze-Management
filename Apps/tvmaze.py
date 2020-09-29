@@ -21,8 +21,8 @@ Options:
 """
 
 from docopt import docopt
-from dearpygui.dearpygui import *
-from dearpygui.wrappers import *
+from dearpygui.core import *
+from dearpygui.simple import *
 
 import subprocess
 import os
@@ -56,7 +56,7 @@ class lists:
     getters = ['Multi', 'ShowRSS', 'rarbgAPI', 'eztvAPI', 'piratebay', 'magnetdl', 'eztv', 'Skip']
     show_statuses = ['Running', 'In Development', 'To Be Determined', 'Ended']
     maintenance_buttons = ['Follow', 'Unfollow', 'Episode Skipping', 'Not Interested', 'Undecided', 'Change Getter']
-    
+
 
 def func_db_opposite():
     """
@@ -219,7 +219,7 @@ def func_log_filter(sender, data):
         for row in filter_table:
             if str(get_value(f'##{win}ft')).lower() in str(row).lower():
                 new_table.append(row)
-        set_value(f'log_table##{win}', new_table)
+        set_table_data(f'log_table##{win}', new_table)
         set_value(f'##{win}ft', '')
 
 
@@ -237,9 +237,13 @@ def func_login(sender, data):
 def func_recursively_show_main(container):
     for item in get_item_children(container):
         if get_item_children(item):
+            if 'SEP' in item:
+                continue
             show_item(item)
             func_recursively_show_main(item)
         else:
+            if 'SEP' in item:
+                continue
             show_item(item)
 
 
@@ -266,10 +270,9 @@ def func_show_statuses(sender, data):
     srd = get_value(f'srd##Top 10 Graphs')
     log_info(f'Show Statuses s {sender}, d {data}, srd {srd}')
     add_data(f'srd#{sender}', srd)
-    #if does_item_exist('In Development Shows##Top 10 Charts'):
+    # if does_item_exist('In Development Shows##Top 10 Charts'):
     #    clear_plot('In Development Shows##Top 10 Charts')
-    add_pie_chart(f'Shows##Top 10 Charts',
-                  normalize=True, format='%.0f', parent='Followed Shows - Network')
+    add_plot(f'Shows##Top 10 Charts', )
     sql = 'select network, count(*) from shows ' \
           'where status = "Followed" and showstatus = "In Development" ' \
           'group by network order by count(*) desc limit 10'
@@ -278,8 +281,9 @@ def func_show_statuses(sender, data):
     for res in result:
         rec = [res[0], res[1]]
         pie_data.append(rec)
-    add_pie_chart_data(f'Shows##{sender}', pie_data)
-    
+    print(pie_data)
+    add_pie_series('Shows##Top 10 Charts', sender, pie_data)
+
 
 def func_tvm_update(fl, si):
     log_info(f'TVMaze update {fl}, {si}')
@@ -323,6 +327,7 @@ def func_tvm_update(fl, si):
             log_error(f'Update of the DB failed: {sql}, {result}')
     return any_error
 
+
 def func_toggle_db(sender, data):
     if get_data('mode') == 'Prod':
         add_data('mode', 'Test')
@@ -354,6 +359,7 @@ def epis_fill_table(sender, data):
     if showid == 0 and showname == '' and button == 'Search':
         set_value(f'##epi_showname{win}', 'Nothing was entered in Show ID or Showname')
     log_info(f'showid: {showid} - showname: {showname}')
+    found_shows = ''
     if button == 'Search':
         found_shows = func_find_shows(showid, showname)
     elif button == 'Evaluate Shows':
@@ -369,7 +375,7 @@ def epis_fill_table(sender, data):
         for field in rec:
             table_row.append(field)
         table.append(table_row)
-    set_value(f'shows_table##{win}', table)
+    set_table_data(f'shows_table##{win}', table)
     func_buttons(win=win, fc='Show')
     epis_view_clear('fill_table##View', 'input_fields_only')
 
@@ -378,7 +384,7 @@ def epis_view_clear(sender, data):
     log_info(f'Epi Maint clear {sender} {data}')
     win = func_sender_breakup(sender, 1)
     if data != 'input_fields_only':
-        set_value(f'shows_table##{win}', [])
+        set_table_data(f'shows_table##{win}', [])
         set_value(f'##show_showname{win}', "")
         func_buttons(win=win, fc='Show')
     
@@ -511,19 +517,19 @@ def program_mainwindow():
         with menu('TVMaze'):
             add_menu_item('Calendar', callback=tvmaze_calendar, tip='Starts in Safari')
             add_spacing(count=1)
-            add_separator()
+            add_separator(name=f'##TVMazeSEP1')
             add_spacing(count=1)
             add_menu_item('Log Out', callback=tvmaze_logout, shortcut='cmd+L')
             add_spacing(count=1)
-            add_separator()
+            add_separator(name=f'##TVMazeSEP2')
             add_spacing(count=1)
             add_menu_item('Quit', callback=window_quit, shortcut='cmd+Q')
         with menu('Shows'):
             add_menu_item('Eval New Shows', callback=window_shows)
             add_same_line(xoffset=115)
-            add_label_text('##no_new_shows', value='0', data_source='shows_ds_new_shows', color=[250, 250, 0, 250])
+            add_label_text('##no_new_shows', value='0', source='shows_ds_new_shows', color=[250, 250, 0, 250])
             add_spacing(count=1)
-            add_separator()
+            add_separator(name=f'##TVMazeSEP3')
             add_spacing(count=1)
             add_menu_item('Maintenance', callback=window_shows)
             with menu('Graphs##shows'):
@@ -532,7 +538,7 @@ def program_mainwindow():
                 add_menu_item('In Development Shows', callback=window_graphs)
                 add_menu_item('Other Shows', callback=window_graphs)
                 add_spacing(count=1)
-                add_separator()
+                add_separator(name=f'Graphs##ShowsSEP1')
                 add_spacing(count=1)
                 add_menu_item('All Graphs##Shows', callback=window_shows_all_graphs, shortcut='cmd+S')
         with menu('Episodes', tip='Only of Followed Shows'):
@@ -545,14 +551,14 @@ def program_mainwindow():
                 add_menu_item('Episodes to Watch', callback=window_graphs)
                 add_menu_item('Upcoming Episodes', callback=window_graphs)
                 add_spacing(count=1)
-                add_separator()
+                add_separator(name='Graphs##episodesSEP1')
                 add_spacing(count=1)
                 add_menu_item('All Graphs##episodes', callback=window_episodes_all_graphs, shortcut='cmd+E')
         add_menu_item('Top 10 Graphs', callback=window_top_10)
         with menu('Process'):
             add_menu_item('Get Episodes', callback=tvmaze_processes)
             add_spacing(count=1)
-            add_separator()
+            add_separator(name='ProcessSEP1')
             add_spacing(count=1)
             add_menu_item('Transmission Files', callback=window_files)
         with menu('Logs'):
@@ -564,30 +570,31 @@ def program_mainwindow():
         with menu('Tools'):
             add_menu_item('Toggle Database to', callback=func_toggle_db)
             add_same_line(xoffset=140)
-            add_label_text(f'##db', value='Test', data_source='db_opposite', color=[250, 250, 0, 250])
+            add_label_text(f'##db', value='Test', source='db_opposite', color=[250, 250, 0, 250])
             add_menu_item('Toggle Theme to', callback=func_toggle_theme)
             add_same_line(xoffset=140)
-            add_label_text(f'##theme', value='Gold', data_source='theme_opposite', color=[250, 250, 0, 250])
+            add_label_text(f'##theme', value='Gold', source='theme_opposite', color=[250, 250, 0, 250])
             add_spacing(count=1)
-            add_separator()
+            add_separator(name='ToolsSEP1')
             add_spacing(count=1)
             add_menu_item('Show Logger', callback=window_standards)
             add_spacing(count=1)
-            add_separator()
+            add_separator(name='ToolsSEP2')
             add_spacing(count=1)
             with menu('Debug Mode'):
+                add_menu_item('Show Demo', callback=window_standards)
                 add_menu_item('Show Debugger', callback=window_standards)
                 add_menu_item('Show Documentation', callback=window_standards)
                 add_menu_item('Show Source Code', callback=window_standards)
                 add_menu_item('Show Style Editor', callback=show_style_editor)
                 add_spacing(count=1)
-                add_separator()
+                add_separator(name='Debug ModeSEP')
                 add_spacing(count=1)
                 add_menu_item('Get Open Window Positions', callback=window_get_pos)
         with menu('Windows'):
             add_menu_item('Close Open Windows', callback=window_close_all)
-    set_render_callback(program_callback, 'Eval New Shows')
-
+    # ToDo set_render_callback(program_callback, 'Eval New Shows')
+    
     # add_additional_font("/System/Library/Fonts/Menlo.ttc", 14,
     add_additional_font("/Users/dick/Library/Fonts/KlokanTechNotoSans-Bold.ttf", 16,
                         custom_glyph_ranges=[[0x370, 0x377], [0x400, 0x4ff], [0x530, 0x58f], [0x10a0, 0x10ff],
@@ -615,6 +622,7 @@ def shows_fill_table(sender, data):
     showid = get_value(f'Show ID##{win}')
     add_data('shows_showid', showid)
     showname = get_value(f'Show Name##{win}')
+    found_shows = ''
     if showid == 0 and showname == '' and button == 'Search':
         set_value(f'##show_showname{win}', 'Nothing was entered in Show ID or Showname')
     log_info(f'showid: {showid} - showname: {showname}')
@@ -633,7 +641,7 @@ def shows_fill_table(sender, data):
         for field in rec:
             table_row.append(str(field).replace('None', ''))
         table.append(table_row)
-    set_value(f'shows_table##{win}', table)
+    set_table_data(f'shows_table##{win}', table)
     func_buttons(win=win, fc='Show')
     shows_maint_clear('fill_table##Maintenance', 'input_fields_only')
 
@@ -668,7 +676,7 @@ def shows_maint_clear(sender, data):
     log_info(f'Show Maint clear {sender} {data}')
     win = func_sender_breakup(sender, 1)
     if data != 'input_fields_only':
-        set_value(f'shows_table##{win}', [])
+        set_table_data(f'shows_table##{win}', [])
         set_value(f'##show_showname{win}', "")
         func_buttons(win=win, fc='Show')
     
@@ -685,9 +693,9 @@ def shows_table_click(sender, data):
     row_cell = get_table_selections(f'shows_table##{win}')
     row = row_cell[0][0]
     add_data(f'selected##{win}', True)
-    showid = get_value(f'shows_table##{win}')[row][0]
-    show_status = get_value(f'shows_table##{win}')[row][6]
-    my_status = get_value(f'shows_table##{win}')[row][7]
+    showid = get_table_data(f'shows_table##{win}')[row][0]
+    show_status = get_table_data(f'shows_table##{win}')[row][6]
+    my_status = get_table_data(f'shows_table##{win}')[row][7]
     log_info(f'Show Table Click id {showid}, status {show_status}, my status {my_status}')
     func_buttons(win, 'Show')
     if show_status == 'New' or show_status == 'Undecided':
@@ -705,7 +713,7 @@ def shows_table_click(sender, data):
     else:
         func_buttons(win=win, fc='Show')
     add_data('showid', showid)
-    showname = str(get_value(f'shows_table##{win}')[row][1])[:35]
+    showname = str(get_table_data(f'shows_table##{win}')[row][1])[:35]
     set_value(f'##show_showname{win}', f"Selected Show: {showid}, {showname} {show_options}")
     set_value(f'Show ID##{win}', int(showid))
     set_value(f'Show Name##{win}', showname)
@@ -741,9 +749,10 @@ def tvmaze_processes(sender, data):
     log_info(f'TVMaze processes Started s {sender}, d {data}')
     paths_info = paths(get_data('mode'))
     loc = paths_info.app_path
+    action = ''
     if sender == 'Get Shows':
         action = f"python3 {loc}actions.py -d "
-    run_async_function(subprocess.call(action, shell=True), data)
+    # ToDo 0.4 run_async_function(subprocess.call(action, shell=True), data)
     log_info(f'TVMaze processes ASYNC Finished s {action}')
     window_logs('TVMaze Log', '')
     window_logs('Python Errors', '')
@@ -799,12 +808,12 @@ def window_change_getters(sender, si):
     win = func_sender_breakup(sender, 1)
     log_info(f'Trying to create window Change Getter with f {function}, w {win}, showid {si}')
     with window(f'Getters##w{win}', on_close=window_close, autosize=True,
-                start_x=670, start_y=290, resizable=False):
+                x_pos=670, y_pos=290, no_resize=True):
         add_radio_button(f'Getters##{win}',
-                         lists.getters, default_value=0,
+                         items=lists.getters, default_value=0,
                          tip='Multiple will use rarbgAPI, eztvAPI, Piratebay and eztv.')
         add_spacing(count=1)
-        add_separator()
+        add_separator(name=f'Getter##w{win}SEP')
         add_spacing(count=3)
         add_button(f'Cancel##{win}', callback=tvmaze_change_getter)
         add_same_line(spacing=12)
@@ -835,7 +844,7 @@ def window_episodes(sender, data):
     win = f'{sender}##window'
     log_info(f'Window Shows {sender}')
     if not does_item_exist(win):
-        with window(win, 1500, 750, start_x=30, start_y=70, resizable=False, movable=True, on_close=window_close):
+        with window(win, 1500, 750, x_pos=30, y_pos=70, no_resize=True, on_close=window_close):
             add_input_int(f'Show ID##{sender}', default_value=0, width=250)
             add_input_text(f'Show Name##{sender}', hint='Use % as wild-card', width=250)
             add_button(f'Clear##{sender}', callback=epis_view_clear)
@@ -873,26 +882,26 @@ def window_episodes_all_graphs(sender, data):
     set_window_pos('Upcoming Episodes##graphs', 1420, 570)
     set_item_width('Upcoming Episodes##graphs', 690)
     set_item_height('Upcoming Episodes##graphs', 515)
-    
+
 
 def window_files(sender, data):
     win = f'{sender}##window'
     log_info(f'Window Files {sender}')
     if not does_item_exist(win):
-        with window(win, 1500, 750, start_x=30, start_y=70, resizable=False, movable=True, on_close=window_close):
+        with window(win, 1500, 750, x_pos=30, y_pos=70, no_resize=True, on_close=window_close):
             add_button('Folder', callback=open_file_dialog())
         set_style_window_title_align(0.5, 0.5)
 
 
 def window_login():
-    with window('Login Window', start_x=900, start_y=400, title_bar=False,
-                movable=False, autosize=True, resizable=False):
+    with window('Login Window', x_pos=900, y_pos=400, no_title_bar=True, no_move=True, autosize=True,
+                no_resize=True, no_background=True):
         add_input_text('Username', hint='Your email address', width=250)
         add_input_text('Password', hint='Password is "password" for now', password=True, width=250)
         add_button('Submit', callback=func_login)
         add_same_line(spacing=5)
-        add_label_text('##Error', '')
-    set_key_release_callback(func_key_login, handler=f'Login Window')
+        add_label_text('##Error', label='')
+    set_key_release_callback(func_key_login)
 
 
 def window_logs(sender, data):
@@ -910,7 +919,7 @@ def window_logs(sender, data):
             height = 500
             sx = 1505
             sy = 35
-        with window(f'{sender}##window', start_x=sx, start_y=sy, width=width, height=height, on_close=window_close):
+        with window(f'{sender}##window', x_pos=sx, y_pos=sy, width=width, height=height, on_close=window_close):
             set_style_window_title_align(0.5, 0.5)
             add_button(f'Refresh##{sender}', callback=window_logs_refresh)
             if sender != 'Transmission Log':
@@ -920,11 +929,11 @@ def window_logs(sender, data):
             add_same_line(spacing=10)
             add_input_text(f'##{sender}ft', hint='No wildcards, case does not matter')
             add_spacing(count=2)
-            add_separator()
+            add_separator(name=f'{sender}##windowSEP')
             add_table(f'log_table##{sender}',
                       headers=[f'{sender} - Info'])
             window_logs_refresh(f'Refresh##{sender}', data)
-        set_key_press_callback(func_key_logs, handler=f'{sender}##window')
+        set_key_press_callback(func_key_logs)
 
 
 def window_logs_refresh(sender, data):
@@ -955,7 +964,7 @@ def window_logs_refresh(sender, data):
     table = []
     for line in consolelines:
         table.append([line.replace("\n", "")])
-    set_value(f'log_table##{win}', table)
+    set_table_data(f'log_table##{win}', table)
     file.close()
     set_value(f'##{win}ft', '')
 
@@ -976,13 +985,11 @@ def window_get_pos(sender, data):
 def window_graphs(sender, data):
     win = f'{sender}##graphs'
     if not does_item_exist(win):
-        with window(win, 1250, 600, start_x=15, start_y=35, resizable=True, movable=True, on_close=window_close):
+        with window(win, 1250, 600, x_pos=15, y_pos=35, on_close=window_close):
             add_button(f'All days##{sender}', callback=graph_refresh)
             add_same_line()
             add_button(f'Last 7 days##{sender}', callback=graph_refresh)
-            add_same_line()
-            add_label_text(f'##{sender}', "", data_source=f'label##{sender}', color=[250, 250, 0, 250])
-            add_plot(f'{sender}##plot')
+            add_plot(f'{sender}##plot', xaxis_time=True, crosshairs=True)
         set_style_window_title_align(0.5, 0.5)
         graph_refresh(sender, 'Last 7 days')
         log_info(f'Create item (window): "{win}"')
@@ -1002,7 +1009,7 @@ def window_shows(sender, data):
     win = f'{sender}##window'
     log_info(f'Window Shows {sender}')
     if not does_item_exist(win):
-        with window(win, 1500, 750, start_x=15, start_y=35, resizable=False, movable=True, on_close=window_close):
+        with window(win, 1500, 750, x_pos=15, y_pos=35, no_resize=True, on_close=window_close):
             if sender == 'Maintenance':
                 add_input_int(f'Show ID##{sender}', default_value=0, width=250)
                 add_input_text(f'Show Name##{sender}', hint='Use % as wild-card', width=250)
@@ -1013,7 +1020,7 @@ def window_shows(sender, data):
                 add_button(f'Evaluate Shows##{sender}', callback=shows_fill_table)
                 add_same_line(spacing=10)
                 add_button(f'Shows Due##{sender}', callback=shows_fill_table)
-                add_separator()
+                add_separator(name=f'Maintenance##SEP1')
                 add_input_text(f'##show_showname{sender}', readonly=True, default_value='', width=450)
                 add_same_line(spacing=10)
                 add_button(f'View on TVMaze##{sender}', callback=tvmaze_view_show)
@@ -1038,17 +1045,17 @@ def window_shows(sender, data):
                 add_same_line(spacing=10)
                 add_button(f'Change Getter##{sender}', callback=tvmaze_update,
                            tip='Set the website where to get the show')
-                add_separator()
+                add_separator(name=f'Maintenance##SEP2')
                 add_spacing()
                 add_table(f'shows_table##{sender}',
-                          headers=['Show ID', 'Show Name', 'Network', 'Language' ,'Type', 'Status', 'My Status',
+                          headers=['Show ID', 'Show Name', 'Network', 'Language', 'Type', 'Status', 'My Status',
                                    'Premiered', 'Getter', 'IMDB', 'TheTVDB'],
                           callback=shows_table_click)
             else:
                 add_label_text(f'##uw{sender}', value='Tried to create an undefined Show Window')
         
         set_style_window_title_align(0.5, 0.5)
-        set_key_press_callback(func_key_shows, handler=win)
+        set_key_press_callback(func_key_shows)
         if ens:
             shows_fill_table(f'Evaluate Shows##{sender}', None)
         log_info(f'Create item (window): "{win}"')
@@ -1099,19 +1106,18 @@ def window_top_10(sender, data):
     win = f'{sender}##window'
     log_info(f'Window Top 10 s {sender}, d {data}')
     if not does_item_exist(win):
-        with window(win, 945, 945, start_x=15, start_y=35,
-                    movable=True, on_close=window_close):
+        with window(win, 945, 945, x_pos=15, y_pos=35, on_close=window_close):
             if sender == 'Top 10 Graphs':
                 with tab_bar(f'Tab Bar##{sender}'):
                     with tab(f'Followed Shows - Network', parent=f'Tab Bar##{sender}'):
                         add_label_text(f'##rdl{sender}', 'Select Show Status:')
                         add_data(f'sss##{sender}', 1)
                         # add_same_line(spacing=10)
-                        add_radio_button(f'srd##{sender}', lists.show_statuses, callback=func_show_statuses)
+                        add_radio_button(name=f'srd##{sender}', items=lists.show_statuses, horizontal=True,
+                                         callback=func_show_statuses)
                         func_show_statuses(sender, '')
                     with tab(f'Pie Graph - Episodes##{sender}'):
-                        add_pie_chart(f'Networks - Followed Episodes##{sender}',
-                                      normalize=True, format='%.0f')
+                        add_plot(f'Networks - Followed Episodes##{sender}')
                         sql = 'select s.network, count(*) from episodes e ' \
                               'join shows s on e.showid = s.showid group by s.network order by count(*) desc limit 10'
                         result = func_exec_sql('Fetch', sql)
@@ -1119,7 +1125,7 @@ def window_top_10(sender, data):
                         for res in result:
                             rec = [res[0], res[1]]
                             pie_data.append(rec)
-                        add_pie_chart_data(f'Networks - Followed Episodes##{sender}', pie_data)
+                        add_pie_series(f'Networks - Followed Episodes##{sender}', data=pie_data)
             else:
                 add_label_text(f'##uw{sender}', value='Tried to create an undefined Pie Graph Window')
         set_style_window_title_align(0.5, 0.5)
