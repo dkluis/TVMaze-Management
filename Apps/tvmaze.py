@@ -20,17 +20,17 @@ Options:
   --version      Show version.
 """
 
-from docopt import docopt
-from dearpygui.core import *
-from dearpygui.simple import *
-
-import subprocess
 import os
+import subprocess
 from datetime import datetime, timedelta
 
-from tvm_lib import execute_sql
-from tvm_api_lib import *
+from dearpygui.core import *
+from dearpygui.simple import *
+from docopt import docopt
+
 from db_lib import tvm_views
+from tvm_api_lib import *
+from tvm_lib import execute_sql
 
 
 class paths:
@@ -54,7 +54,7 @@ class paths:
 
 class lists:
     getters = ['Multi', 'ShowRSS', 'rarbgAPI', 'eztvAPI', 'piratebay', 'magnetdl', 'eztv', 'Skip']
-    show_statuses = ['Running', 'In Development', 'To Be Determined', 'Ended']
+    show_statuses = ['Running', 'In Development', 'To Be Determined', 'Ended', 'All']
     maintenance_buttons = ['Follow', 'Unfollow', 'Episode Skipping', 'Not Interested', 'Undecided', 'Change Getter']
 
 
@@ -125,6 +125,10 @@ def func_empty_logfile(sender='', data=''):
     else:
         log_warning(f'Did not process the emptying, could not find {sender}')
     delete_item(f'{win}##window')
+    
+    
+def func_episode_statuses(sender, data):
+    pass
 
 
 def func_exec_sql(f='', s=''):
@@ -270,19 +274,40 @@ def func_show_statuses(sender, data):
     srd = get_value(f'srd##Top 10 Graphs')
     log_info(f'Show Statuses s {sender}, d {data}, srd {srd}')
     add_data(f'srd#{sender}', srd)
-    # if does_item_exist('In Development Shows##Top 10 Charts'):
-    #    clear_plot('In Development Shows##Top 10 Charts')
-    add_plot(f'Shows##Top 10 Charts', )
-    sql = 'select network, count(*) from shows ' \
-          'where status = "Followed" and showstatus = "In Development" ' \
-          'group by network order by count(*) desc limit 10'
+    if does_item_exist('Shows##Top 10 Charts'):
+        clear_plot('Shows##Top 10 Charts')
+        delete_series('Shows##Top 10 Charts', sender)
+    else:
+        add_plot(f'Shows##Top 10 Charts', xaxis_no_gridlines=True, xaxis_no_tick_labels=True, xaxis_no_tick_marks=True,
+                 yaxis_no_gridlines=True, yaxis_no_tick_labels=True, yaxis_no_tick_marks=True, no_mouse_pos=True)
+        set_plot_xlimits(f'Shows##Top 10 Charts', -.1, 1.1)
+        set_plot_ylimits(f'Shows##Top 10 Charts', -.1, 1.1)
+    if srd == 0:
+        ss = 'Running'
+        add_data(f'srd##{sender}', 0)
+    elif srd == 1:
+        ss = 'In Development'
+        add_data(f'srd##{sender}', 1)
+    elif srd == 2:
+        ss = 'To Be Determined'
+        add_data(f'srd##{sender}', 2)
+    elif srd == 3:
+        ss = 'Ended'
+        add_data(f'srd##{sender}', 3)
+    if srd == 4:
+        sql = f'select network, count(*) from shows ' \
+              f'where status = "Followed" ' \
+              f'group by network order by count(*) desc limit 10'
+    else:
+        sql = f'select network, count(*) from shows ' \
+              f'where status = "Followed" and showstatus = "{ss}" ' \
+              f'group by network order by count(*) desc limit 10'
     result = func_exec_sql('Fetch', sql)
     pie_data = []
     for res in result:
         rec = [res[0], res[1]]
         pie_data.append(rec)
-    print(pie_data)
-    add_pie_series('Shows##Top 10 Charts', sender, pie_data)
+    add_pie_series('Shows##Top 10 Charts', sender, pie_data, 0.5, 0.5, 0.5)
 
 
 def func_tvm_update(fl, si):
@@ -407,7 +432,7 @@ def graph_execute_get_data(sql, sender, pi, g_filter):
     # add_stem_series(f'{sender}##plot', f'{plot_index}', data)
     add_line_series(f'{sender}##plot', f'{plot_index}', data)
     # ToDo Figure graph call back from auto refresh option
-    # set_render_callback('graph_render_callback')
+    # set_render_callback(graph_render_callback)
 
 
 def graph_get_data(sender, g_filter):
@@ -471,10 +496,8 @@ def graph_refresh_other(sender, g_filter):
 
 
 # Todo part of the render callback todo
-"""
 def graph_render_callback(sender, data):
     log_info(f'Graph Render Callback Triggered {sender} {data}')
-"""
 
 
 def program_callback(sender, data):
@@ -992,6 +1015,7 @@ def window_graphs(sender, data):
             add_plot(f'{sender}##plot', xaxis_time=True, crosshairs=True)
         set_style_window_title_align(0.5, 0.5)
         graph_refresh(sender, 'Last 7 days')
+        graph_refresh(sender, 'All Days')
         log_info(f'Create item (window): "{win}"')
 
 
@@ -1110,14 +1134,22 @@ def window_top_10(sender, data):
             if sender == 'Top 10 Graphs':
                 with tab_bar(f'Tab Bar##{sender}'):
                     with tab(f'Followed Shows - Network', parent=f'Tab Bar##{sender}'):
-                        add_label_text(f'##rdl{sender}', 'Select Show Status:')
-                        add_data(f'sss##{sender}', 1)
-                        # add_same_line(spacing=10)
+                        add_label_text(name=f'##rdl{sender}', value='Select Followed Shows by Status:')
+                        add_data(f'srd##{sender}', 0)
                         add_radio_button(name=f'srd##{sender}', items=lists.show_statuses, horizontal=True,
                                          callback=func_show_statuses)
                         func_show_statuses(sender, '')
-                    with tab(f'Pie Graph - Episodes##{sender}'):
-                        add_plot(f'Networks - Followed Episodes##{sender}')
+                    with tab(f'Followed Episodes - Network##{sender}'):
+                        add_label_text(name=f'##edl{sender}', value='Select Followed Episodes by Status:')
+                        add_data(f'erd##{sender}', 0)
+                        add_radio_button(name=f'erd##{sender}', items=lists.show_statuses, horizontal=True,
+                                         callback=func_episode_statuses)
+                        add_plot(f'Episodes##Top 10 Charts', xaxis_no_gridlines=True, xaxis_no_tick_labels=True,
+                                 xaxis_no_tick_marks=True,
+                                 yaxis_no_gridlines=True, yaxis_no_tick_labels=True, yaxis_no_tick_marks=True,
+                                 no_mouse_pos=True)
+                        set_plot_xlimits(f'Episodes##Top 10 Charts', -.1, 1.1)
+                        set_plot_ylimits(f'Episodes##Top 10 Charts', -.1, 1.1)
                         sql = 'select s.network, count(*) from episodes e ' \
                               'join shows s on e.showid = s.showid group by s.network order by count(*) desc limit 10'
                         result = func_exec_sql('Fetch', sql)
@@ -1125,7 +1157,7 @@ def window_top_10(sender, data):
                         for res in result:
                             rec = [res[0], res[1]]
                             pie_data.append(rec)
-                        add_pie_series(f'Networks - Followed Episodes##{sender}', data=pie_data)
+                        add_pie_series('Episodes##Top 10 Charts', sender, pie_data, 0.5, 0.5, 0.5)
             else:
                 add_label_text(f'##uw{sender}', value='Tried to create an undefined Pie Graph Window')
         set_style_window_title_align(0.5, 0.5)
