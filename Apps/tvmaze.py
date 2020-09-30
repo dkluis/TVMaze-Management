@@ -288,7 +288,7 @@ def func_sender_breakup(sender, pos):
 def func_show_statuses(sender, data):
     srd = get_value(f'srd##Top 10 Graphs')
     log_info(f'Show Statuses s {sender}, d {data}, srd {srd}')
-    add_value(f'srd#{sender}', srd)
+    set_value(f'srd#{sender}', srd)
     if does_item_exist('Shows##Top 10 Charts'):
         clear_plot('Shows##Top 10 Charts')
         delete_series('Shows##Top 10 Charts', sender)
@@ -300,16 +300,16 @@ def func_show_statuses(sender, data):
     ss = ''
     if srd == 0:
         ss = 'Running'
-        add_value(f'srd##{sender}', 0)
+        set_value(f'srd##{sender}', 0)
     elif srd == 1:
         ss = 'In Development'
-        add_value(f'srd##{sender}', 1)
+        set_value(f'srd##{sender}', 1)
     elif srd == 2:
         ss = 'To Be Determined'
-        add_value(f'srd##{sender}', 2)
+        set_value(f'srd##{sender}', 2)
     elif srd == 3:
         ss = 'Ended'
-        add_value(f'srd##{sender}', 3)
+        set_value(f'srd##{sender}', 3)
     sql = ''
     if srd == 4:
         sql = f'select network, count(*) from shows ' \
@@ -396,7 +396,7 @@ def epis_fill_table(sender, data):
     win = func_sender_breakup(sender, 1)
     button = func_sender_breakup(sender, 0)
     showid = get_value(f'Show ID##{win}')
-    add_value('epi_showid', showid)
+    set_value('epi_showid', showid)
     showname = get_value(f'Show Name##{win}')
     if showid == 0 and showname == '' and button == 'Search':
         set_value(f'##epi_showname{win}', 'Nothing was entered in Show ID or Showname')
@@ -433,7 +433,7 @@ def epis_view_clear(sender, data):
     set_value(f'Show ID##{win}', 0)
     set_value(f'Show Name##{win}', '')
     set_value(f'##show_name{win}', '')
-    add_value(f'selected##{win}', False)
+    set_value(f'selected##{win}', False)
 
 
 def graph_execute_get_value(sql, sender, pi, g_filter):
@@ -521,7 +521,7 @@ def program_callback(sender, data):
     if sender == 'Shows':
         sql = tvm_views.shows_to_review_count
         count = func_exec_sql('Fetch', sql)
-        add_value('shows_ds_new_shows', f': {str(count[0][0])}')
+        set_value('shows_ds_new_shows', f': {str(count[0][0])}')
 
 
 def program_data():
@@ -541,6 +541,7 @@ def program_data():
     add_value('label##Episodes to Get', "All episodes to get onto Plex (followed shows only)")
     add_value('label##Episodes to Watch', "All available episodes on Plex not watched yet (followed shows only)")
     add_value('label##Upcoming Episodes', "All announced episodes beyond today (followed shows only)")
+    add_value('theme_opposite', 'Dark')
 
 
 def program_mainwindow():
@@ -657,7 +658,7 @@ def shows_fill_table(sender, data):
     win = func_sender_breakup(sender, 1)
     button = func_sender_breakup(sender, 0)
     showid = get_value(f'Show ID##{win}')
-    add_value('shows_showid', showid)
+    set_value('shows_showid', showid)
     showname = get_value(f'Show Name##{win}')
     found_shows = ''
     if showid == 0 and showname == '' and button == 'Search':
@@ -720,7 +721,7 @@ def shows_maint_clear(sender, data):
     set_value(f'Show ID##{win}', 0)
     set_value(f'Show Name##{win}', '')
     set_value(f'##show_name{win}', '')
-    add_value(f'selected##{win}', False)
+    set_value(f'selected##{win}', False)
 
 
 def shows_table_click(sender, data):
@@ -729,7 +730,7 @@ def shows_table_click(sender, data):
     win = func_sender_breakup(sender, 1)
     row_cell = get_table_selections(f'shows_table##{win}')
     row = row_cell[0][0]
-    add_value(f'selected##{win}', True)
+    set_value(f'selected##{win}', True)
     showid = get_table_data(f'shows_table##{win}')[row][0]
     show_status = get_table_data(f'shows_table##{win}')[row][6]
     my_status = get_table_data(f'shows_table##{win}')[row][7]
@@ -749,7 +750,7 @@ def shows_table_click(sender, data):
                      buttons=['Unfollow', 'Episode Skipping', 'Not Interested', 'Undecided', 'Change Getter'])
     else:
         func_buttons(win=win, fc='Show')
-    add_value('showid', showid)
+    set_value('showid', showid)
     showname = str(get_table_data(f'shows_table##{win}')[row][1])[:35]
     set_value(f'##show_showname{win}', f"Selected Show: {showid}, {showname} {show_options}")
     set_value(f'Show ID##{win}', int(showid))
@@ -1150,13 +1151,13 @@ def window_top_10(sender, data):
                 with tab_bar(f'Tab Bar##{sender}'):
                     with tab(f'Followed Shows - Network', parent=f'Tab Bar##{sender}'):
                         add_label_text(name=f'##rdl{sender}', value='Select Followed Shows by Status:')
-                        add_value(f'srd##{sender}', 0)
+                        set_value(f'srd##{sender}', 0)
                         add_radio_button(name=f'srd##{sender}', items=lists.show_statuses, horizontal=True,
                                          callback=func_show_statuses)
                         func_show_statuses(sender, '')
                     with tab(f'Followed Episodes - Network##{sender}'):
                         add_label_text(name=f'##edl{sender}', value='Select Followed Episodes by Status:')
-                        add_value(f'erd##{sender}', 0)
+                        set_value(f'erd##{sender}', 0)
                         add_radio_button(name=f'erd##{sender}', items=lists.show_statuses, horizontal=True,
                                          callback=func_episode_statuses)
                         add_plot(f'Episodes##Top 10 Charts', xaxis_no_gridlines=True, xaxis_no_tick_labels=True,
