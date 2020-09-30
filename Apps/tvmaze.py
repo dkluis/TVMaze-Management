@@ -1146,7 +1146,7 @@ def window_top_10(sender, data):
     win = f'{sender}##window'
     log_info(f'Window Top 10 s {sender}, d {data}')
     if not does_item_exist(win):
-        with window(win, 945, 945, x_pos=15, y_pos=35, on_close=window_close):
+        with window(win, 890, 970, x_pos=15, y_pos=35, on_close=window_close):
             if sender == 'Top 10 Graphs':
                 with tab_bar(f'Tab Bar##{sender}'):
                     with tab(f'Followed Shows - Network', parent=f'Tab Bar##{sender}'):
