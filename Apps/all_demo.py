@@ -1079,6 +1079,10 @@ def show_demo():
                 add_label_text("Keys pressed##demoevents")
                 add_label_text("Keys released##demoevents")
                 
+
+show_debug()
+show_logger()
+show_style_editor()
 show_documentation()
 show_demo()
 

@@ -64,22 +64,25 @@ def func_db_opposite():
     
     :return: The name of the opposite DB to toggle to
     """
-    log_info(f'Retrieving Mode {get_data("mode")}')
-    if get_data('mode') == 'Prod':
-        add_data('db_opposite', 'Test DB')
+    log_info(f'Retrieving Mode {get_value("mode")}')
+    if get_value('mode') == 'Prod':
+        set_value('db_opposite', 'Test DB')
     else:
-        add_data('db_opposite', "Production DB")
+        set_value('db_opposite', "Production DB")
+    log_info(f'db_opposite {get_value("db_opposite")}')
 
 
-def func_buttons(win='', fc='Show', buttons=[]):
+def func_buttons(win='', fc='Show', buttons=None):
     """
     Function to turn buttons visible or hide them
     
     :param win:     The name of the Window where the buttons are located, currently only for win = 'Maintenance'
-    :param fc:      The fction to be executed. (Hide or Show)
+    :param fc:      The function to be executed. (Hide or Show)
     :param buttons: A list of button widgets to hide or show, full list is in lists.maintenance_buttons
     :return:        None
     """
+    if buttons is None:
+        buttons = []
     log_info(f'function Buttons s {win} f {fc}, b {buttons}')
     if fc == 'Hide':
         for button in buttons:
@@ -107,7 +110,7 @@ def func_empty_logfile(sender='', data=''):
     """
     win = func_sender_breakup(sender, 1)
     log_info(f'Start the empty logfile process with {sender}, {data}')
-    paths_info = paths(get_data('mode'))
+    paths_info = paths(get_value('mode'))
     if win == 'Cleanup Log':
         logfile = paths_info.cleanup
         func_remove_logfile(logfile)
@@ -139,13 +142,25 @@ def func_exec_sql(f='', s=''):
     :param s:  The full sql command
     :return:   Result of the sql execution
     """
-    if get_data('mode') == 'Prod':
+    if get_value('mode') == 'Prod':
         res = execute_sql(sqltype=f, sql=s)
     else:
         res = execute_sql(sqltype=f, sql=s, d='Test-TVM-DB')
     log_info(f'SQL {f} {s} executed {res}')
     return res
 
+
+def func_every_frame(sender, data):
+    if is_item_clicked('Tools'):
+        set_item_label(f'##db', get_value('db_opposite'))
+        set_item_label(f'##theme', get_value('theme_opposite'))
+        log_info(f'Every Frame: Tools was clicked')
+    elif is_item_clicked('Shows'):
+        sql = tvm_views.shows_to_review_count
+        count = func_exec_sql('Fetch', sql)
+        set_item_label('##no_new_shows', str(count[0][0]))
+        log_info(f'Every Frame: Shows was clicked')
+        
 
 def func_filter_graph_sql(sql, g_filter):
     if g_filter == 'Last 7 days':
@@ -166,7 +181,7 @@ def func_find_shows(si, sn):
               f'where e.mystatus is NULL and e.airdate is not NULL and e.airdate <= current_date ' \
               f'and download != "Skip" ORDER BY showid;'
     else:
-        showid = get_data('shows_showid')
+        showid = get_value('shows_showid')
         if showid != 0:
             sql = f'select showid, showname, network, language, type, showstatus, status, premiered, download, ' \
                   f'imdb, thetvdb ' \
@@ -273,7 +288,7 @@ def func_sender_breakup(sender, pos):
 def func_show_statuses(sender, data):
     srd = get_value(f'srd##Top 10 Graphs')
     log_info(f'Show Statuses s {sender}, d {data}, srd {srd}')
-    add_data(f'srd#{sender}', srd)
+    add_value(f'srd#{sender}', srd)
     if does_item_exist('Shows##Top 10 Charts'):
         clear_plot('Shows##Top 10 Charts')
         delete_series('Shows##Top 10 Charts', sender)
@@ -282,18 +297,20 @@ def func_show_statuses(sender, data):
                  yaxis_no_gridlines=True, yaxis_no_tick_labels=True, yaxis_no_tick_marks=True, no_mouse_pos=True)
         set_plot_xlimits(f'Shows##Top 10 Charts', -.1, 1.1)
         set_plot_ylimits(f'Shows##Top 10 Charts', -.1, 1.1)
+    ss = ''
     if srd == 0:
         ss = 'Running'
-        add_data(f'srd##{sender}', 0)
+        add_value(f'srd##{sender}', 0)
     elif srd == 1:
         ss = 'In Development'
-        add_data(f'srd##{sender}', 1)
+        add_value(f'srd##{sender}', 1)
     elif srd == 2:
         ss = 'To Be Determined'
-        add_data(f'srd##{sender}', 2)
+        add_value(f'srd##{sender}', 2)
     elif srd == 3:
         ss = 'Ended'
-        add_data(f'srd##{sender}', 3)
+        add_value(f'srd##{sender}', 3)
+    sql = ''
     if srd == 4:
         sql = f'select network, count(*) from shows ' \
               f'where status = "Followed" ' \
@@ -354,24 +371,24 @@ def func_tvm_update(fl, si):
 
 
 def func_toggle_db(sender, data):
-    if get_data('mode') == 'Prod':
-        add_data('mode', 'Test')
-        add_data('db_opposite', 'Production DB')
+    log_info(f'Toggle DB')
+    if get_value('mode') == 'Prod':
+        set_value('mode', 'Test')
+        set_value('db_opposite', 'Production DB')
         set_main_window_title(f'TVMaze Management - Test DB')
     else:
-        add_data('mode', 'Prod')
-        add_data('db_opposite', 'Test DB')
+        set_value('mode', 'Prod')
+        set_value('db_opposite', 'Test DB')
         set_main_window_title(f'TVMaze Management - Production DB')
-    log_info(f'Toggled the DB access')
 
 
 def func_toggle_theme(sender, data):
-    ot = get_data('theme_opposite')
+    ot = get_value('theme_opposite')
     set_theme(str(ot))
     if ot == 'Dark':
-        add_data('theme_opposite', 'Gold')
+        set_value('theme_opposite', 'Gold')
     else:
-        add_data('theme_opposite', 'Dark')
+        set_value('theme_opposite', 'Dark')
 
 
 def epis_fill_table(sender, data):
@@ -379,7 +396,7 @@ def epis_fill_table(sender, data):
     win = func_sender_breakup(sender, 1)
     button = func_sender_breakup(sender, 0)
     showid = get_value(f'Show ID##{win}')
-    add_data('epi_showid', showid)
+    add_value('epi_showid', showid)
     showname = get_value(f'Show Name##{win}')
     if showid == 0 and showname == '' and button == 'Search':
         set_value(f'##epi_showname{win}', 'Nothing was entered in Show ID or Showname')
@@ -416,10 +433,10 @@ def epis_view_clear(sender, data):
     set_value(f'Show ID##{win}', 0)
     set_value(f'Show Name##{win}', '')
     set_value(f'##show_name{win}', '')
-    add_data(f'selected##{win}', False)
+    add_value(f'selected##{win}', False)
 
 
-def graph_execute_get_data(sql, sender, pi, g_filter):
+def graph_execute_get_value(sql, sender, pi, g_filter):
     log_info(f'Filling the plot data for {sender} with {sql} and {g_filter}')
     data = func_exec_sql('Fetch', sql)
     plot_index = sender
@@ -429,13 +446,12 @@ def graph_execute_get_data(sql, sender, pi, g_filter):
         plot_index = f'{plot_index} - {g_filter}'
     else:
         plot_index = f'{plot_index} - All Days'
-    # add_stem_series(f'{sender}##plot', f'{plot_index}', data)
     add_line_series(f'{sender}##plot', f'{plot_index}', data)
     # ToDo Figure graph call back from auto refresh option
     # set_render_callback(graph_render_callback)
 
 
-def graph_get_data(sender, g_filter):
+def graph_get_value(sender, g_filter):
     log_info(f'Grabbing the graphs for {sender}')
     data = []
     if sender == 'All Shows':
@@ -463,7 +479,7 @@ def graph_get_data(sender, g_filter):
         add_line_series(f'{sender}##plot', "Unknown", data)
         return
     sql = func_filter_graph_sql(sql, g_filter)
-    graph_execute_get_data(sql, sender, data, g_filter)
+    graph_execute_get_value(sql, sender, data, g_filter)
 
 
 def graph_refresh(sender, data):
@@ -477,7 +493,7 @@ def graph_refresh(sender, data):
     else:
         requester = sender
     log_info(f'Refreshing Graph Data for {requester} with filter {g_filter}')
-    graph_get_data(requester, g_filter)
+    graph_get_value(requester, g_filter)
 
 
 def graph_refresh_other(sender, g_filter):
@@ -486,13 +502,13 @@ def graph_refresh_other(sender, g_filter):
         return
     sql = f'select statepoch, myshowsended from statistics where statrecind = "TVMaze"'
     sql = func_filter_graph_sql(sql, g_filter)
-    graph_execute_get_data(sql, 'Other Shows', f'Ended', g_filter)
+    graph_execute_get_value(sql, 'Other Shows', f'Ended', g_filter)
     sql = f'select statepoch, myshowsrunning from statistics where statrecind = "TVMaze"'
     sql = func_filter_graph_sql(sql, g_filter)
-    graph_execute_get_data(sql, 'Other Shows', f'Running', g_filter)
+    graph_execute_get_value(sql, 'Other Shows', f'Running', g_filter)
     sql = f'select statepoch, myshowstbd from statistics where statrecind = "TVMaze"'
     sql = func_filter_graph_sql(sql, g_filter)
-    graph_execute_get_data(sql, 'Other Shows', f'TBD', g_filter)
+    graph_execute_get_value(sql, 'Other Shows', f'TBD', g_filter)
 
 
 # Todo part of the render callback todo
@@ -505,30 +521,30 @@ def program_callback(sender, data):
     if sender == 'Shows':
         sql = tvm_views.shows_to_review_count
         count = func_exec_sql('Fetch', sql)
-        add_data('shows_ds_new_shows', f': {str(count[0][0])}')
+        add_value('shows_ds_new_shows', f': {str(count[0][0])}')
 
 
 def program_data():
-    add_data('shows_ds_new_shows', '0')
-    add_data('shows_showid', 0)
-    add_data(f'selected##Maintenance', False)
-    add_data(f'selected##View', False)
-    add_data('theme_opposite', 'Dark')
-    add_data('label##All Shows', "All the shows that are available on TVMaze")
-    add_data('label##Followed Shows', "Only the followed shows")
-    add_data('label##In Development Shows', "Only the followed shows that have not started yet")
-    add_data('label##Other Shows',
-             "Only the followed shows that are currently 'Running', have 'Ended' or are 'In Limbo")
-    add_data('label##All Episodes', "All episodes (followed shows only)")
-    add_data('label##Watched Episodes', "All watched episodes (followed shows only)")
-    add_data('label##Skipped Episodes', "All skipped episodes (followed shows only)")
-    add_data('label##Episodes to Get', "All episodes to get onto Plex (followed shows only)")
-    add_data('label##Episodes to Watch', "All available episodes on Plex not watched yet (followed shows only)")
-    add_data('label##Upcoming Episodes', "All announced episodes beyond today (followed shows only)")
+    add_value('shows_ds_new_shows', '0')
+    add_value('shows_showid', 0)
+    add_value(f'selected##Maintenance', False)
+    add_value(f'selected##View', False)
+    add_value('theme_opposite', 'Dark')
+    add_value('label##All Shows', "All the shows that are available on TVMaze")
+    add_value('label##Followed Shows', "Only the followed shows")
+    add_value('label##In Development Shows', "Only the followed shows that have not started yet")
+    add_value('label##Other Shows',
+              "Only the followed shows that are currently 'Running', have 'Ended' or are 'In Limbo")
+    add_value('label##All Episodes', "All episodes (followed shows only)")
+    add_value('label##Watched Episodes', "All watched episodes (followed shows only)")
+    add_value('label##Skipped Episodes', "All skipped episodes (followed shows only)")
+    add_value('label##Episodes to Get', "All episodes to get onto Plex (followed shows only)")
+    add_value('label##Episodes to Watch', "All available episodes on Plex not watched yet (followed shows only)")
+    add_value('label##Upcoming Episodes', "All announced episodes beyond today (followed shows only)")
 
 
 def program_mainwindow():
-    if get_data('mode') == 'Test':
+    if get_value('mode') == 'Test':
         set_main_window_title(f'TVMaze Management - Test DB')
     else:
         set_main_window_title('TVMaze Management - Production DB')
@@ -549,8 +565,8 @@ def program_mainwindow():
             add_menu_item('Quit', callback=window_quit, shortcut='cmd+Q')
         with menu('Shows'):
             add_menu_item('Eval New Shows', callback=window_shows)
-            add_same_line(xoffset=115)
-            add_label_text('##no_new_shows', value='0', source='shows_ds_new_shows', color=[250, 250, 0, 250])
+            add_same_line()
+            add_label_text('##no_new_shows', value='')
             add_spacing(count=1)
             add_separator(name=f'##TVMazeSEP3')
             add_spacing(count=1)
@@ -593,10 +609,10 @@ def program_mainwindow():
         with menu('Tools'):
             add_menu_item('Toggle Database to', callback=func_toggle_db)
             add_same_line(xoffset=140)
-            add_label_text(f'##db', value='Test', source='db_opposite', color=[250, 250, 0, 250])
+            add_label_text(f'##db')
             add_menu_item('Toggle Theme to', callback=func_toggle_theme)
             add_same_line(xoffset=140)
-            add_label_text(f'##theme', value='Gold', source='theme_opposite', color=[250, 250, 0, 250])
+            add_label_text(f'##theme', label='Gold')
             add_spacing(count=1)
             add_separator(name='ToolsSEP1')
             add_spacing(count=1)
@@ -605,7 +621,6 @@ def program_mainwindow():
             add_separator(name='ToolsSEP2')
             add_spacing(count=1)
             with menu('Debug Mode'):
-                add_menu_item('Show Demo', callback=window_standards)
                 add_menu_item('Show Debugger', callback=window_standards)
                 add_menu_item('Show Documentation', callback=window_standards)
                 add_menu_item('Show Source Code', callback=window_standards)
@@ -616,17 +631,16 @@ def program_mainwindow():
                 add_menu_item('Get Open Window Positions', callback=window_get_pos)
         with menu('Windows'):
             add_menu_item('Close Open Windows', callback=window_close_all)
-    # ToDo set_render_callback(program_callback, 'Eval New Shows')
     
-    # add_additional_font("/System/Library/Fonts/Menlo.ttc", 14,
+    # add_additional_font("/System/Library/Fonts/Menlo.ttc", 14)
     add_additional_font("/Users/dick/Library/Fonts/KlokanTechNotoSans-Bold.ttf", 16,
                         custom_glyph_ranges=[[0x370, 0x377], [0x400, 0x4ff], [0x530, 0x58f], [0x10a0, 0x10ff],
                                              [0x30a0, 0x30ff], [0x0590, 0x05ff]])
     # add_additional_font("/Users/dick/Library/Fonts/ProggyClean.ttf", 14,
     # add_additional_font("/Users/dick/Library/Fonts/unifont-13.0.03.ttf", 14,
     #                    custom_glyph_ranges=[[0x370, 0x377], [0x400, 0x4ff], [0x530, 0x58f], [0x10a0, 0x10ff]])
-    # set_key_down_callback(func_key_main)
-    # set_key_press_callback(func_key_main)
+    set_key_down_callback(func_key_main)
+    set_key_press_callback(func_key_main)
     if options['-s'] and not options['-l']:
         window_shows_all_graphs('All Graphs', 'set_item_callback')
     elif options['-e'] and not options['-l']:
@@ -643,7 +657,7 @@ def shows_fill_table(sender, data):
     win = func_sender_breakup(sender, 1)
     button = func_sender_breakup(sender, 0)
     showid = get_value(f'Show ID##{win}')
-    add_data('shows_showid', showid)
+    add_value('shows_showid', showid)
     showname = get_value(f'Show Name##{win}')
     found_shows = ''
     if showid == 0 and showname == '' and button == 'Search':
@@ -672,7 +686,7 @@ def shows_fill_table(sender, data):
 def shows_find_on_web(sender, data):
     win = func_sender_breakup(sender, 1)
     function = func_sender_breakup(sender, 0)
-    selected = get_data(f'selected##{win}')
+    selected = get_value(f'selected##{win}')
     showid = get_value(f'Show ID##{win}')
     log_info(f'Shows Find On the Web s {sender}, d {data}, w "{win}", f "{function}", si {showid}')
     if not selected:
@@ -706,7 +720,7 @@ def shows_maint_clear(sender, data):
     set_value(f'Show ID##{win}', 0)
     set_value(f'Show Name##{win}', '')
     set_value(f'##show_name{win}', '')
-    add_data(f'selected##{win}', False)
+    add_value(f'selected##{win}', False)
 
 
 def shows_table_click(sender, data):
@@ -715,7 +729,7 @@ def shows_table_click(sender, data):
     win = func_sender_breakup(sender, 1)
     row_cell = get_table_selections(f'shows_table##{win}')
     row = row_cell[0][0]
-    add_data(f'selected##{win}', True)
+    add_value(f'selected##{win}', True)
     showid = get_table_data(f'shows_table##{win}')[row][0]
     show_status = get_table_data(f'shows_table##{win}')[row][6]
     my_status = get_table_data(f'shows_table##{win}')[row][7]
@@ -735,7 +749,7 @@ def shows_table_click(sender, data):
                      buttons=['Unfollow', 'Episode Skipping', 'Not Interested', 'Undecided', 'Change Getter'])
     else:
         func_buttons(win=win, fc='Show')
-    add_data('showid', showid)
+    add_value('showid', showid)
     showname = str(get_table_data(f'shows_table##{win}')[row][1])[:35]
     set_value(f'##show_showname{win}', f"Selected Show: {showid}, {showname} {show_options}")
     set_value(f'Show ID##{win}', int(showid))
@@ -770,7 +784,7 @@ def tvmaze_logout(sender, data):
 
 def tvmaze_processes(sender, data):
     log_info(f'TVMaze processes Started s {sender}, d {data}')
-    paths_info = paths(get_data('mode'))
+    paths_info = paths(get_value('mode'))
     loc = paths_info.app_path
     action = ''
     if sender == 'Get Shows':
@@ -784,7 +798,7 @@ def tvmaze_processes(sender, data):
 def tvmaze_update(sender, data):
     win = func_sender_breakup(sender, 1)
     function = func_sender_breakup(sender, 0)
-    selected = get_data(f'selected##{win}')
+    selected = get_value(f'selected##{win}')
     si = get_value(f'Show ID##{win}')
     log_info(f'TVMaze update s {sender}, d {data}, w "{win}", f "{function}", si {si}')
     if not selected:
@@ -816,7 +830,7 @@ def tvmaze_update(sender, data):
 
 def tvmaze_view_show(sender, data):
     win = func_sender_breakup(sender, 1)
-    selected = get_data(f'selected##{win}')
+    selected = get_value(f'selected##{win}')
     if not selected:
         set_value(f'##show_showname{win}', 'No Show was selected yet, nothing to do yet')
     else:
@@ -963,7 +977,8 @@ def window_logs_refresh(sender, data):
     win = func_sender_breakup(sender, 1)
     function = func_sender_breakup(sender, 0)
     log_info(f'Log Refresh s {sender}, d {data}, f {function}, w {win}')
-    paths_info = paths(get_data('mode'))
+    paths_info = paths(get_value('mode'))
+    logfile = ''
     if win == 'Processing Log':
         logfile = paths_info.process
     elif win == 'TVMaze Log':
@@ -1112,9 +1127,9 @@ def window_standards(sender, data):
         set_item_height('logger##standard', 175)
     elif sender == 'Show Debugger':
         show_debug()
-        set_window_pos('debug##standard', 1555, 445)
+        set_window_pos('debug##standard', 1120, 445)
     elif sender == 'Show Source Code':
-        paths_info = paths(get_data('mode'))
+        paths_info = paths(get_value('mode'))
         show_source(f'{paths_info.app_path}tvmaze.py')
         set_window_pos('source##standard', 520, 35)
         set_item_width('source##standard', 975)
@@ -1135,13 +1150,13 @@ def window_top_10(sender, data):
                 with tab_bar(f'Tab Bar##{sender}'):
                     with tab(f'Followed Shows - Network', parent=f'Tab Bar##{sender}'):
                         add_label_text(name=f'##rdl{sender}', value='Select Followed Shows by Status:')
-                        add_data(f'srd##{sender}', 0)
+                        add_value(f'srd##{sender}', 0)
                         add_radio_button(name=f'srd##{sender}', items=lists.show_statuses, horizontal=True,
                                          callback=func_show_statuses)
                         func_show_statuses(sender, '')
                     with tab(f'Followed Episodes - Network##{sender}'):
                         add_label_text(name=f'##edl{sender}', value='Select Followed Episodes by Status:')
-                        add_data(f'erd##{sender}', 0)
+                        add_value(f'erd##{sender}', 0)
                         add_radio_button(name=f'erd##{sender}', items=lists.show_statuses, horizontal=True,
                                          callback=func_episode_statuses)
                         add_plot(f'Episodes##Top 10 Charts', xaxis_no_gridlines=True, xaxis_no_tick_labels=True,
@@ -1169,12 +1184,12 @@ def window_top_10(sender, data):
 print(f'{time.strftime("%D %T")} TVMaze UI >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Started')
 options = docopt(__doc__, version='TVMaze V1')
 if options['-p']:
-    add_data('mode', 'Prod')
-    add_data('db_opposite', "Test DB")
+    add_value('mode', 'Prod')
+    add_value('db_opposite', "Test DB")
     print('Starting in Production Mode')
 else:
-    add_data('mode', 'Test')
-    add_data('db_opposite', "Production DB")
+    add_value('mode', 'Test')
+    add_value('db_opposite', "Production DB")
     print('Starting in Test Mode')
 if options['-d']:
     print('Starting in Debug Mode')
@@ -1185,6 +1200,7 @@ if options['-s']:
 
 program_data()
 program_mainwindow()
+set_render_callback(func_every_frame)
 
 if options['-l']:
     tvmaze_logout('', '')

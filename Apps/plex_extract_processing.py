@@ -150,7 +150,8 @@ for episode in we:
     plex_epi = epi[2]
     plex_watch_date = epi[3]
     if vli > 3:
-        print(f'Trying to find episodes for {plex_sn}, s {plex_season} epi {plex_epi}')
+        print(f'{time.strftime(("%D %T"))} Plex Extract Processing: '
+              f'Trying to find episodes for {plex_sn}, s {plex_season} epi {plex_epi}')
     found_pe = find_plex_episodes(plex_sn, plex_season, plex_epi)
     if len(found_pe) != 0:
         if found_pe[0][4]:
@@ -162,7 +163,11 @@ for episode in we:
         ipe_sql = f'insert into plex_episodes values ' \
                   f'({plex_sn}, {plex_season}, {plex_epi}, {plex_watch_date}, None, None)'
         ipe_sql = ipe_sql.replace('None', 'NULL')
-        execute_sql(sqltype='Commit', sql=ipe_sql)
+        res = execute_sql(sqltype='Commit', sql=ipe_sql)
+        if not res[0]:
+            print(f'{time.strftime(("%D %T"))} Plex Extract Processing: Error with inserting or finding this show '
+                  f'{episode} with {res}, skipping to the next one')
+            continue
     
     plex_show = find_plex_show(plex_sn)
     if plex_show:
