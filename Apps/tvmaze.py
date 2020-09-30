@@ -245,11 +245,9 @@ def func_log_filter(sender, data):
 def func_login(sender, data):
     log_info(f'Password Checker s {sender}, d {data}')
     if get_value('Password') == 'password':
-        delete_item('Login Window')
-        func_recursively_show_main('MainWindow')
+        close_popup()
     else:
         set_value('##Error', 'Wrong Username or Password')
-        # ToDo figure out style and color for set_item
         set_item_color('##Error', style=mvGuiCol_Text, color=[250, 0, 0])
 
 
@@ -559,7 +557,13 @@ def program_mainwindow():
             add_spacing(count=1)
             add_separator(name=f'##TVMazeSEP1')
             add_spacing(count=1)
-            add_menu_item('Log Out', callback=tvmaze_logout, shortcut='cmd+L')
+            add_button('Log Out')
+            with popup("Log Out", "Sign In", modal=True):
+                add_input_text('Username', hint='Your email address', width=250)
+                add_input_text('Password', hint='Password is "password" for now', password=True, width=250)
+                add_button('Submit', callback=func_login)
+                add_same_line(spacing=5)
+                add_label_text('##Error', label='')
             add_spacing(count=1)
             add_separator(name=f'##TVMazeSEP2')
             add_spacing(count=1)
@@ -874,8 +878,13 @@ def window_close_all(sender, data):
             continue
         log_info(f'Closing window found: {win}')
         delete_item(win)
+    hide_item('documentation##standard')
+    hide_item('about##standard')
+    hide_item('metrics##standard')
+    hide_item('source##standard')
     hide_item('debug##standard')
-    hide_item('logger#standard')
+    hide_item('style##standard')
+    hide_item('logger##standard')
 
 
 def window_episodes(sender, data):
