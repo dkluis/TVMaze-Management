@@ -218,35 +218,29 @@ def func_get_getter(getters):
     return links
 
 
-def func_key_login(sender, data):
-    log_info(f'Login Key Press detected s {sender} d {data}')
-    if data == mvKey_Return:
-        func_login(sender, data)
-
-
 def func_key_main(sender, data):
-    log_info(f'Main Window Key detected s {sender} d {data}')
-
-
-def func_key_shows(sender, data):
+    win = func_sender_breakup(sender, 0)
     function = func_sender_breakup(sender, 1)
-    log_info(f'Shows Key Press detected s {sender} d {data} w {function}')
-    if data == mvKey_Return:
-        shows_fill_table(f'Search##{sender}', data)
-
-
-def func_key_logs(sender, data):
-    function = func_sender_breakup(sender, 0)
-    log_info(f'Logs Key Press detected s {sender} d {data} w {function}')
-    if data == mvKey_Return:
-        func_log_filter(f'Filter##{function}', data)
+    if win == 'Maintenance' and function == 'window':
+        if data == mvKey_Return:
+            shows_fill_table(f'Search##{sender}', data)
+            log_info(f'{win} Key detected for Function {function}')
+    elif win == 'Login Popup' and function == 'Undefined for now':
+        if data == mvKey_Return:
+            func_login(sender, data)
+            log_info(f'{win} Key detected for Function {function}')
+    elif win == 'Cleanup Log' or win == 'Processing Log' or win == 'Python Errors' \
+            or win == 'Transmission Log' or win == 'TVMaze Log':
+        if data == mvKey_Return:
+            func_log_filter(f'Refresh##{win}', get_value(f'{win}ft'))
+            log_info(f'{win} Key detected for Function {function}')
 
 
 def func_log_filter(sender, data):
     log_info(f'Func Log Filter s {sender}, d {data}')
     win = func_sender_breakup(sender, 1)
-    filter_table = get_value(f'log_table##{win}')
-    if len(get_value(f'##{win}ft')) != 0:
+    filter_table = get_table_data(f'log_table##{win}')
+    if len(filter_table) != 0:
         new_table = []
         for row in filter_table:
             if str(get_value(f'##{win}ft')).lower() in str(row).lower():
@@ -649,8 +643,7 @@ def program_mainwindow():
     # add_additional_font("/Users/dick/Library/Fonts/ProggyClean.ttf", 14,
     # add_additional_font("/Users/dick/Library/Fonts/unifont-13.0.03.ttf", 14,
     #                    custom_glyph_ranges=[[0x370, 0x377], [0x400, 0x4ff], [0x530, 0x58f], [0x10a0, 0x10ff]])
-    set_key_down_callback(func_key_main)
-    set_key_press_callback(func_key_main)
+    set_key_release_callback(func_key_main)
     if options['-s'] and not options['-l']:
         window_shows_all_graphs('All Graphs', 'set_item_callback')
     elif options['-e'] and not options['-l']:
@@ -926,7 +919,6 @@ def window_login():
         add_button('Submit', callback=func_login)
         add_same_line(spacing=5)
         add_label_text('##Error', label='')
-    set_key_release_callback(func_key_login)
 
 
 def window_logs(sender, data):
@@ -958,7 +950,6 @@ def window_logs(sender, data):
             add_table(f'log_table##{sender}',
                       headers=[f'{sender} - Info'])
             window_logs_refresh(f'Refresh##{sender}', data)
-        set_key_press_callback(func_key_logs)
 
 
 def window_logs_refresh(sender, data):
@@ -1090,7 +1081,6 @@ def window_shows(sender, data):
                 add_label_text(f'##uw{sender}', value='Tried to create an undefined Show Window')
         
         set_style_window_title_align(0.5, 0.5)
-        set_key_press_callback(func_key_shows)
         if ens:
             shows_fill_table(f'Evaluate Shows##{sender}', None)
         log_info(f'Create item (window): "{win}"')
