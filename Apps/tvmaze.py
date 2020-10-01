@@ -769,16 +769,17 @@ def tvmaze_calendar(sender, data):
     subprocess.call("open -a safari  https://www.tvmaze.com/calendar", shell=True)
 
 
-def tvmaze_change_getter(sender, si):
+def tvmaze_change_getter(sender, data):
     win = func_sender_breakup(sender, 1)
+    si = get_value(f'Show ID##Maintenance')
     function = func_sender_breakup(sender, 0)
-    log_info(f'Change where to get s {sender}, showid {si}, w {win}, f {function}')
+    log_info(f'Change where to get s {sender}, d {data}, showid {si}, w {win}, f {function}')
     if function == 'Submit':
-        ind = get_value(f'Getters##Maintenance')
+        ind = get_value(f'Getters##RadioButtons')
         log_info(f'Getter Selected {lists.getters[ind]}')
         sql = f'update shows set download = "{lists.getters[ind]}" where `showid` = {si}'
         func_exec_sql('Commit', sql)
-    delete_item(f'Getters##w{win}')
+    close_popup()
 
 
 def tvmaze_logout(sender, data):
@@ -843,24 +844,6 @@ def tvmaze_view_show(sender, data):
         tvm_link = f"https://www.tvmaze.com/shows/{si}"
         follow_str = 'open -a safari ' + tvm_link
         os.system(follow_str)
-
-
-def window_change_getters(sender, si):
-    function = func_sender_breakup(sender, 0)
-    win = func_sender_breakup(sender, 1)
-    log_info(f'Trying to create window Change Getter with f {function}, w {win}, showid {si}')
-    with window(f'Getters##w{win}', on_close=window_close, autosize=True,
-                x_pos=670, y_pos=290, no_resize=True):
-        add_radio_button(f'Getters##{win}',
-                         items=lists.getters, default_value=0,
-                         tip='Multiple will use rarbgAPI, eztvAPI, Piratebay and eztv.')
-        add_spacing(count=1)
-        add_separator(name=f'Getter##w{win}SEP')
-        add_spacing(count=3)
-        add_button(f'Cancel##{win}', callback=tvmaze_change_getter)
-        add_same_line(spacing=12)
-        add_button(f"Submit##{win}", callback=tvmaze_change_getter, callback_data=si)
-        add_spacing(count=1)
 
 
 def window_close(sender, data):
@@ -1089,11 +1072,19 @@ def window_shows(sender, data):
                 add_same_line(spacing=10)
                 add_button(f'Undecided##{sender}', callback=tvmaze_update,
                            tip='Keep show on Evaluate list for later determination')
-                # add_label_text(f'##{sender}', ' ')
-                # add_same_line(spacing=643)
                 add_same_line(spacing=10)
-                add_button(f'Change Getter##{sender}', callback=tvmaze_update,
-                           tip='Set the website where to get the show')
+                add_button(f'Change Getter##{sender}', tip='Set the website where to get the show')
+                with popup(f'Change Getter##{sender}', 'Change Getter##getterpopup', modal=True):
+                    add_radio_button(f'Getters##RadioButtons',
+                                     items=lists.getters, default_value=0,
+                                     tip='Multiple will use rarbgAPI, eztvAPI, Piratebay and eztv.')
+                    add_spacing(count=1)
+                    add_separator(name=f'Getter##w{win}SEP')
+                    add_spacing(count=3)
+                    add_button(f'Cancel##{win}', callback=tvmaze_change_getter)
+                    add_same_line(spacing=12)
+                    add_button(f"Submit##{win}", callback=tvmaze_change_getter)
+                    add_spacing(count=1)
                 add_separator(name=f'Maintenance##SEP2')
                 add_spacing()
                 add_table(f'shows_table##{sender}',
