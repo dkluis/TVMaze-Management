@@ -35,27 +35,38 @@ from tvm_lib import execute_sql
 
 class paths:
     def __init__(self, mode):
-        log_prod = '/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Logs/'
+        sp = '/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/scripts/'
         if mode == 'Prod':
-            lp = log_prod
+            lp = '/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Logs/'
             ap = '/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Apps/'
         else:
             lp = '/Volumes/HD-Data-CA-Server/Development/PycharmProjects/TVM-Management/Logs/'
             ap = '/Volumes/HD-Data-CA-Server/Development/PycharmProjects/TVM-Management/Apps/'
         self.log_path = lp
         self.app_path = ap
+        self.scr_path = sp
         self.console = lp + 'TVMaze.log'
         self.errors = lp + 'Errors.log'
-        self.process = log_prod + 'Process.log'
-        self.cleanup = log_prod + 'Cleanup.log'
-        self.watched = log_prod + 'Watched.log'
-        self.transmission = log_prod + "Transmission.log"
+        self.process = lp + 'Process.log'
+        self.cleanup = lp + 'Cleanup.log'
+        self.watched = lp + 'Watched.log'
+        self.transmission = lp + "Transmission.log"
 
 
 class lists:
     getters = ['Multi', 'ShowRSS', 'rarbgAPI', 'eztvAPI', 'piratebay', 'magnetdl', 'eztv', 'Skip']
     show_statuses = ['Running', 'In Development', 'To Be Determined', 'Ended', 'All']
     maintenance_buttons = ['Follow', 'Unfollow', 'Episode Skipping', 'Not Interested', 'Undecided', 'Change Getter']
+
+
+def func_async(sender, process):
+    log_info(f'Starting subprocess {process}')
+    subprocess.call(process, shell=True)
+    
+
+def func_async_return(sender, data):
+    configure_item('Process', enabled=True)
+    log_info(f'Ended subprocess {data}')
 
 
 def func_db_opposite():
@@ -67,8 +78,10 @@ def func_db_opposite():
     log_info(f'Retrieving Mode {get_value("mode")}')
     if get_value('mode') == 'Prod':
         set_value('db_opposite', 'Test DB')
+        configure_item('Process', enabled=True)
     else:
         set_value('db_opposite', "Production DB")
+        configure_item('Process', enabled=False)
     log_info(f'db_opposite {get_value("db_opposite")}')
 
 
@@ -374,10 +387,12 @@ def func_toggle_db(sender, data):
         set_value('mode', 'Test')
         set_value('db_opposite', 'Production DB')
         set_main_window_title(f'TVMaze Management - Test DB')
+        configure_item('Process', enabled=False)
     else:
         set_value('mode', 'Prod')
         set_value('db_opposite', 'Test DB')
         set_main_window_title(f'TVMaze Management - Production DB')
+        configure_item('Process', enabled=True)
 
 
 def func_toggle_theme(sender, data):
@@ -445,8 +460,6 @@ def graph_execute_get_value(sql, sender, pi, g_filter):
     else:
         plot_index = f'{plot_index} - All Days'
     add_line_series(f'{sender}##plot', f'{plot_index}', data)
-    # ToDo Figure graph call back from auto refresh option
-    # set_render_callback(graph_render_callback)
 
 
 def graph_get_value(sender, g_filter):
@@ -507,11 +520,6 @@ def graph_refresh_other(sender, g_filter):
     sql = f'select statepoch, myshowstbd from statistics where statrecind = "TVMaze"'
     sql = func_filter_graph_sql(sql, g_filter)
     graph_execute_get_value(sql, 'Other Shows', f'TBD', g_filter)
-
-
-# Todo part of the render callback todo
-def graph_render_callback(sender, data):
-    log_info(f'Graph Render Callback Triggered {sender} {data}')
 
 
 def program_callback(sender, data):
@@ -601,7 +609,7 @@ def program_mainwindow():
             add_spacing(count=1)
             add_separator(name='ProcessSEP1')
             add_spacing(count=1)
-            add_menu_item('Transmission Files', callback=window_files)
+            add_menu_item('Run full Process', callback=tvmaze_processes)
         with menu('Logs'):
             add_menu_item('Cleanup Log', callback=window_logs)
             add_menu_item('Processing Log', callback=window_logs)
@@ -788,11 +796,13 @@ def tvmaze_logout(sender, data):
 def tvmaze_processes(sender, data):
     log_info(f'TVMaze processes Started s {sender}, d {data}')
     paths_info = paths(get_value('mode'))
-    loc = paths_info.app_path
     action = ''
-    if sender == 'Get Shows':
-        action = f"python3 {loc}actions.py -d "
-    # ToDo 0.4 run_async_function(subprocess.call(action, shell=True), data)
+    if sender == 'Get Episodes':
+        action = f"python3 {paths_info.app_path}actions.py -d"
+    elif sender == 'Run full Process':
+        action = f"{paths_info.scr_path}tvm_process.sh"
+    configure_item('Process', enabled=False)
+    run_async_function(func_async, action, return_handler=func_async_return)
     log_info(f'TVMaze processes ASYNC Finished s {action}')
     window_logs('TVMaze Log', '')
     window_logs('Python Errors', '')
@@ -906,15 +916,6 @@ def window_episodes_all_graphs(sender, data):
     set_window_pos('Upcoming Episodes##graphs', 1420, 570)
     set_item_width('Upcoming Episodes##graphs', 690)
     set_item_height('Upcoming Episodes##graphs', 515)
-
-
-def window_files(sender, data):
-    win = f'{sender}##window'
-    log_info(f'Window Files {sender}')
-    if not does_item_exist(win):
-        with window(win, 1500, 750, x_pos=30, y_pos=70, no_resize=True, on_close=window_close):
-            add_button('Folder', callback=open_file_dialog())
-        set_style_window_title_align(0.5, 0.5)
 
 
 def window_login():
@@ -1195,6 +1196,10 @@ if options['-s']:
 
 program_data()
 program_mainwindow()
+if get_value('mode') == 'Prod':
+    configure_item('Process', enabled=True)
+else:
+    configure_item('Process', enabled=False)
 set_render_callback(func_every_frame)
 
 if options['-l']:
