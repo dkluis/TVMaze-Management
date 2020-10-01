@@ -152,13 +152,13 @@ def func_exec_sql(f='', s=''):
 
 def func_every_frame(sender, data):
     if is_item_clicked('Tools'):
-        set_item_label(f'##db', get_value('db_opposite'))
-        set_item_label(f'##theme', get_value('theme_opposite'))
+        set_value(f'##db', get_value('db_opposite'))
+        set_value(f'##theme', get_value('theme_opposite'))
         log_info(f'Every Frame: Tools was clicked')
     elif is_item_clicked('Shows'):
         sql = tvm_views.shows_to_review_count
         count = func_exec_sql('Fetch', sql)
-        set_item_label('##no_new_shows', str(count[0][0]))
+        set_value('##no_new_shows: ', str(count[0][0]))
         log_info(f'Every Frame: Shows was clicked')
         
 
@@ -557,7 +557,7 @@ def program_mainwindow():
             add_spacing(count=1)
             add_separator(name=f'##TVMazeSEP1')
             add_spacing(count=1)
-            add_button('Log Out')
+            add_button('Log Out', callback=window_close_all)
             with popup("Log Out", "Sign In", modal=True):
                 add_input_text('Username', hint='Your email address', width=250)
                 add_input_text('Password', hint='Password is "password" for now', password=True, width=250)
@@ -569,12 +569,11 @@ def program_mainwindow():
             add_spacing(count=1)
             add_menu_item('Quit', callback=window_quit, shortcut='cmd+Q')
         with menu('Shows'):
-            add_menu_item('Eval New Shows', callback=window_shows)
+            add_menu_item('New Shows Found: ', callback=window_shows)
+            add_same_line(xoffset=125)
+            add_text('##no_new_shows: ', color=[250, 250, 0, 250])
             add_same_line()
-            add_label_text('##no_new_shows', value='')
-            add_spacing(count=1)
-            add_separator(name=f'##TVMazeSEP3')
-            add_spacing(count=1)
+            add_text('##no_new_shows', default_value=' ')
             add_menu_item('Maintenance', callback=window_shows)
             with menu('Graphs##shows'):
                 add_menu_item('All Shows', callback=window_graphs)
@@ -612,12 +611,16 @@ def program_mainwindow():
             add_menu_item('Transmission Log', callback=window_logs)
             add_menu_item('TVMaze Log', callback=window_logs)
         with menu('Tools'):
-            add_menu_item('Toggle Database to', callback=func_toggle_db)
+            add_menu_item('Toggle Database to: ', callback=func_toggle_db)
             add_same_line(xoffset=140)
-            add_label_text(f'##db')
-            add_menu_item('Toggle Theme to', callback=func_toggle_theme)
+            add_text(f'##db', color=[250, 250, 0, 250])
+            add_same_line()
+            add_text('##no_db', default_value=' ')
+            add_menu_item('Toggle Theme to: ', callback=func_toggle_theme)
             add_same_line(xoffset=140)
-            add_label_text(f'##theme', label='Gold')
+            add_text(f'##theme', color=[250, 250, 0, 250])
+            add_same_line()
+            add_text('##no_theme', default_value=' ')
             add_spacing(count=1)
             add_separator(name='ToolsSEP1')
             add_spacing(count=1)
@@ -822,9 +825,6 @@ def tvmaze_update(sender, data):
             result = func_tvm_update('UD', si)
             log_info(f'TVMaze Undecided result: {result}')
             set_value(f'##show_showname{win}', f'Show {si} update on TVMaze and set Unfollow = {result}')
-        elif function == 'Change Getter':
-            log_info(f'Starting window change getter with {sender}, {data}')
-            window_change_getters(sender, si)
         elif function == 'Not Interested':
             result = func_tvm_update('SK', si)
             log_info(f'TVMaze Skipping result: {result}')
@@ -1032,7 +1032,7 @@ def window_quit(sender, data):
 
 
 def window_shows(sender, data):
-    if sender == 'Eval New Shows':
+    if sender == 'New Shows Found: ':
         sender = 'Maintenance'
         ens = True
     else:
