@@ -571,9 +571,7 @@ def program_mainwindow():
         with menu('Shows'):
             add_menu_item('New Shows Found: ', callback=window_shows)
             add_same_line(xoffset=125)
-            add_text('##no_new_shows: ', color=[250, 250, 0, 250])
-            add_same_line()
-            add_text('##no_new_shows', default_value=' ')
+            add_text('##no_new_shows: ', color=[250, 250, 0, 250], wrap=-1)
             add_menu_item('Maintenance', callback=window_shows)
             with menu('Graphs##shows'):
                 add_menu_item('All Shows', callback=window_graphs)
@@ -613,14 +611,10 @@ def program_mainwindow():
         with menu('Tools'):
             add_menu_item('Toggle Database to: ', callback=func_toggle_db)
             add_same_line(xoffset=140)
-            add_text(f'##db', color=[250, 250, 0, 250])
-            add_same_line()
-            add_text('##no_db', default_value=' ')
+            add_text(f'##db', color=[250, 250, 0, 250], wrap=-1)
             add_menu_item('Toggle Theme to: ', callback=func_toggle_theme)
             add_same_line(xoffset=140)
-            add_text(f'##theme', color=[250, 250, 0, 250])
-            add_same_line()
-            add_text('##no_theme', default_value=' ')
+            add_text(f'##theme', color=[250, 250, 0, 250], wrap=-1)
             add_spacing(count=1)
             add_separator(name='ToolsSEP1')
             add_spacing(count=1)
