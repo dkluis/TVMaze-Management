@@ -245,6 +245,10 @@ def process_update_all_shows(mdb, mcur):
 
 def process_followed_shows():
     result = execute_tvm_request(api=tvm_apis.followed_shows, code=True)
+    if not result:
+        result = ''
+        print(f"{time.strftime(('%D %T'))} Shows: Some error with the call to TVMaze occurred")
+        return
     result = result.json()
     found = False
     shows = execute_sql(sqltype='Fetch', sql=std_sql.followed_shows)
