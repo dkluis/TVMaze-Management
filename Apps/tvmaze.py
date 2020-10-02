@@ -1167,7 +1167,7 @@ def window_top_10(sender, data):
 
 # Program
 
-print(f'{time.strftime("%D %T")} TVMaze UI >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Started')
+print(f'{time.strftime("%D %T")} TVMaze UI Started')
 options = docopt(__doc__, version='TVMaze V1')
 if options['-p']:
     add_value('mode', 'Prod')
