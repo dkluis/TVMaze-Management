@@ -124,7 +124,13 @@ except IOError as err:
     quit()
 ew = 0
 for episode in watched_episodes:
-    we.write(f'{str(episode).strip()}\n')
+    f1 = str(episode[0]).replace(',', '')
+    f2 = episode[1]
+    f3 = episode[2]
+    f4 = episode[3]
+    watched = (f1, f2, f3, f4)
+    print(watched)
+    we.write(f'{str(watched).strip()}\n')
     ew += 1
     if vli > 2:
         print(f'Processed {episode}')
