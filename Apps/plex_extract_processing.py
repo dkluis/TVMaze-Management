@@ -164,7 +164,7 @@ for episode in we:
                   f'({plex_sn}, {plex_season}, {plex_epi}, {plex_watch_date}, None, None)'
         ipe_sql = ipe_sql.replace('None', 'NULL')
         res = execute_sql(sqltype='Commit', sql=ipe_sql)
-        if not res[0]:
+        if not res:
             print(f'{time.strftime(("%D %T"))} Plex Extract Processing: Error with inserting or finding this show '
                   f'{episode} with {res}, skipping to the next one')
             continue
