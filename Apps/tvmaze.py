@@ -565,7 +565,7 @@ def program_mainwindow():
                 add_input_text('Password', hint='Password is "password" for now', password=True, width=250)
                 add_button('Submit', callback=func_login)
                 add_same_line(spacing=5)
-                add_label_text('##Error', label='')
+                add_label_text(name='##Error', label='')
             add_spacing(count=1)
             add_separator(name=f'##TVMazeSEP2')
             add_spacing(count=1)
@@ -878,7 +878,7 @@ def window_episodes(sender, data):
             add_same_line(spacing=10)
             add_button(f'Search##{sender}', callback=epis_fill_table)
             with group('View Options', horizontal=True):
-                add_label_text(f'##cbl{sender}', 'Select Options:')
+                add_label_text(name=f'##cbl{sender}', value='Select Options:')
                 add_checkbox(f'Test##{sender}')
                 add_checkbox(f'Test2##{sender}')
         set_style_window_title_align(0.5, 0.5)
@@ -918,7 +918,7 @@ def window_login():
         add_input_text('Password', hint='Password is "password" for now', password=True, width=250)
         add_button('Submit', callback=func_login)
         add_same_line(spacing=5)
-        add_label_text('##Error', label='')
+        add_label_text(name='##Error', label='')
 
 
 def window_logs(sender, data):
@@ -1078,7 +1078,7 @@ def window_shows(sender, data):
                                    'Premiered', 'Getter', 'IMDB', 'TheTVDB'],
                           callback=shows_table_click)
             else:
-                add_label_text(f'##uw{sender}', value='Tried to create an undefined Show Window')
+                add_label_text(name=f'##uw{sender}', value='Tried to create an undefined Show Window')
         
         set_style_window_title_align(0.5, 0.5)
         if ens:
@@ -1160,7 +1160,7 @@ def window_top_10(sender, data):
                             pie_data.append(rec)
                         add_pie_series('Episodes##Top 10 Charts', sender, pie_data, 0.5, 0.5, 0.5)
             else:
-                add_label_text(f'##uw{sender}', value='Tried to create an undefined Pie Graph Window')
+                add_label_text(name=f'##uw{sender}', value='Tried to create an undefined Pie Graph Window')
         set_style_window_title_align(0.5, 0.5)
     log_info(f'Create item (window): "{win}"')
 
