@@ -173,7 +173,16 @@ def func_every_frame(sender, data):
         count = func_exec_sql('Fetch', sql)
         set_value('##no_new_shows: ', str(count[0][0]))
         log_info(f'Every Frame: Shows was clicked')
-        
+
+
+def func_fill_watched_errors(sender, data):
+    win = func_sender_breakup(sender, 1)
+    log_info(f'Fill Watched Errors table s {sender}, d {data}, w {win}')
+    sql = f'''select * from plex_episodes where tvm_watch_status is null'''
+    we = execute_sql('Fetch', sql)[0]
+    print(we)
+    set_value(f'table##{sender}', we)
+
 
 def func_filter_graph_sql(sql, g_filter):
     if g_filter == 'Last 7 days':
@@ -586,6 +595,7 @@ def program_mainwindow():
                 add_menu_item('All Graphs##Shows', callback=window_shows_all_graphs, shortcut='cmd+S')
         with menu('Episodes', tip='Only of Followed Shows'):
             add_menu_item('View', callback=window_episodes)
+            add_menu_item('Watched Updated Errors', callback=window_episodes)
             with menu('Graphs##episodes'):
                 add_menu_item('All Episodes', callback=window_graphs)
                 add_menu_item('Skipped Episodes', callback=window_graphs)
@@ -877,10 +887,9 @@ def window_episodes(sender, data):
             add_button(f'Clear##{sender}', callback=epis_view_clear)
             add_same_line(spacing=10)
             add_button(f'Search##{sender}', callback=epis_fill_table)
-            with group('View Options', horizontal=True):
-                add_label_text(name=f'##cbl{sender}', value='Select Options:')
-                add_checkbox(f'Test##{sender}')
-                add_checkbox(f'Test2##{sender}')
+            add_separator(name='##epSEP1')
+            add_table(name=f'table##{sender}', headers=['Some Info'])
+            set_value(f'table##{sender}', func_fill_watched_errors)
         set_style_window_title_align(0.5, 0.5)
 
 

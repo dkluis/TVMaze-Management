@@ -30,9 +30,7 @@ class sdb_info:
     else:
         data = '/Users/dick/Library/Application Support/Plex Media Server/' \
                'Plug-in Support/Databases/com.plexapp.plugins.library.db'
-    ubuntu = '/var/lib/plexmediaserver/Library/Application Support/Plex Media Server/Plug-in Support/' \
-             'Databases/com.plexapp.plugins.library.db'
-
+        
 
 def connect_sdb():
     try:
@@ -115,7 +113,8 @@ check = os.getcwd()
 if 'Pycharm' in check:
     wetxt = '/Volumes/HD-Data-CA-Server/Development/PycharmProjects/TVM-Management/Data/Plex_Watched_Episodes.txt'
 else:
-    wetxt = '/Volumes/HD-Media-CA-Media/PlexMedia/PlexProcessing/TVMaze/Data/Plex_Watched_Episodes.txt'
+    # wetxt = '/Volumes/HD-Media-CA-Media/PlexMedia/PlexProcessing/TVMaze/Data/Plex_Watched_Episodes.txt'
+    wetxt = '/Volumes/SharedFolders/PlexMedia/PlexProcessing/TVMaze/Data/Plex_Watched_Episodes.txt'
 
 try:
     we = open(wetxt, "w")
