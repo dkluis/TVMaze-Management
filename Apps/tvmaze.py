@@ -56,7 +56,7 @@ class paths:
 class lists:
     getters = ['Multi', 'ShowRSS', 'rarbgAPI', 'eztvAPI', 'piratebay', 'magnetdl', 'eztv', 'Skip']
     show_statuses = ['Running', 'In Development', 'To Be Determined', 'Ended', 'All']
-    maintenance_buttons = ['Follow', 'Unfollow', 'Episode Skipping', 'Not Interested', 'Undecided', 'Change Getter']
+    maintenance_buttons = ['View on TVMaze', 'Find on the Web', 'Follow', 'Unfollow', 'Episode Skipping', 'Not Interested', 'Undecided', 'Change Getter']
 
 
 def func_async(sender, process):
@@ -100,7 +100,7 @@ def func_buttons(win='', fc='Show', buttons=None):
     if fc == 'Hide':
         for button in buttons:
             log_info(f'Hiding button {button}')
-            hide_item(f'{button}##{win}')
+            configure_item(f'{button}##{win}', enabled=False)
     elif fc == 'Show':
         log_info(f'Showing buttons for {win}')
         if win == 'Maintenance':
@@ -108,7 +108,7 @@ def func_buttons(win='', fc='Show', buttons=None):
             log_info(f'Buttons are {buttons}')
             for button in buttons:
                 log_info(f'Showing button {button}')
-                show_item(f'{button}##{win}')
+                configure_item(f'{button}##{win}', enabled=True)
     else:
         log_error(f'None existing function code {fc}')
 
@@ -181,6 +181,7 @@ def func_fill_watched_errors(sender, data):
     sql = f'''select * from plex_episodes where tvm_watch_status is null'''
     we = execute_sql('Fetch', sql)[0]
     print(we)
+    # ToDo Finish the log for Watched Errors
     set_value(f'table##{sender}', we)
 
 
@@ -692,7 +693,7 @@ def shows_fill_table(sender, data):
             table_row.append(str(field).replace('None', ''))
         table.append(table_row)
     set_table_data(f'shows_table##{win}', table)
-    func_buttons(win=win, fc='Show')
+    func_buttons(win=win, fc='Hide', buttons=lists.maintenance_buttons)
     shows_maint_clear('fill_table##Maintenance', 'input_fields_only')
 
 
@@ -728,7 +729,7 @@ def shows_maint_clear(sender, data):
     if data != 'input_fields_only':
         set_table_data(f'shows_table##{win}', [])
         set_value(f'##show_showname{win}', "")
-        func_buttons(win=win, fc='Show')
+        func_buttons(win=win, fc='Hide', buttons=lists.maintenance_buttons)
     
     set_value(f'Show ID##{win}', 0)
     set_value(f'Show Name##{win}', '')
@@ -760,8 +761,8 @@ def shows_table_click(sender, data):
     elif show_status == 'Skipped':
         func_buttons(win=win, fc='Hide',
                      buttons=['Unfollow', 'Episode Skipping', 'Not Interested', 'Undecided', 'Change Getter'])
-    else:
-        func_buttons(win=win, fc='Show')
+    # else:
+    #     func_buttons(win=win, fc='Show')
     set_value('showid', showid)
     showname = str(get_table_data(f'shows_table##{win}')[row][1])[:35]
     set_value(f'##show_showname{win}', f"Selected Show: {showid}, {showname} {show_options}")
@@ -881,7 +882,7 @@ def window_episodes(sender, data):
     win = f'{sender}##window'
     log_info(f'Window Shows {sender}')
     if not does_item_exist(win):
-        with window(win, 1500, 750, x_pos=30, y_pos=70, no_resize=True, on_close=window_close):
+        with window(name=win, width=1500, height=750, x_pos=30, y_pos=70, no_resize=True, on_close=window_close):
             add_input_int(f'Show ID##{sender}', default_value=0, width=250)
             add_input_text(f'Show Name##{sender}', hint='Use % as wild-card', width=250)
             add_button(f'Clear##{sender}', callback=epis_view_clear)
@@ -921,7 +922,7 @@ def window_episodes_all_graphs(sender, data):
 
 
 def window_login():
-    with window('Login Window', x_pos=900, y_pos=400, no_title_bar=True, no_move=True, autosize=True,
+    with window(name='Login Window', x_pos=900, y_pos=400, no_title_bar=True, no_move=True, autosize=True,
                 no_resize=True, no_background=True):
         add_input_text('Username', hint='Your email address', width=250)
         add_input_text('Password', hint='Password is "password" for now', password=True, width=250)
@@ -945,7 +946,7 @@ def window_logs(sender, data):
             height = 500
             sx = 1505
             sy = 35
-        with window(f'{sender}##window', x_pos=sx, y_pos=sy, width=width, height=height, on_close=window_close):
+        with window(name=f'{sender}##window', x_pos=sx, y_pos=sy, width=width, height=height, on_close=window_close):
             set_style_window_title_align(0.5, 0.5)
             add_button(f'Refresh##{sender}', callback=window_logs_refresh)
             if sender != 'Transmission Log':
@@ -1011,7 +1012,7 @@ def window_get_pos(sender, data):
 def window_graphs(sender, data):
     win = f'{sender}##graphs'
     if not does_item_exist(win):
-        with window(win, 1250, 600, x_pos=15, y_pos=35, on_close=window_close):
+        with window(name=win, width=1250, height=600, x_pos=15, y_pos=35, on_close=window_close):
             add_button(f'All days##{sender}', callback=graph_refresh)
             add_same_line()
             add_button(f'Last 7 days##{sender}', callback=graph_refresh)
@@ -1036,11 +1037,11 @@ def window_shows(sender, data):
     win = f'{sender}##window'
     log_info(f'Window Shows {sender}')
     if not does_item_exist(win):
-        with window(win, 1500, 750, x_pos=15, y_pos=35, no_resize=True, on_close=window_close):
+        with window(name=win, width=1500, height=750, x_pos=15, y_pos=35, no_resize=True, on_close=window_close):
             if sender == 'Maintenance':
                 add_input_int(f'Show ID##{sender}', default_value=0, width=250)
                 add_input_text(f'Show Name##{sender}', hint='Use % as wild-card', width=250)
-                add_button(f'Clear##{sender}', callback=shows_maint_clear)
+                add_button(name=f'Clear##{sender}', callback=shows_maint_clear)
                 add_same_line(spacing=10)
                 add_button(f'Search##{sender}', callback=shows_fill_table)
                 add_same_line(spacing=10)
@@ -1050,25 +1051,25 @@ def window_shows(sender, data):
                 add_separator(name=f'Maintenance##SEP1')
                 add_input_text(f'##show_showname{sender}', readonly=True, default_value='', width=450)
                 add_same_line(spacing=10)
-                add_button(f'View on TVMaze##{sender}', callback=tvmaze_view_show)
+                add_button(f'View on TVMaze##{sender}', enabled=False, callback=tvmaze_view_show)
                 add_same_line(spacing=10)
-                add_button(f'Find on the Web##{sender}', callback=shows_find_on_web,
+                add_button(f'Find on the Web##{sender}', enabled=False, callback=shows_find_on_web,
                            tip='find the websites where to get the show')
                 add_same_line(spacing=10)
-                add_button(f'Follow##{sender}', callback=tvmaze_update, tip='Start Following selected show')
+                add_button(f'Follow##{sender}', enabled=False, callback=tvmaze_update, tip='Start Following selected show')
                 add_same_line(spacing=10)
-                add_button(f'Unfollow##{sender}', callback=tvmaze_update,
+                add_button(f'Unfollow##{sender}', enabled=False, callback=tvmaze_update,
                            tip='Unfollow selected show and deleted episode info')
                 add_same_line(spacing=10)
-                add_button(f'Episode Skipping##{sender}', callback=tvmaze_update,
+                add_button(f'Episode Skipping##{sender}', enabled=False, callback=tvmaze_update,
                            tip='Do not acquire episodes going forward')
                 add_same_line(spacing=10)
-                add_button(f'Not Interested##{sender}', callback=tvmaze_update, tip='Set new show to Skipped')
+                add_button(f'Not Interested##{sender}', enabled=False, callback=tvmaze_update, tip='Set new show to Skipped')
                 add_same_line(spacing=10)
-                add_button(f'Undecided##{sender}', callback=tvmaze_update,
+                add_button(f'Undecided##{sender}', enabled=False, callback=tvmaze_update,
                            tip='Keep show on Evaluate list for later determination')
                 add_same_line(spacing=10)
-                add_button(f'Change Getter##{sender}', tip='Set the website where to get the show')
+                add_button(f'Change Getter##{sender}', enabled=False, tip='Set the website where to get the show')
                 with popup(f'Change Getter##{sender}', 'Change Getter##getterpopup', modal=True):
                     add_radio_button(f'Getters##RadioButtons',
                                      items=lists.getters, default_value=0,
@@ -1140,7 +1141,7 @@ def window_top_10(sender, data):
     win = f'{sender}##window'
     log_info(f'Window Top 10 s {sender}, d {data}')
     if not does_item_exist(win):
-        with window(win, 890, 970, x_pos=15, y_pos=35, on_close=window_close):
+        with window(name=win, width=890, height=970, x_pos=15, y_pos=35, on_close=window_close):
             if sender == 'Top 10 Graphs':
                 with tab_bar(f'Tab Bar##{sender}'):
                     with tab(f'Followed Shows - Network', parent=f'Tab Bar##{sender}'):
