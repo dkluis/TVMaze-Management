@@ -1,7 +1,9 @@
 import mariadb
+import sqlite3
 from sqlalchemy import create_engine
 import sys
 import os
+import time
 
 
 class mdbi:
@@ -12,7 +14,10 @@ class mdbi:
         else:
             prod = True
         if h == '':
-            self.host = 'localhost'
+            if 'SharedFolders' in check:
+                self.host = '192.168.42.68'
+            else:
+                self.host = 'localhost'
         else:
             self.host = h
         self.user = 'dick'
@@ -101,7 +106,7 @@ def execute_sql(con='', db='', cur='', batch='', h='', d='', sqltype='', sql='')
         return False, 'Not implemented yet'
 
 
-'''
+
 class sdb_info:
     check = os.getcwd()
     if 'Pycharm' in check:
@@ -150,7 +155,6 @@ def execute_sqlite(sqltype='', sql=''):
         return result
     else:
         return False, 'Not implemented yet'
-'''
 
 
 def create_db_sql(db):
