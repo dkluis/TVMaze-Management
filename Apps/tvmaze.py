@@ -56,7 +56,9 @@ class paths:
 class lists:
     getters = ['Multi', 'ShowRSS', 'rarbgAPI', 'eztvAPI', 'piratebay', 'magnetdl', 'eztv', 'Skip']
     show_statuses = ['Running', 'In Development', 'To Be Determined', 'Ended', 'All']
-    maintenance_buttons = ['View on TVMaze', 'Find on the Web', 'Follow', 'Unfollow', 'Episode Skipping', 'Not Interested', 'Undecided', 'Change Getter']
+    maintenance_buttons = ['View on TVMaze', 'Find on the Web', 'Follow', 'Unfollow',
+                           'Episode Skipping', 'Not Interested', 'Undecided', 'Change Getter']
+    themes = ["Dark", "Light", "Classic", "Dark 2", "Grey", "Dark Grey", "Cherry", "Purple", "Gold", "Red"]
 
 
 def func_async(sender, process):
@@ -299,6 +301,14 @@ def func_sender_breakup(sender, pos):
         win = ''
     return win
 
+
+def func_set_theme(sender, data):
+    ind = get_value('##Themesrd')
+    theme = lists.themes[ind]
+    log_info(f'Change the Theme s {sender} d {data}, t {theme}')
+    set_theme(theme)
+    close_popup()
+    
 
 def func_show_statuses(sender, data):
     srd = get_value(f'srd##Top 10 Graphs')
@@ -628,6 +638,10 @@ def program_mainwindow():
             add_menu_item('Toggle Theme to: ', callback=func_toggle_theme)
             add_same_line(xoffset=140)
             add_text(f'##theme', color=[250, 250, 0, 250], wrap=-1)
+            add_button(name=f'Themes')
+            with popup(popupparent='Themes', name='##Themespopup'):
+                add_radio_button(name='##Themesrd', items=lists.themes, default_value=9)
+                add_button(name=f'Submit##Themesrd', callback=func_set_theme)
             add_spacing(count=1)
             add_separator(name='ToolsSEP1')
             add_spacing(count=1)
