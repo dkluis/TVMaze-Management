@@ -5,9 +5,7 @@ statistics     The App that handles finding and inserting as well as updating al
                 This is based on the TVMaze API to request all episode info for all followed shows.
 
 Usage:
-  statistics -d [--vl=<vlevel]
   statistics -s [--vl=<vlevel]
-  statistics -v [--vl=<vlevel]
   statistics [--vl=<vlevel>]
   statistics -h | --help
   statistics --version
@@ -15,8 +13,6 @@ Usage:
 
 Options:
   -s                    Store the Statistics
-  -d                    Display the latest Statistics
-  -v                    View the historical Statistics
   -h --help             Show this screen
   --vl=<vlevel>         Level of verbosity
                           1 = Warnings & Errors Only, 2 = High Level Info,
@@ -26,7 +22,7 @@ Options:
 """
 
 
-from terminal_lib import *
+
 from tvm_lib import get_today, count_by_download_options
 from db_lib import stat_views, execute_sql
 import pandas as pd
@@ -149,38 +145,12 @@ mytodownloadeps = execute_sql(sql=stat_views.count_my_episodes_to_download, sqlt
 myfutureeps = execute_sql(sql=stat_views.count_my_episodes_future, sqltype='Fetch')[0][0] - mytodownloadeps
 
 dls = count_by_download_options()
-if options['-d']:
-    print(term_pos(menu_pos.status_x + 1, menu_pos.menu_2y) + "Total # of Shows on TVMaze         :",
-          str(format(tvmshows, ',d')))
-    print(term_pos(menu_pos.status_x + 3, menu_pos.menu_2y) + "Number of My Shows                 :",
-          str(format(myshows, ',d')).rjust(6))
-    print(term_pos(menu_pos.status_x + 4, menu_pos.menu_2y) + "Number of My Shows ended           :",
-          str(myshowsended).rjust(6))
-    print(term_pos(menu_pos.status_x + 5, menu_pos.menu_2y) + "Number of My Shows to be determined:",
-          str(myshowstbd).rjust(6))
-    print(term_pos(menu_pos.status_x + 6, menu_pos.menu_2y) + "Number of My Shows running         :",
-          str(myshowsrunning).rjust(6))
-    print(term_pos(menu_pos.status_x + 7, menu_pos.menu_2y) + "Number of My Shows in development  :",
-          str(myshowsid).rjust(6))
-    print(term_pos(menu_pos.status_x + 1, menu_pos.menu_3y) + "Total # of My Episodes             :",
-          str(format(myeps, ',d')))
-    print(term_pos(menu_pos.status_x + 3, menu_pos.menu_3y) + "Number of My Episodes watched      :",
-          str(format(mywatchedeps, ',d')).rjust(6))
-    print(term_pos(menu_pos.status_x + 4, menu_pos.menu_3y) + "Number of My Episodes to watch     :",
-          str(format(mytowatcheps, ',d')).rjust(6))
-    print(term_pos(menu_pos.status_x + 5, menu_pos.menu_3y) + "Number of My Episodes skipped      :",
-          str(format(myskippedeps, ',d')).rjust(6))
-    print(term_pos(menu_pos.status_x + 6, menu_pos.menu_3y) + "Number of My Episodes to download  :",
-          str(format(mytodownloadeps, ',d')).rjust(6))
-    print(term_pos(menu_pos.status_x + 7, menu_pos.menu_3y) + "Number of My Episodes upcoming     :",
-          str(format(myfutureeps, ',d')).rjust(6))
-elif options['-s']:
+
+if options['-s']:
     print(f"{time.strftime('%D %T')} Statistics: Storing")
     go_store_statistics(tvmshows, myshows, myshowsrunning, myshowsended, myshowstbd, myshowsid,
                         myeps, mywatchedeps, mytowatcheps, myskippedeps, mytodownloadeps, myfutureeps)
     go_store_download_options(dls)
-elif options['-v']:
-    view_history(False)
 else:
     print(f'{time.strftime("%D %T")} Statistics: No option like -d, -s, or -v was supplied')
     
