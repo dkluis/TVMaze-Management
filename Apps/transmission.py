@@ -19,12 +19,14 @@ Options:
 
 from db_lib import execute_sql
 from tvm_api_lib import execute_tvm_request
+from tvm_lib import fix_showname
 
 import os
 import sys
 from datetime import date
 from time import strftime
 from docopt import docopt
+
 
 def get_all_episodes_to_update():
     ttps = []

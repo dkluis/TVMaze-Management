@@ -2,13 +2,12 @@ import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from datetime import datetime, timedelta, date
-import time
 
 from db_lib import *
 
 
 class release:
-    console_version = 'Version: In Development - V1.5 - July 31 at 2:00:00 PM'
+    console_version = 'Version: In Development - V2.0 - Oct 7 at 11:00:00 AM'
     console_description = "TVMaze Management system"
     
 
@@ -131,6 +130,26 @@ def count_by_download_options():
     value = (no_dl[0][0], rarbg_api[0][0], rarbg[0][0], rarbgmirror[0][0], showrss[0][0], skip[0][0],
              eztv_api[0][0], eztv[0][0], magnetdl[0][0], torrentfunk[0][0], piratebay[0][0], multi[0][0])
     return value
+
+
+def fix_showname(sn):
+    sn = sn.replace(" : ", " ").replace("vs.", "vs").replace("'", "").replace(":", '').replace("&", "and")
+    sn = sn.replace('"', '').replace(",", "")
+    if sn[-1:] == " ":
+        sn = sn[:-1]
+    lsix = sn[-6:]
+    if lsix[0] == "(" and lsix[5] == ")":
+        sn = sn[:-7]
+    lfour = sn[-4:]
+    if lfour.lower() == "(us)":
+        sn = sn[:-5]
+    if lfour.isnumeric():
+        sn = sn[:-5]
+    ltree = sn[-3:]
+    if ltree.lower() == " us":
+        sn = sn[:-3]
+    sn = sn.strip()
+    return sn
 
 
 '''

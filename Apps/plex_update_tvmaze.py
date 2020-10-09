@@ -64,7 +64,7 @@ class lists:
 def func_async(sender, process):
     log_info(f'Starting subprocess {process}')
     subprocess.call(process, shell=True)
-    
+
 
 def func_async_return(sender, data):
     configure_item('Process', enabled=True)
@@ -74,7 +74,7 @@ def func_async_return(sender, data):
 def func_db_opposite():
     """
     Function to return the DB that can be toggled to
-    
+
     :return: The name of the opposite DB to toggle to
     """
     log_info(f'Retrieving Mode {get_value("mode")}')
@@ -90,7 +90,7 @@ def func_db_opposite():
 def func_buttons(win='', fc='Show', buttons=None):
     """
     Function to turn buttons visible or hide them
-    
+
     :param win:     The name of the Window where the buttons are located, currently only for win = 'Maintenance'
     :param fc:      The function to be executed. (Hide or Show)
     :param buttons: A list of button widgets to hide or show, full list is in lists.maintenance_buttons
@@ -118,7 +118,7 @@ def func_buttons(win='', fc='Show', buttons=None):
 def func_empty_logfile(sender='', data=''):
     """
     Function to empty a log file
-    
+
     :param sender:  The name of the button and the window
     :param data:    Not Used
     :return:        None
@@ -143,8 +143,8 @@ def func_empty_logfile(sender='', data=''):
     else:
         log_warning(f'Did not process the emptying, could not find {sender}')
     delete_item(f'{win}##window')
-    
-    
+
+
 def func_episode_statuses(sender, data):
     pass
 
@@ -152,7 +152,7 @@ def func_episode_statuses(sender, data):
 def func_exec_sql(f='', s=''):
     """
     Function to execute SQL which automatically figures out which DB to use
-    
+
     :param f:  Type of SQL request:  'Fetch' or 'Commit'
     :param s:  The full sql command
     :return:   Result of the sql execution
@@ -308,7 +308,7 @@ def func_set_theme(sender, data):
     log_info(f'Change the Theme s {sender} d {data}, t {theme}')
     set_theme(theme)
     close_popup()
-    
+
 
 def func_show_statuses(sender, data):
     srd = get_value(f'srd##Top 10 Graphs')
@@ -1070,7 +1070,8 @@ def window_shows(sender, data):
                 add_button(f'Find on the Web##{sender}', enabled=False, callback=shows_find_on_web,
                            tip='find the websites where to get the show')
                 add_same_line(spacing=10)
-                add_button(f'Follow##{sender}', enabled=False, callback=tvmaze_update, tip='Start Following selected show')
+                add_button(f'Follow##{sender}', enabled=False, callback=tvmaze_update,
+                           tip='Start Following selected show')
                 add_same_line(spacing=10)
                 add_button(f'Unfollow##{sender}', enabled=False, callback=tvmaze_update,
                            tip='Unfollow selected show and deleted episode info')
@@ -1078,7 +1079,8 @@ def window_shows(sender, data):
                 add_button(f'Episode Skipping##{sender}', enabled=False, callback=tvmaze_update,
                            tip='Do not acquire episodes going forward')
                 add_same_line(spacing=10)
-                add_button(f'Not Interested##{sender}', enabled=False, callback=tvmaze_update, tip='Set new show to Skipped')
+                add_button(f'Not Interested##{sender}', enabled=False, callback=tvmaze_update,
+                           tip='Set new show to Skipped')
                 add_same_line(spacing=10)
                 add_button(f'Undecided##{sender}', enabled=False, callback=tvmaze_update,
                            tip='Keep show on Evaluate list for later determination')
