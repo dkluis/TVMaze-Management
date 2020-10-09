@@ -1,6 +1,6 @@
 import subprocess
 import requests
-from terminal_lib import *
+from Misc.terminal_lib import *
 from tvm_lib import *
 
 

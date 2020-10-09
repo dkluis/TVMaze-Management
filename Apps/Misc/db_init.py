@@ -1,5 +1,5 @@
 from db_lib import *
-from terminal_lib import check_cli_args, term_codes
+from Misc.terminal_lib import check_cli_args, term_codes
 
 
 def get_cli_args():
