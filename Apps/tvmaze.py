@@ -30,27 +30,7 @@ from docopt import docopt
 
 from db_lib import tvm_views
 from tvm_api_lib import *
-from tvm_lib import execute_sql
-
-
-class paths:
-    def __init__(self, mode):
-        sp = '/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/scripts/'
-        if mode == 'Prod':
-            lp = '/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Logs/'
-            ap = '/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Apps/'
-        else:
-            lp = '/Volumes/HD-Data-CA-Server/Development/PycharmProjects/TVM-Management/Logs/'
-            ap = '/Volumes/HD-Data-CA-Server/Development/PycharmProjects/TVM-Management/Apps/'
-        self.log_path = lp
-        self.app_path = ap
-        self.scr_path = sp
-        self.console = lp + 'TVMaze.log'
-        self.errors = lp + 'Errors.log'
-        self.process = lp + 'Process.log'
-        self.cleanup = lp + 'Cleanup.log'
-        self.watched = lp + 'Watched.log'
-        self.transmission = lp + "Transmission.log"
+from tvm_lib import execute_sql, paths
 
 
 class lists:
@@ -624,6 +604,11 @@ def program_mainwindow():
             add_spacing(count=1)
             add_separator(name='ProcessSEP1')
             add_spacing(count=1)
+            add_menu_item('Refresh Show Info', callback=tvmaze_processes,
+                          tip='Get the latest TVMaze info into the Shows Table')
+            add_spacing(count=1)
+            add_separator(name='ProcessSEP2')
+            add_spacing(count=1)
             add_menu_item('Run full Process', callback=tvmaze_processes)
         with menu('Logs'):
             add_menu_item('Cleanup Log', callback=window_logs)
@@ -631,6 +616,10 @@ def program_mainwindow():
             add_menu_item('Python Errors', callback=window_logs)
             add_menu_item('Transmission Log', callback=window_logs)
             add_menu_item('TVMaze Log', callback=window_logs)
+            add_spacing(count=1)
+            add_separator(name='LogsSEP1')
+            add_spacing(count=1)
+            add_menu_item('Process: Refresh Show Info', callback=window_logs)
         with menu('Tools'):
             add_menu_item('Toggle Database to: ', callback=func_toggle_db)
             add_same_line(xoffset=140)
@@ -819,6 +808,8 @@ def tvmaze_processes(sender, data):
         action = f"python3 {paths_info.app_path}actions.py -d"
     elif sender == 'Run full Process':
         action = f"{paths_info.scr_path}tvm_process.sh"
+    elif sender == 'Refresh: Refresh Show Info':
+        action = f'{paths_info.app_path}shows_update.py --vl=5 >>{paths_info.shows_update} 2>>{paths_info.shows_update}'
     configure_item('Process', enabled=False)
     run_async_function(func_async, action, return_handler=func_async_return)
     log_info(f'TVMaze processes ASYNC Finished s {action}')
@@ -992,12 +983,14 @@ def window_logs_refresh(sender, data):
         logfile = paths_info.cleanup
     elif win == 'Transmission Log':
         logfile = paths_info.transmission
+    elif win == 'Process: Refresh Show Info':
+        logfile = paths_info.shows_update
     else:
         log_error(f'Refresh for {sender} not defined')
     try:
         file = open(logfile, 'r')
     except IOError as err:
-        log_warning(f'Console log file IOError: {err}')
+        log_warning(f'Console log file IOError: {err}, {win}, {function}, {logfile}')
         open(logfile, 'a').close()
         return
     log_info(f'refresh console file: {sender}, {data}')

@@ -10,6 +10,27 @@ class release:
     console_version = 'Version: In Development - V2.0 - Oct 7 at 11:00:00 AM'
     console_description = "TVMaze Management system"
     
+    
+class paths:
+    def __init__(self, mode='Prod'):
+        sp = '/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/scripts/'
+        if mode == 'Prod':
+            lp = '/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Logs/'
+            ap = '/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Apps/'
+        else:
+            lp = '/Volumes/HD-Data-CA-Server/Development/PycharmProjects/TVM-Management/Logs/'
+            ap = '/Volumes/HD-Data-CA-Server/Development/PycharmProjects/TVM-Management/Apps/'
+        self.log_path = lp
+        self.app_path = ap
+        self.scr_path = sp
+        self.console = lp + 'TVMaze.log'
+        self.errors = lp + 'Errors.log'
+        self.process = lp + 'Process.log'
+        self.cleanup = lp + 'Cleanup.log'
+        self.watched = lp + 'Watched.log'
+        self.transmission = lp + "Transmission.log"
+        self.shows_update = lp + "Shows_Update.log"
+    
 
 class def_downloader:
     dl = 'Multi'
