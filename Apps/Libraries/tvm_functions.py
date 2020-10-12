@@ -4,39 +4,13 @@ from email.mime.text import MIMEText
 from datetime import datetime, timedelta, date
 import time
 
-from Libraries.tvm_db import *
+from Libraries.tvm_db import execute_sql, get_tvmaze_info
 
 
 class release:
     # Obsolete now - only used in the console app
     console_version = 'Version: In Development - V2.0 - Oct 7 at 11:00:00 AM'
     console_description = "TVMaze Management system"
-
-
-class paths:
-    def __init__(self, mode='Prod'):
-        # sp = execute_sql(sqltype='Fetch', sql=f'SELECT info FROM key_values WHERE `key` = "path_script"')[0][0]
-        sp = get_tvmaze_info('path_scripts')
-        if mode == 'Prod':
-            lp = get_tvmaze_info('path_prod_logs')
-            ap = get_tvmaze_info('path_prod_apps')
-        else:
-            lp = get_tvmaze_info('path_tst_logs')
-            ap = get_tvmaze_info('path_tst_apps')
-        self.log_path = lp
-        self.app_path = ap
-        self.scr_path = sp
-        self.console = lp + 'TVMaze.log'
-        self.errors = lp + 'Errors.log'
-        self.process = lp + 'Process.log'
-        self.cleanup = lp + 'Cleanup.log'
-        self.watched = lp + 'Watched.log'
-        self.transmission = lp + "Transmission.log"
-        self.shows_update = lp + "Shows_Update.log"
-
-
-class def_downloader:
-    dl = execute_sql(sqltype='Fetch', sql=f'SELECT info FROM key_values WHERE `key` = "def_dl"')[0][0]
 
 
 def get_today(tp='human', fmt='full'):
@@ -64,6 +38,7 @@ def date_delta(d='Now', delta=0):
     return str(nd)[:10]
 
 
+'''
 def send_txt_message(message):
     email = get_tvmaze_info('email')
     pas = get_tvmaze_info('emailpas')
@@ -84,7 +59,7 @@ def send_txt_message(message):
     sms = msg.as_string()
     server.sendmail(email, sms_gateway, sms)
     server.quit()
-
+'''
 
 def fix_showname(sn):
     sn = sn.replace(" : ", " ").replace("vs.", "vs").replace("'", "").replace(":", '').replace("&", "and")
@@ -104,3 +79,27 @@ def fix_showname(sn):
         sn = sn[:-3]
     sn = sn.strip()
     return sn
+
+class paths:
+    def __init__(self, mode='Prod'):
+        sp = get_tvmaze_info('path_scripts')
+        if mode == 'Prod':
+            lp = get_tvmaze_info('path_prod_logs')
+            ap = get_tvmaze_info('path_prod_apps')
+        else:
+            lp = get_tvmaze_info('path_tst_logs')
+            ap = get_tvmaze_info('path_tst_apps')
+        self.log_path = lp
+        self.app_path = ap
+        self.scr_path = sp
+        self.console = lp + 'TVMaze.log'
+        self.errors = lp + 'Errors.log'
+        self.process = lp + 'Process.log'
+        self.cleanup = lp + 'Cleanup.log'
+        self.watched = lp + 'Watched.log'
+        self.transmission = lp + "Transmission.log"
+        self.shows_update = lp + "Shows_Update.log"
+
+
+class def_downloader:
+    dl = execute_sql(sqltype='Fetch', sql=f'SELECT info FROM key_values WHERE `key` = "def_dl"')[0][0]

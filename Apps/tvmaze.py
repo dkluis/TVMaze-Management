@@ -28,9 +28,8 @@ from dearpygui.core import *
 from dearpygui.simple import *
 from docopt import docopt
 
-from Libraries.tvm_db import tvm_views
+from Libraries.tvm_db import *
 from Libraries.tvm_apis import *
-from Libraries.tvm_functions import execute_sql, paths
 
 
 class lists:

@@ -3,10 +3,23 @@ import sqlite3
 from sqlalchemy import create_engine
 import sys
 import os
+import ast
+
+
+def read_secrets():
+    try:
+        secret = open('/Users/dick/.tvmaze/config', 'r')
+    except IOError as err:
+        print('TVMaze config is not found at /Users/dick/.tvmaze/config with error', err)
+        quit()
+    secrets = ast.literal_eval(secret.read())
+    secret.close()
+    return secrets
 
 
 class mdbi:
     def __init__(self, h, d):
+        s = read_secrets()
         check = os.getcwd()
         if 'Pycharm' in check:
             prod = False
@@ -14,18 +27,18 @@ class mdbi:
             prod = True
         if h == '':
             if 'SharedFolders' in check:
-                self.host = '192.168.42.68'
+                self.host = s['host_network']
             else:
-                self.host = 'localhost'
+                self.host = s['host_local']
         else:
             self.host = h
-        self.user = 'dick'
-        self.password = 'Sandy3942'
+        self.user = s['user']
+        self.password = s['password']
         if d == '':
             if prod:
-                self.db = 'TVMazeDB'
+                self.db = s['db_prod']
             else:
-                self.db = 'Test-TVM-DB'
+                self.db = s['db_test']
         else:
             self.db = d
 
@@ -492,5 +505,4 @@ def count_by_download_options():
     value = (no_dl[0][0], rarbg_api[0][0], rarbg[0][0], rarbgmirror[0][0], showrss[0][0], skip[0][0],
              eztv_api[0][0], eztv[0][0], magnetdl[0][0], torrentfunk[0][0], piratebay[0][0], multi[0][0])
     return value
-
 
