@@ -2,6 +2,7 @@ import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from datetime import datetime, timedelta, date
+import time
 
 from Libraries.tvm_db import *
 
@@ -61,35 +62,6 @@ def date_delta(d='Now', delta=0):
     return str(nd)[:10]
 
 
-def get_tvmaze_info(key):
-    sql = f"SELECT info from key_values WHERE `key` = {key} "
-    info = execute_sql(sqltype='Fetch', sql=sql)
-    if not info:
-        return False
-    else:
-        info = info[0][0]
-    return info
-
-
-def find_new_shows():
-    info = execute_sql(sqltype='Fetch', sql=tvm_views.shows_to_review)
-    return info
-
-
-def get_download_options(html=False):
-    if not html:
-        download_options = execute_sql(sqltype='Fetch', sql="SELECT * from download_options ")
-    else:
-        download_options = execute_sql(sqltype='Fetch', sql="SELECT * from download_options "
-                                                            "where link_prefix like 'http%' ")
-    return download_options
-
-
-class num_list:
-    new_list = find_new_shows()
-    num_newshows = len(new_list)
-
-
 def send_txt_message(message):
     # email = "dickkluis@gmail.com"
     email = get_tvmaze_info('email')
@@ -121,36 +93,6 @@ def send_txt_message(message):
     server.sendmail(email, sms_gateway, sms)
     # lastly quit the server
     server.quit()
-
-
-def count_by_download_options():
-    rarbg_api = execute_sql(sqltype='Fetch',
-                            sql="SELECT COUNT(*) from shows WHERE download = 'rarbgAPI' AND status = 'Followed'")
-    rarbg = execute_sql(sqltype='Fetch',
-                        sql="SELECT COUNT(*) from shows WHERE download = 'rarbg' AND status = 'Followed'")
-    rarbgmirror = execute_sql(sqltype='Fetch',
-                              sql="SELECT COUNT(*) from shows WHERE download = 'rarbgmirror' AND status = 'Followed'")
-    showrss = execute_sql(sqltype='Fetch',
-                          sql="SELECT COUNT(*) from shows WHERE download = 'ShowRSS' AND status = 'Followed'")
-    eztv_api = execute_sql(sqltype='Fetch',
-                           sql="SELECT COUNT(*) from shows WHERE download = 'eztvAPI' AND status = 'Followed'")
-    no_dl = execute_sql(sqltype='Fetch',
-                        sql="SELECT COUNT(*) from shows WHERE download is NULL AND status = 'Followed'")
-    skip = execute_sql(sqltype='Fetch',
-                       sql="SELECT COUNT(*) from shows WHERE download = 'Skip' AND status = 'Followed'")
-    eztv = execute_sql(sqltype='Fetch',
-                       sql="SELECT COUNT(*) from shows WHERE download = 'eztv' AND status = 'Followed'")
-    magnetdl = execute_sql(sqltype='Fetch',
-                           sql="SELECT COUNT(*) from shows WHERE download = 'magnetdl' AND status = 'Followed'")
-    torrentfunk = execute_sql(sqltype='Fetch',
-                              sql="SELECT COUNT(*) from shows WHERE download = 'torrentfunk' AND status = 'Followed'")
-    piratebay = execute_sql(sqltype='Fetch',
-                            sql="SELECT COUNT(*) from shows WHERE download = 'piratebay' AND status = 'Followed'")
-    multi = execute_sql(sqltype='Fetch',
-                        sql="SELECT COUNT(*) from shows WHERE download = 'Multi' AND status = 'Followed'")
-    value = (no_dl[0][0], rarbg_api[0][0], rarbg[0][0], rarbgmirror[0][0], showrss[0][0], skip[0][0],
-             eztv_api[0][0], eztv[0][0], magnetdl[0][0], torrentfunk[0][0], piratebay[0][0], multi[0][0])
-    return value
 
 
 def fix_showname(sn):
