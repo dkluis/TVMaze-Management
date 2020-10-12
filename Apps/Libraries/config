@@ -1,0 +1,17 @@
+{'host_network' : '192.168.1,11', 'host_local' : 'localhost', 'db_admin' : 'mariadb_admin', 'db_password' : 'password', 'db_prod' : 'productionDB', 'db_test' : 'testDB', 'user_admin' :'admin', 'user_password' : 'password'}
+
+## Example Config File.   Only the first line of the file gets read by TVMaze programs.
+It is a Python Dictionary with key, value pairs.
+
+More readable:
+
+{
+    'host_network'  : '192.168.1,11',
+    'host_local'    : 'localhost',
+    'db_admin'      : 'mariadb_admin',
+    'db_password'   : 'password',
+    'db_prod'       : 'productionDB',
+    'db_test'       : 'testDB',
+    'user_admin'    : 'admin',
+    'user_password' : 'password'
+}
