@@ -19,7 +19,7 @@ Options:
 """
 
 from docopt import docopt
-import sqlite3
+from Libraries.tvm_db import connect_sdb, close_sdb, execute_sqlite
 import os
 
 
@@ -30,53 +30,7 @@ class sdb_info:
     else:
         data = '/Users/dick/Library/Application Support/Plex Media Server/' \
                'Plug-in Support/Databases/com.plexapp.plugins.library.db'
-        
 
-def connect_sdb():
-    try:
-        sdb = sqlite3.connect(sdb_info.data)
-    except sqlite3.Error as err:
-        print(f'Error Opening the DB with error {err} on {sdb_info.data}')
-        quit()
-    scur = sdb.cursor()
-    sdict = {'sdb': sdb,
-             'scursor': scur}
-    return sdict
-
-
-def close_sdb(sdb):
-    sdb.close()
-
-
-def execute_sqlite(sqltype='', sql=''):
-    sdb = connect_sdb()
-    sdbcur = sdb['scursor']
-    sdbdb = sdb['sdb']
-    if sqltype == 'Commit':
-        try:
-            sdbcur.execute(sql)
-            sdbdb.commit()
-        except sqlite3.Error as er:
-            print('Commit Database Error: ', er, sql)
-            print('----------------------------------------------------------------------')
-            close_sdb(sdbdb)
-            return False, er
-        close_sdb(sdbdb)
-        return True
-    elif sqltype == "Fetch":
-        try:
-            sdbcur.execute(sql)
-            result = sdbcur.fetchall()
-        except sqlite3.Error as er:
-            print('Execute SQL Database Error: ', er, sql)
-            print('----------------------------------------------------------------------')
-            close_sdb(sdbdb)
-            return False, er
-        close_sdb(sdbdb)
-        return result
-    else:
-        return False, 'Not implemented yet'
-    
 
 ''' Main Program'''
 ''' Get Options'''

@@ -436,12 +436,12 @@ def generate_insert_sql(primary, table, **kwargs):
 
 
 def get_tvmaze_info(key):
-    sql = f"SELECT info from key_values WHERE `key` = {key} "
-    info = execute_sql(sqltype='Fetch', sql=sql)
-    if not info:
+    sql = f"SELECT info from key_values WHERE `key` = '{key}' "
+    result = execute_sql(sqltype='Fetch', sql=sql)
+    if not result:
         return False
     else:
-        info = info[0][0]
+        info = result[0][0]
     return info
 
 
