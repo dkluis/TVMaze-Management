@@ -3,7 +3,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from datetime import datetime, timedelta, date
 
-from db_lib import *
+from Libraries.tvm_db import *
 
 
 class release:

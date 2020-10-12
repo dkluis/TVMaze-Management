@@ -25,9 +25,9 @@ from datetime import datetime, timedelta, date
 from bs4 import BeautifulSoup as Soup
 import re
 
-from db_lib import *
-from tvm_lib import def_downloader, date_delta
-from tvm_api_lib import *
+from Libraries.tvm_db import *
+from Libraries.tvm_functions import def_downloader, date_delta
+from Libraries.tvm_apis import *
 
 from docopt import docopt
 

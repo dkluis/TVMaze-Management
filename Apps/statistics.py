@@ -23,8 +23,8 @@ Options:
 
 
 
-from tvm_lib import get_today, count_by_download_options
-from db_lib import stat_views, execute_sql
+from Libraries.tvm_functions import get_today, count_by_download_options
+from Libraries.tvm_db import stat_views, execute_sql
 import pandas as pd
 from sqlalchemy import create_engine
 import time

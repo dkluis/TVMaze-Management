@@ -1,5 +1,5 @@
 import sys
-from tvm_lib import get_tvmaze_info
+from Libraries.tvm_functions import get_tvmaze_info
 
 
 def check_cli_args(ltc):

@@ -1,6 +1,6 @@
 from flask import Flask
-from tvm_lib import execute_sql
-from db_lib import connect_pd
+from Libraries.tvm_functions import execute_sql
+from Libraries.tvm_db import connect_pd
 import pandas as pd
 
 app = Flask(__name__)

@@ -29,9 +29,9 @@ Options:
 
 """
 
-from tvm_api_lib import *
-from db_lib import *
-from tvm_lib import def_downloader
+from Libraries.tvm_apis import *
+from Libraries.tvm_db import *
+from Libraries.tvm_functions import def_downloader
 
 from timeit import default_timer as timer
 from datetime import datetime, date

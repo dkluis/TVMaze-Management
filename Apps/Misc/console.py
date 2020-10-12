@@ -1,7 +1,7 @@
 import subprocess
 import requests
 from Misc.terminal_lib import *
-from tvm_lib import *
+from Libraries.tvm_functions import *
 
 
 def clear_subscreen(lines):
@@ -667,4 +667,4 @@ while loop:
               "Not yet implemented" + term_codes.cl_eol)
     
     del sys.modules['tvm_lib']
-    from tvm_lib import num_list
+    from Libraries.tvm_functions import num_list

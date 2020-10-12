@@ -13,8 +13,8 @@ Options:
 
 """
 
-from db_lib import execute_sql
-from tvm_api_lib import execute_tvm_request
+from Libraries.tvm_db import execute_sql
+from Libraries.tvm_apis import execute_tvm_request
 
 
 etu_sql = "select epiid, airdate from episodes where mystatus = 'Watched' and mystatus_date is None"

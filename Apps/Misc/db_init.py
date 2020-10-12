@@ -1,4 +1,4 @@
-from db_lib import *
+from Libraries.tvm_db import *
 from Misc.terminal_lib import check_cli_args, term_codes
 
 

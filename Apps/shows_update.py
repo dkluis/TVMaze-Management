@@ -14,9 +14,9 @@ Options:
                           3 = Medium Level Info, 4 = Low Level Info, 5 = all [default: 1]
 """
 
-from tvm_api_lib import *
-from tvm_lib import paths
-from db_lib import *
+from Libraries.tvm_apis import *
+from Libraries.tvm_functions import paths
+from Libraries.tvm_db import *
 
 from docopt import docopt
 

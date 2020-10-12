@@ -22,9 +22,9 @@ import os
 from datetime import date
 import time
 
-from db_lib import execute_sql
-from tvm_api_lib import execute_tvm_request
-from tvm_lib import fix_showname
+from Libraries.tvm_db import execute_sql
+from Libraries.tvm_apis import execute_tvm_request
+from Libraries.tvm_functions import fix_showname
 
 
 def update_plex_shows(psn, sn, si):

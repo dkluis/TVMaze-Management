@@ -28,9 +28,9 @@ from dearpygui.core import *
 from dearpygui.simple import *
 from docopt import docopt
 
-from db_lib import tvm_views
-from tvm_api_lib import *
-from tvm_lib import execute_sql, paths
+from Libraries.tvm_db import tvm_views
+from Libraries.tvm_apis import *
+from Libraries.tvm_functions import execute_sql, paths
 
 
 class lists:
@@ -248,7 +248,22 @@ def func_login(sender, data):
     else:
         set_value('##Error', 'Wrong Username or Password')
         set_item_color('##Error', style=mvGuiCol_Text, color=[250, 0, 0])
+        
 
+def func_plex_episode_table(sender, data):
+    log_info(f'Fill Plex Episode {sender} {data}')
+    win = func_sender_breakup(sender, 1)
+    button = func_sender_breakup(sender, 0)
+    table = []
+    sql = 'select * from plex_episodes order by`date_watched`'
+    pe_recs = execute_sql(sqltype='Fetch', sql=sql)
+    for pe_rec in pe_recs:
+        table_row = []
+        for field in pe_rec:
+            table_row.append(field)
+        table.append(table_row)
+    set_table_data(f'plex_episodes_table', table)
+    
 
 def func_recursively_show_main(container):
     for item in get_item_children(container):
@@ -598,6 +613,11 @@ def program_mainwindow():
                 add_separator(name='Graphs##episodesSEP1')
                 add_spacing(count=1)
                 add_menu_item('All Graphs##episodes', callback=window_episodes_all_graphs, shortcut='cmd+E')
+        with menu(name='System Maintenance', tip='Misc view and maintenance options'):
+            add_menu_item(name='Plex Shows', tip='Not Implemented Yet', callback=window_plex_shows)
+            add_menu_item(name='Plex Episodes', tip='Not Implemented Yet', callback=window_plex_episodes)
+            add_menu_item(name='Getters', tip='Not Implemented Yet', callback=window_getters)
+            add_menu_item(name='Key Values', tip='Not Implemented Yet', callback=window_key_values)
         add_menu_item('Top 10 Graphs', callback=window_top_10)
         with menu('Process'):
             add_menu_item('Get Episodes', callback=tvmaze_processes)
@@ -924,6 +944,14 @@ def window_episodes_all_graphs(sender, data):
     set_window_pos('Upcoming Episodes##graphs', 1420, 570)
     set_item_width('Upcoming Episodes##graphs', 690)
     set_item_height('Upcoming Episodes##graphs', 515)
+    
+    
+def window_getters(sender, data):
+    return
+
+
+def window_key_values(sender, data):
+    return
 
 
 def window_login():
@@ -1028,6 +1056,32 @@ def window_graphs(sender, data):
         graph_refresh(sender, 'Last 7 days')
         graph_refresh(sender, 'All Days')
         log_info(f'Create item (window): "{win}"')
+        
+        
+def window_plex_episodes(sender, data):
+    with window(name='Plex Episode Maintenance', width=1300, height=600, x_pos=330, y_pos=225):
+        with group(name='Header##PEM', parent='Plex Episode Maintenance'):
+            add_input_int(f'Show ID##{sender}', default_value=0, width=250)
+            add_input_text(f'Show Name##{sender}', hint='Use % as wild-card', width=250)
+            add_button(name=f'Clear##{sender}', callback=shows_maint_clear)
+            add_same_line(spacing=10)
+            add_button(f'Search##{sender}', callback=func_plex_episode_table)
+            add_same_line(spacing=10)
+            add_separator(name=f'PEMaintenance##SEP1')
+            add_input_text(f'##show_showname{sender}', readonly=True, default_value='', width=450)
+            add_same_line(spacing=10)
+            add_separator(name=f'PEMaintenance##SEP2')
+            add_spacing()
+        with group(name='Table##PEM', parent='Plex Episode Maintenance'):
+            add_table(f'plex_episodes_table',
+                      headers=['Plex Show Name', 'Season', 'Episode', 'Date/Time Watched', 'TVM Updated', 'TVM Status'],
+                      callback=func_plex_episode_table)
+            func_plex_episode_table('', '')
+    return
+
+
+def window_plex_shows(sender, data):
+    return
 
 
 def window_quit(sender, data):

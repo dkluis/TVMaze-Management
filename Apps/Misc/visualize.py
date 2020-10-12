@@ -7,7 +7,7 @@ from dash.dependencies import Input, Output
 from plotly.subplots import make_subplots
 import plotly.graph_objects as go
 
-from db_lib import connect_pd
+from Libraries.tvm_db import connect_pd
 
 print(f'Starting Visualize Statistics Plots')
 

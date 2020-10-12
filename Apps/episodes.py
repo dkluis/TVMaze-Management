@@ -18,8 +18,8 @@ Options:
 
 """
 
-from tvm_api_lib import *
-from db_lib import *
+from Libraries.tvm_apis import *
+from Libraries.tvm_db import *
 from docopt import docopt
 
 from timeit import default_timer as timer

@@ -24,8 +24,8 @@ Options:
 """
 
 from docopt import docopt
-from db_lib import execute_sql
-from tvm_api_lib import execute_tvm_request
+from Libraries.tvm_db import execute_sql
+from Libraries.tvm_apis import execute_tvm_request
 
 args = docopt(__doc__, version='Try Release 1.0')
 print(args)
