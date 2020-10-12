@@ -4,6 +4,7 @@ Usage:
   tvmaze.py [-p] [-e] [-l] [-d] [--th=<theme>]
   tvmaze.py [-p] [-s] [-l] [-d] [--th=<theme>]
   tvmaze.py -p   [-m] [-l] [-d] [--th=<theme>]
+  tvmaze.py -i
   tvmaze.py -h | --help
   tvmaze.py --version
 
@@ -15,12 +16,13 @@ Options:
   -d             Start with the standard Debug and standard Logger windows opened
   -s             Start with all show graphs windows opened
   -e             Start with all episode graphs windows opened
-  --th=<theme>   Level of verbosity *******  NOT IMPLEMENTED YET  *******
-                   D = Dark Theme, G = Gold Theme  [default: G]
+  -i             Start TVMaze in initialization mode to update the config file so that admin user, password and
+                    MariaDB info to connect can be setup, currently on supports macOS and it creates a .TVMaze
+                    directory under the set up User's home directory
+  --th=<theme>   D = Dark Theme, G = Gold Theme  [default: G]
   --version      Show version.
 """
 
-import os
 import subprocess
 from datetime import datetime, timedelta
 
@@ -30,6 +32,7 @@ from docopt import docopt
 
 from Libraries.tvm_db import *
 from Libraries.tvm_apis import *
+from Libraries.tvm_functions import paths
 
 
 class lists:
@@ -242,7 +245,8 @@ def func_log_filter(sender, data):
 
 def func_login(sender, data):
     log_info(f'Password Checker s {sender}, d {data}')
-    if get_value('Password') == 'password':
+    mdb_info = mdbi(None, None)
+    if get_value('Password') == mdb_info.admin_password:
         close_popup()
     else:
         set_value('##Error', 'Wrong Username or Password')

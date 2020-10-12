@@ -32,8 +32,8 @@ class mdbi:
                 self.host = s['host_local']
         else:
             self.host = h
-        self.user = s['user']
-        self.password = s['password']
+        self.user = s['db_admin']
+        self.password = s['db_password']
         if d == '':
             if prod:
                 self.db = s['db_prod']
@@ -41,6 +41,8 @@ class mdbi:
                 self.db = s['db_test']
         else:
             self.db = d
+        self.admin = s['user_admin']
+        self.admin_password = s['user_password']
 
 
 def connect_mdb(h='', d='', err=True):
