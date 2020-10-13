@@ -4,16 +4,13 @@ actions.py   The App that handles all actions for reviewing new shows and for do
              episode air dates, future will be a manual request for an episode
 
 Usage:
-  actions.py [-d] [-r] [--vl=<vlevel>]
-  actions.py -f <show> <episode> [--vl=<vlevel>] Not Implemented Yet
+  actions.py -d [--vl=<vlevel>]
   actions.py -h | --help
   actions.py --version
 
 Options:
   -h --help      Show this screen
   -d             Download all outstanding Episodes
-  -r             Review all newly detected Shows
-  -f             Find downloads for a Show and Episode (Episode can also be a whole season - S01E05 or S01)
   --vl=<vlevel>  Level of verbosity
                    1 = Warnings & Errors Only, 2 = High Level Info,
                    3 = Medium Level Info, 4 = Low Level Info, 5 = All  [default: 1]
@@ -52,20 +49,17 @@ def update_show_status(showid, status):
 
 
 def update_tvmaze_followed_shows(showid):
-    api = 'https://api.tvmaze.com/v1/user/follows/shows/' + str(showid)
+    api = tvm_apis.followed_shows = str(showid)
     response = execute_tvm_request(api=api, code=True, req_type='put')
     return response
 
 
 def update_tvmaze_episode_status(epiid):
     api = tvm_apis.update_episode_status + str(epiid)
-    headers = {'Authorization': 'Basic RGlja0tsdWlzOlRUSFlfQ2hIeUF5SU1fV1ZZRmUwcDhrWTkxTkE1WUNH'}
     epoch_date = int(date.today().strftime("%s"))
     data = {"marked_at": epoch_date, "type": 1}
-    response = requests.put(api, headers=headers, data=data)
-    if response.status_code != 200:
-        print(f"{time.strftime('%D %T')} Actions: Update TVMaze Episode Status: Error: {response} for episode: {api}",
-              flush=True)
+    response = execute_tvm_request(api, code=True, data=data, err=True)
+    if not response:
         return False
     return True
 
@@ -299,57 +293,6 @@ def find_dl_info(dl, dlapis):
     return False
 
 
-def process_new_shows():
-    newshows = get_shows_to_review()
-    print(f"{time.strftime('%D %T')} Actions: Processing New Shows to Review:", len(newshows), flush=True)
-    # Process all the new shows to review
-    if len(newshows) == 0:
-        return
-    print(f'{"Shows To Evaluate".rjust(135)}', flush=True)
-    request = "[s,S,u,D,f,F]"
-    print(f'{"Show Name:".ljust(50)} {"TVMaze Link:".ljust(80)} {"Type:".ljust(12)} {"Show Status:".ljust(16)} '
-          f'{"Premiered:".ljust(12)} {"Language:".ljust(15)} {"Length:".ljust(12)} {"Network:".ljust(24)} '
-          f'{"Country:".ljust(16)} {"Option:"}', flush=True)
-    for newshow in newshows:
-        if not newshow[5]:
-            premiered = " "
-        else:
-            premiered = newshow[5]
-        if not newshow[6]:
-            language = " "
-        else:
-            language = newshow[6]
-        if not newshow[7]:
-            length = " "
-        else:
-            length = newshow[7]
-        if not newshow[8]:
-            network = "Unknown"
-        else:
-            network = newshow[8]
-        if not newshow[9]:
-            country = "Unknown"
-        else:
-            country = newshow[9]
-        print(f'{newshow[1].ljust(50)} {newshow[2].ljust(80)} {newshow[3].ljust(12)} {newshow[4].ljust(16)} '
-              f'{premiered.ljust(12)} {language.ljust(15)} {str(length).ljust(12)} {network.ljust(24)} '
-              f'{country.ljust(16)} {request}', end=":", flush=True)
-        command_str = 'open -a safari ' + newshow[2]
-        os.system(command_str)
-        ans = input(" ").lower()
-        if ans == "s":
-            answer = "Skipped"
-        elif ans == "u":
-            answer = "Undecided"
-        elif ans == "f":
-            answer = "Followed"
-            update_tvmaze_followed_shows(newshow[0])
-        else:
-            continue
-        update_show_status(newshow[0], answer)
-    print(flush=True)
-
-
 def do_season_process(epi_tdl):
     if epi_tdl[4] is None:
         s = '0'
@@ -527,12 +470,8 @@ if not download_apis:
           f' >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Ended', flush=True)
     quit()
 
-if options['-r']:
-    process_new_shows()
 if options['-d']:
     process_the_episodes_to_download()
-if not options['-d'] and not options['-r']:
-    print(f'{time.strftime("%D %T")} Actions: Nothing to do, neither -r, -d or -rd cli args were supplied', flush=True)
 
 print(f'{time.strftime("%D %T")} Actions >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Ended',
       flush=True)

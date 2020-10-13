@@ -1,28 +1,42 @@
 import time
-
 import requests
 
 from Libraries.tvm_db import get_tvmaze_info
 
 
 class tvm_apis:
+    """
+    Predefined TVMaze APIs used
+    """
     shows_by_page = 'http://api.tvmaze.com/shows?page='
     updated_shows = 'http://api.tvmaze.com/updates/shows'
-    episodes_by_show_pre = 'http://api.tvmaze.com/shows/'  # + str(showid)
+    episodes_by_show_pre = 'http://api.tvmaze.com/shows/'
     episodes_by_show_suf = '/episodes?specials=1'
     episodes_status = 'https://api.tvmaze.com/v1/user/episodes'
     followed_shows_embed_info = 'https://api.tvmaze.com/v1/user/follows/shows?embed=show'
     followed_shows = 'https://api.tvmaze.com/v1/user/follows/shows'
-    secret = {'Authorization: Basic RGlja0tsdWlzOlRUSFlfQ2hIeUF5SU1fV1ZZRmUwcDhrWTkxTkE1WUNH'}
     update_episode_status = 'https://api.tvmaze.com/v1/user/episodes/'
 
 
 def execute_tvm_request(api, data='', err=True, sleep=1.25, code=False,
                         req_type='get', redirect=5, timeout=(10, 5)):
+    """
+    Call TVMaze APIs
+    
+    :param api:         The TVMaze API to call
+    :param data:        Some APIs (the put) can requirement data
+    :param err:         If True: generates an error on any none 200 response code for the request
+    :param sleep:       Wait time between API calls [Default: 1.25 seconds]
+    :param code:        Some API require a token because they are premium API
+    :param req_type:    get, put, delete [Default: get]
+    :param redirect:    Number of redirects allowed
+    :param timeout:     Initial time-out limit and call time-out limit [Default: 10 and 5 seconds]
+    :return:
+    """
+    
     time.sleep(sleep)
     session = requests.Session()
     session.max_redirects = redirect
-    tvm_auth = get_tvmaze_info('tvm_api_auth')
     if code:
         tvm_auth = get_tvmaze_info('tvm_api_auth')
         header_info = {'Authorization': tvm_auth}
