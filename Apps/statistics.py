@@ -22,11 +22,9 @@ Options:
 """
 
 
-
 from Libraries.tvm_functions import get_today
-from Libraries.tvm_db import stat_views, execute_sql, count_by_download_options
+from Libraries.tvm_db import stat_views, execute_sql, count_by_download_options, connect_pd
 import pandas as pd
-from sqlalchemy import create_engine
 import time
 from docopt import docopt
 
@@ -104,7 +102,7 @@ def view_history(last: False):
         else:
             return shows[0]
     else:
-        mdbe = create_engine('mysql://dick:Sandy3942@127.0.0.1/TVMazeDB')
+        mdbe = connect_pd()
         pd.set_option('max_rows', 31)
         pd.set_option('min_rows', 30)
         df = pd.read_sql_query('select statepoch, statdate, tvmshows, myshows, myshowsended,'

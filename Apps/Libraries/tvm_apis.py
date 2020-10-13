@@ -1,5 +1,8 @@
-import requests
 import time
+
+import requests
+
+from Libraries.tvm_db import get_tvmaze_info
 
 
 class tvm_apis:
@@ -19,13 +22,15 @@ def execute_tvm_request(api, data='', err=True, sleep=1.25, code=False,
     time.sleep(sleep)
     session = requests.Session()
     session.max_redirects = redirect
+    tvm_auth = get_tvmaze_info('tvm_api_auth')
+    if code:
+        tvm_auth = get_tvmaze_info('tvm_api_auth')
+        header_info = {'Authorization': tvm_auth}
     try:
         if req_type == 'get':
             if code:
                 response = session.get(api,
-                                       headers={
-                                           'Authorization':
-                                               'Basic RGlja0tsdWlzOlRUSFlfQ2hIeUF5SU1fV1ZZRmUwcDhrWTkxTkE1WUNH'},
+                                       headers=header_info,
                                        timeout=timeout)
             else:
                 response = session.get(api,
@@ -37,9 +42,7 @@ def execute_tvm_request(api, data='', err=True, sleep=1.25, code=False,
         elif req_type == 'put':
             if code:
                 response = session.put(api,
-                                       headers={
-                                           'Authorization':
-                                               'Basic RGlja0tsdWlzOlRUSFlfQ2hIeUF5SU1fV1ZZRmUwcDhrWTkxTkE1WUNH'},
+                                       headers=header_info,
                                        timeout=timeout,
                                        data=data)
             else:
@@ -47,9 +50,7 @@ def execute_tvm_request(api, data='', err=True, sleep=1.25, code=False,
         elif req_type == 'delete':
             if code:
                 response = session.delete(api,
-                                          headers={
-                                              'Authorization':
-                                                  'Basic RGlja0tsdWlzOlRUSFlfQ2hIeUF5SU1fV1ZZRmUwcDhrWTkxTkE1WUNH'},
+                                          headers=header_info,
                                           timeout=timeout)
             else:
                 response = session.delete(api, timeout=timeout)

@@ -3,6 +3,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from datetime import datetime, timedelta, date
 import time
+import os
 
 from Libraries.tvm_db import execute_sql, get_tvmaze_info
 
@@ -11,7 +12,7 @@ class release:
     # Obsolete now - only used in the console app
     console_version = 'Version: In Development - V2.0 - Oct 7 at 11:00:00 AM'
     console_description = "TVMaze Management system"
-
+    
 
 def get_today(tp='human', fmt='full'):
     now = datetime.now()
@@ -80,6 +81,7 @@ def fix_showname(sn):
     sn = sn.strip()
     return sn
 
+
 class paths:
     def __init__(self, mode='Prod'):
         sp = get_tvmaze_info('path_scripts')
@@ -99,7 +101,28 @@ class paths:
         self.watched = lp + 'Watched.log'
         self.transmission = lp + "Transmission.log"
         self.shows_update = lp + "Shows_Update.log"
-
-
+        
+        
 class def_downloader:
     dl = execute_sql(sqltype='Fetch', sql=f'SELECT info FROM key_values WHERE `key` = "def_dl"')[0][0]
+
+
+def print_tvm(mode='Test', app='', line=''):
+    p_time = time.strftime("%D - %T")
+    if mode == '':
+        quit('Mode was empty')
+    path_info = paths(mode)
+    if app != '':
+        p_file = open(f'{path_info.log_path + app[:-3] + ".log"}', 'a')
+        p_file.write(f'{p_time} -> {app} => {line}\n')
+        p_file.close()
+
+
+class operational_mode:
+    def __init__(self):
+        check = os.getcwd()
+        if 'Pycharm' in check:
+            prod = False
+        else:
+            prod = True
+        self.prod = prod
