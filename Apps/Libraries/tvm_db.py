@@ -120,14 +120,14 @@ def execute_sql(con='', db='', cur='', batch='', h='', d='', sqltype='', sql='')
         return False, 'Not implemented yet'
 
 
-
 class sdb_info:
     check = os.getcwd()
     if 'Pycharm' in check:
         data = '/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/Plex DB/com.plexapp.plugins.library.db'
     else:
-        data = '/Users/dick/PycharmProjects/TVMaze/Data/TVMaze.db'
-    
+        data = '/Users/dick/Library/Application Support/Plex Media Server/Plug-in Support/Databases/' \
+               'com.plexapp.plugins.library.db'
+
 
 def connect_sdb():
     sdb = sqlite3.connect(sdb_info.data)
