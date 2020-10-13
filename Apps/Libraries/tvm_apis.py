@@ -75,10 +75,11 @@ def execute_tvm_request(api, data='', err=True, sleep=1.25, code=False,
         print(f'Request timed out for: {api}', flush=True)
         return False
     except requests.exceptions.RequestException as er:
-        print(f'Request exception: {er} for: {api}', flush=True)
+        print(f'Request exception: {er} for: {api}, header {header_info}, code {code}, data {data}', flush=True)
         return False
     if response.status_code != 200:
         if err:
-            print(f"Error response: {response} for api call: {api}", flush=True)
+            print(f"Error response: {response} for api call: {api}, header {header_info}, code {code}, data {data}",
+                  flush=True)
             return False
     return response
