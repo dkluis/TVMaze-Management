@@ -58,7 +58,7 @@ def update_tvmaze_episode_status(epiid):
     api = tvm_apis.update_episode_status + str(epiid)
     epoch_date = int(date.today().strftime("%s"))
     data = {"marked_at": epoch_date, "type": 1}
-    response = execute_tvm_request(api, code=True, data=data, err=True)
+    response = execute_tvm_request(api=api, req_type='put', code=True, data=data, err=True)
     if not response:
         return False
     return True
@@ -453,8 +453,8 @@ def process_the_episodes_to_download():
     First get all the supporting lists we use
 '''
 print(flush=True)
-print(f'{time.strftime("%D %T")} Actions >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Started'
-      , flush=True)
+print(f'{time.strftime("%D %T")} Actions >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Started',
+      flush=True)
 options = docopt(__doc__, version='Statistics Release 1.0')
 vli = int(options['--vl'])
 if vli > 5 or vli < 1:

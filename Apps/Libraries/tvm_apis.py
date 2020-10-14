@@ -18,8 +18,7 @@ class tvm_apis:
     update_episode_status = 'https://api.tvmaze.com/v1/user/episodes/'
 
 
-def execute_tvm_request(api, data='', err=True, sleep=1.25, code=False,
-                        req_type='get', redirect=5, timeout=(10, 5)):
+def execute_tvm_request(api, req_type='get', data='', err=True, sleep=1.25, code=False, redirect=5, timeout=(10, 5)):
     """
     Call TVMaze APIs
     
@@ -37,6 +36,7 @@ def execute_tvm_request(api, data='', err=True, sleep=1.25, code=False,
     time.sleep(sleep)
     session = requests.Session()
     session.max_redirects = redirect
+    header_info = ''
     if code:
         tvm_auth = get_tvmaze_info('tvm_api_auth')
         header_info = {'Authorization': tvm_auth}
