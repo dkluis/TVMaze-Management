@@ -49,7 +49,7 @@ def update_show_status(showid, status):
 
 
 def update_tvmaze_followed_shows(showid):
-    api = tvm_apis.followed_shows = str(showid)
+    api = tvm_apis.update_followed_shows = str(showid)
     response = execute_tvm_request(api=api, code=True, req_type='put')
     return response
 

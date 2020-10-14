@@ -50,7 +50,7 @@ total_episodes = 0
 updated = 0
 inserted = 0
 for show in shows:
-    api = f"{tvm_apis.episodes_by_show_pre}{show[0]}{tvm_apis.episodes_by_show_suf}"
+    api = f"{tvm_apis.get_episodes_by_show_pre}{show[0]}{tvm_apis.get_episodes_by_show_suf}"
     episodes = execute_tvm_request(api=api, sleep=0.5)
     if not episodes:
         continue
@@ -131,7 +131,7 @@ print(f'{time.strftime("%D %T")} Episodes: '
 
 print(f"{time.strftime('%D %T')} Episodes: "
       f"Starting update of episode statuses and date")
-episodes = execute_tvm_request(api=tvm_apis.episodes_status, code=True, sleep=0)
+episodes = execute_tvm_request(api=tvm_apis.get_episodes_status, code=True, sleep=0)
 eps_updated = episodes.json()
 updated = 0
 if vli > 2:

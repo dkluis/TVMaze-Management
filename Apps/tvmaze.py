@@ -352,7 +352,7 @@ def func_show_statuses(sender, data):
 
 def func_tvm_update(fl, si):
     log_info(f'TVMaze update {fl}, {si}')
-    api = f'{tvm_apis.followed_shows}/{si}'
+    api = f'{tvm_apis.update_followed_shows}/{si}'
     sql = []
     if fl == "F":
         shows = execute_tvm_request(api, req_type='put', code=True)

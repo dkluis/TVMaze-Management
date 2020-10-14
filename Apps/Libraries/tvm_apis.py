@@ -8,13 +8,14 @@ class tvm_apis:
     """
     Predefined TVMaze APIs used
     """
-    shows_by_page = 'http://api.tvmaze.com/shows?page='
-    updated_shows = 'http://api.tvmaze.com/updates/shows'
-    episodes_by_show_pre = 'http://api.tvmaze.com/shows/'
-    episodes_by_show_suf = '/episodes?specials=1'
-    episodes_status = 'https://api.tvmaze.com/v1/user/episodes'
-    followed_shows_embed_info = 'https://api.tvmaze.com/v1/user/follows/shows?embed=show'
-    followed_shows = 'https://api.tvmaze.com/v1/user/follows/shows'
+    get_shows_by_page = 'http://api.tvmaze.com/shows?page='
+    get_updated_shows = 'http://api.tvmaze.com/updates/shows'
+    get_episodes_by_show_pre = 'http://api.tvmaze.com/shows/'
+    get_episodes_by_show_suf = '/episodes?specials=1'
+    get_episodes_status = 'https://api.tvmaze.com/v1/user/episodes'
+    get_followed_shows_embed_info = 'https://api.tvmaze.com/v1/user/follows/shows?embed=show'
+    update_followed_shows = 'https://api.tvmaze.com/v1/user/follows/shows'
+    get_followed_shows = 'https://api.tvmaze.com/v1/user/follows/shows'
     update_episode_status = 'https://api.tvmaze.com/v1/user/episodes/'
 
 
@@ -30,7 +31,7 @@ def execute_tvm_request(api, req_type='get', data='', err=True, sleep=1.25, code
     :param req_type:    get, put, delete [Default: get]
     :param redirect:    Number of redirects allowed
     :param timeout:     Initial time-out limit and call time-out limit [Default: 10 and 5 seconds]
-    :return:
+    :return:            Resulting json if successful for get or HTTPS result or False if unsuccessful
     """
     
     time.sleep(sleep)

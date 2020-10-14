@@ -103,7 +103,7 @@ def process_all_shows(start, end, sync):
     while ind <= end:  # Paging is going up to 250  # Remember last page processed here: 197
         if vli > 3:
             print(f'{time.strftime(("%D %T"))} Shows: Processing TVMaze Page: ', ind)
-        req = tvm_apis.shows_by_page + str(ind)
+        req = tvm_apis.get_shows_by_page + str(ind)
         response = execute_tvm_request(api=req, err=False)
         if vli > 3:
             print(f'{time.strftime(("%D %T"))} Shows: Response to page request {ind} is {response}')
@@ -128,7 +128,7 @@ def process_all_shows(start, end, sync):
 
 
 def process_update_all_shows(mdb, mcur):
-    response = execute_tvm_request(api=tvm_apis.updated_shows)
+    response = execute_tvm_request(api=tvm_apis.get_updated_shows)
     response = response.json()
     if vli > 1:
         print(f'{time.strftime(("%D %T"))} Shows: Number of Shows to potentially update', len(response))
@@ -244,7 +244,7 @@ def process_update_all_shows(mdb, mcur):
 
 
 def process_followed_shows():
-    result = execute_tvm_request(api=tvm_apis.followed_shows, code=True)
+    result = execute_tvm_request(api=tvm_apis.get_followed_shows, code=True)
     if not result:
         result = ''
         print(f"{time.strftime(('%D %T'))} Shows: Some error with the call to TVMaze occurred")
