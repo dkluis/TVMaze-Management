@@ -48,6 +48,7 @@ def func_accelerator_callback(sender, data):
         "Q": mvKey_Q,
         'S': mvKey_S,
         'E': mvKey_E,
+        'C': mvKey_C,
         "SHIFT": mvKey_Shift,
         "CTRL": 341,
         "CMD": 343
@@ -696,7 +697,7 @@ def program_mainwindow():
                 add_spacing(count=1)
                 add_menu_item('Get Open Window Positions', callback=window_get_pos)
         with menu('Windows'):
-            add_menu_item('Close Open Windows', callback=window_close_all)
+            add_menu_item('Close Open Windows', callback=window_close_all, shortcut='cmd+C')
     
     # add_additional_font("/System/Library/Fonts/Menlo.ttc", 14)
     add_additional_font("/Users/dick/Library/Fonts/KlokanTechNotoSans-Bold.ttf", 16,
@@ -1146,7 +1147,8 @@ def window_shows(sender, data):
                 add_button(f'Find on the Web##{sender}', enabled=False, callback=shows_find_on_web,
                            tip='find the websites where to get the show')
                 add_same_line(spacing=10)
-                add_button(f'Follow##{sender}', enabled=False, callback=tvmaze_update, tip='Start Following selected show')
+                add_button(f'Follow##{sender}', enabled=False, callback=tvmaze_update,
+                           tip='Start Following selected show')
                 add_same_line(spacing=10)
                 add_button(f'Unfollow##{sender}', enabled=False, callback=tvmaze_update,
                            tip='Unfollow selected show and deleted episode info')
@@ -1154,7 +1156,8 @@ def window_shows(sender, data):
                 add_button(f'Episode Skipping##{sender}', enabled=False, callback=tvmaze_update,
                            tip='Do not acquire episodes going forward')
                 add_same_line(spacing=10)
-                add_button(f'Not Interested##{sender}', enabled=False, callback=tvmaze_update, tip='Set new show to Skipped')
+                add_button(f'Not Interested##{sender}', enabled=False, callback=tvmaze_update,
+                           tip='Set new show to Skipped')
                 add_same_line(spacing=10)
                 add_button(f'Undecided##{sender}', enabled=False, callback=tvmaze_update,
                            tip='Keep show on Evaluate list for later determination')
