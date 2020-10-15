@@ -2,7 +2,7 @@
 """
 
 transmission.py The App that handles all transmission generated files (or directories) by processing the
-                transmission log and archiving it.  And updatign TVMaze that the show or movie has been acquired.
+                transmission log and archiving it.  And updating TVMaze that the show or movie has been acquired.
 
 Usage:
   transmission.py [--vl=<vlevel>] [<to_process>]
@@ -190,8 +190,6 @@ if cli:
             break
         else:
             continue
-        ndl.append(str(dl).replace(' ', '.'))
-    # ndl.append(download)
 else:
     for dl in download:
         for plexpref in plexprefs:

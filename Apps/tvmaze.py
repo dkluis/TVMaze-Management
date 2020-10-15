@@ -43,6 +43,32 @@ class lists:
     themes = ["Dark", "Light", "Classic", "Dark 2", "Grey", "Dark Grey", "Cherry", "Purple", "Gold", "Red"]
 
 
+def func_accelerator_callback(sender, data):
+    mapping = {
+        "Q": mvKey_Q,
+        'S': mvKey_S,
+        'E': mvKey_E,
+        "SHIFT": mvKey_Shift,
+        "CTRL": 341,
+        "CMD": 343
+        }
+
+    def are_all_true(short_cut):
+        keys = short_cut.split("+")
+        for it in keys:
+            if not is_key_down(mapping[it.upper()]):
+                return False
+        return True
+
+    items = get_all_items()
+    for item in items:
+        if get_item_type(item) == "mvAppItemType::MenuItem":
+            shortcut = get_item_configuration(item)["shortcut"]
+            if shortcut and shortcut != "":
+                if are_all_true(shortcut):
+                    get_item_callback(item)(item, None)
+
+
 def func_async(sender, process):
     log_info(f'Starting subprocess {process}')
     subprocess.call(process, shell=True)
@@ -573,7 +599,7 @@ def program_mainwindow():
     # add_image('TVMaze BG', '/Users/dick/Desktop/tvm-icon-1210.png')
     with menu_bar('Menu Bar'):
         with menu('TVMaze'):
-            add_menu_item('Calendar', callback=tvmaze_calendar, tip='Starts in Safari')
+            add_menu_item('Calendar', callback=tvmaze_calendar)
             add_spacing(count=1)
             add_separator(name=f'##TVMazeSEP1')
             add_spacing(count=1)
@@ -602,7 +628,7 @@ def program_mainwindow():
                 add_separator(name=f'Graphs##ShowsSEP1')
                 add_spacing(count=1)
                 add_menu_item('All Graphs##Shows', callback=window_shows_all_graphs, shortcut='cmd+S')
-        with menu('Episodes', tip='Only of Followed Shows'):
+        with menu('Episodes'):
             add_menu_item('View', callback=window_episodes)
             add_menu_item('Watched Updated Errors', callback=window_episodes)
             with menu('Graphs##episodes'):
@@ -616,19 +642,18 @@ def program_mainwindow():
                 add_separator(name='Graphs##episodesSEP1')
                 add_spacing(count=1)
                 add_menu_item('All Graphs##episodes', callback=window_episodes_all_graphs, shortcut='cmd+E')
-        with menu(name='System Maintenance', tip='Misc view and maintenance options'):
-            add_menu_item(name='Plex Shows', tip='Not Implemented Yet', callback=window_plex_shows)
-            add_menu_item(name='Plex Episodes', tip='Not Implemented Yet', callback=window_plex_episodes)
-            add_menu_item(name='Getters', tip='Not Implemented Yet', callback=window_getters)
-            add_menu_item(name='Key Values', tip='Not Implemented Yet', callback=window_key_values)
+        with menu(name='System Maintenance'):
+            add_menu_item(name='Plex Shows', callback=window_plex_shows)
+            add_menu_item(name='Plex Episodes', callback=window_plex_episodes)
+            add_menu_item(name='Getters', callback=window_getters)
+            add_menu_item(name='Key Values', callback=window_key_values)
         add_menu_item('Top 10 Graphs', callback=window_top_10)
         with menu('Process'):
             add_menu_item('Get Episodes', callback=tvmaze_processes)
             add_spacing(count=1)
             add_separator(name='ProcessSEP1')
             add_spacing(count=1)
-            add_menu_item('Refresh Show Info', callback=tvmaze_processes,
-                          tip='Get the latest TVMaze info into the Shows Table')
+            add_menu_item('Refresh Show Info', callback=tvmaze_processes)
             add_spacing(count=1)
             add_separator(name='ProcessSEP2')
             add_spacing(count=1)
@@ -681,6 +706,7 @@ def program_mainwindow():
     # add_additional_font("/Users/dick/Library/Fonts/unifont-13.0.03.ttf", 14,
     #                    custom_glyph_ranges=[[0x370, 0x377], [0x400, 0x4ff], [0x530, 0x58f], [0x10a0, 0x10ff]])
     set_key_release_callback(func_key_main)
+    set_accelerator_callback(func_accelerator_callback)
     if options['-s'] and not options['-l']:
         window_shows_all_graphs('All Graphs', 'set_item_callback')
     elif options['-e'] and not options['-l']:

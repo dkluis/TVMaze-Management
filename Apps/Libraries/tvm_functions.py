@@ -4,6 +4,7 @@ from email.mime.text import MIMEText
 from datetime import datetime, timedelta, date
 import time
 import os
+import re
 
 from Libraries.tvm_db import execute_sql, get_tvmaze_info
 
@@ -62,7 +63,25 @@ def send_txt_message(message):
     server.quit()
 '''
 
+
+def eliminate_prefixes(sn):
+    plexprefs = execute_sql(sqltype='Fetch', sql="SELECT info FROM key_values WHERE `key` = 'plexprefs'")[0]
+    plexprefs = str(plexprefs).replace('(', '').replace(')', '').replace("'", "")
+    plexprefs = str(plexprefs).split(',')
+    for pp in plexprefs:
+        pp = pp + '.'
+        if pp in sn:
+            csn = sn.replace(pp, '')
+            return csn
+            
+
 def fix_showname(sn):
+    """
+    Function to make the actual showname into a showname without special characters and suffixes
+    
+    :param sn:  showname to be transformed
+    :return:    transformed (cleaned up) showname (used for searching for show names)
+    """
     sn = sn.replace(" : ", " ").replace("vs.", "vs").replace("'", "").replace(":", '').replace("&", "and")
     sn = sn.replace('"', '').replace(",", "")
     if sn[-1:] == " ":
@@ -80,6 +99,77 @@ def fix_showname(sn):
         sn = sn[:-3]
     sn = sn.strip()
     return sn
+
+
+def process_download_name(download_name):
+    """
+    Function to extract real showname
+    
+    :param download_name:   The transmission directory or file name
+    :return:                The real showname, the showid and the season, episode and episodeid
+                                or if it is considered a movie (Dict)
+    """
+    without_prefix = eliminate_prefixes(download_name)
+    # print(f'Without Prefix {without_prefix}')
+    result = is_download_name_tvshow(without_prefix)
+    # print(f'Result is {result}')
+    if not result['is_tvshow']:
+        data = {'is_tvshow': False,
+                'showid': 0,
+                'real_showname': '',
+                'season': 0,
+                'episode': 0,
+                'episodeid': 0}
+    else:
+        end_of_showname = result['span'][0]
+        raw_showname = without_prefix[:end_of_showname]
+        raw_season_episode = result['match']
+        clean_showname = fix_showname(str(raw_showname).replace('.', ' '))
+        # print(f'Clean Showname {clean_showname}')
+        showinfo = get_showid(clean_showname)
+        split = raw_season_episode.lower().split('e')
+        season = int(split[0].lower().replace('s', ''))
+        episode = int(split[1])
+        episodeid = get_episodeid(showinfo['showid'], season, episode)
+        data = {'is_tvshow': True,
+                'showid': showinfo['showid'],
+                'real_showname': showinfo['real_showname'],
+                'season': season,
+                'episode': episode,
+                'episodeid': episodeid}
+    return data
+
+
+def get_showid(clean_showname):
+    sql = f'select showid, showname from shows where alt_showname = "{clean_showname}" and status = "Followed"'
+    result = execute_sql(sqltype='Fetch', sql=sql)
+    if len(result) != 1:
+        print(f'Something is up, either too many shows found or no show found', result)
+    showid = result[0][0]
+    showname = result[0][1]
+    return {'showid': showid, 'real_showname': showname}
+
+
+def get_episodeid(showid, season, episode):
+    sql = f'select epiid from episodes where showid = {showid} and season = {season} and episode = {episode}'
+    result = execute_sql(sqltype='Fetch', sql=sql)
+    if len(result) != 1:
+        print(f'Something is up, either too many episodes found or no episode found', result)
+    episodeid = result[0][0]
+    return episodeid
+
+
+def is_download_name_tvshow(download_name):
+    reg_exs = ['.[Ss][0-9][Ee][0-9].',
+               '.[Ss][0-9][0-9][Ee][0-9][0-9].',
+               '.[Ss][0-9][0-9][0-9][Ee][0-9][0-9][0-9].']
+    for reg_ex in reg_exs:
+        result = re.search(reg_ex, download_name)
+        if result:
+            span = result.span()
+            match = str(result.group()).replace('.', '')
+            return {'is_tvshow': True, 'match': match, 'span': span}
+    return {'is_tvshow': False, 'match': '', 'span': (0, 0)}
 
 
 class paths:
