@@ -510,3 +510,28 @@ def count_by_download_options():
     return value
 
 
+class shows:
+    field_list = [
+        'showid',
+        'showname',
+        'url',
+        'type',
+        'showstatus',
+        'premiered',
+        'language',
+        'runtime',
+        'network',
+        'country',
+        'tvrage',
+        'thetvdb',
+        'imdb',
+        'tvmaze_updated',
+        'tvmaze_upd_date',
+        'status',
+        'download',
+        'record_updated',
+        'alt_showname',
+        'alt_sn_override',
+        'eps_count',
+        'eps_updated'
+    ]
