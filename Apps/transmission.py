@@ -18,13 +18,13 @@ Options:
 
 
 from Libraries.tvm_db import execute_sql
-from Libraries.tvm_apis import execute_tvm_request
 
 import os
 import sys
-from datetime import date
 from time import strftime
 from docopt import docopt
+
+from Libraries.tvm_apis import update_tvmaze_episode_status
 
 
 def get_all_episodes_to_update():
@@ -136,15 +136,6 @@ def find_epiid(si, s, e, i_s):
     return result
 
 
-def update_tvmaze_episode_status(epiid):
-    # print("Updating", epiid)
-    baseurl = 'https://api.tvmaze.com/v1/user/episodes/' + str(epiid)
-    epoch_date = int(date.today().strftime("%s"))
-    data = {"marked_at": epoch_date, "type": 1}
-    response = execute_tvm_request(baseurl, data=data, req_type='put', code=True)
-    return response
-
-
 '''
 Main Program start
 '''
@@ -231,7 +222,7 @@ for dl in ndl:
                 print(f"Updated Show '{str(showname).title()}', episode {showepisode} as downloaded in TVMaze")
             else:
                 for epi in found_epiid:
-                    update_tvmaze_episode_status(epi[0])
+                    update_tvmaze_episode_status(epi[0], 1)
                     print(f"Updated TVMaze as downloaded for {epi[2]}, Season {epi[5]}, Episode {epi[6]}")
 
 if not cli:

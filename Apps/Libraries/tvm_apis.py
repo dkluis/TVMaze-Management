@@ -1,7 +1,9 @@
 import time
 import requests
+from datetime import date
 
 from Libraries.tvm_db import get_tvmaze_info
+
 
 
 class tvm_apis:
@@ -83,4 +85,18 @@ def execute_tvm_request(api, req_type='get', data='', err=True, sleep=1.25, code
             print(f"Error response: {response} for api call: {api}, header {header_info}, code {code}, data {data}",
                   flush=True)
             return False
+    return response
+
+
+def update_tvmaze_episode_status(epiid, status):
+    """
+                    Go Update TVMaze that the show is
+    :param epiid:   Episode ID
+    :param status:  Type of update: 0 = Watched, 1 = Acquired, 2 = Skipped
+    :return:        HTML response
+    """
+    baseurl = 'https://api.tvmaze.com/v1/user/episodes/' + str(epiid)
+    epoch_date = int(date.today().strftime("%s"))
+    data = {"marked_at": epoch_date, "type": 1}
+    response = execute_tvm_request(baseurl, data=data, req_type='put', code=True)
     return response

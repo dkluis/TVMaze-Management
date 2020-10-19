@@ -16,8 +16,10 @@ Options:
 """
 
 from docopt import docopt
+import time
 
 from Libraries.tvm_functions import process_download_name
+from Libraries.tvm_apis import update_tvmaze_episode_status
 from Libraries.tvm_db import execute_sql
 
 
@@ -27,7 +29,7 @@ def get_all_episodes_to_update():
         transmissions = open('/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Logs/Transmission.log')
     except IOError as err:
         if vli:
-            print(f'Transmission file did not exist: {err}')
+            print(f'{time.strftime("%D %T")} Transmission: Transmission file did not exist: {err}')
         return ttps
     
     for ttp in transmissions:
@@ -60,12 +62,21 @@ else:
     cli = False
     download = get_all_episodes_to_update()
     if len(download) == 0:
-        print(f'Nothing to Process in the transmission log')
+        print(f'{time.strftime("%D %T")} Transmission: Nothing to Process in the transmission log')
         quit()
 
 if vli:
     print(f'Download = {download}')
 
-to_process = 'www.scenetime.com.Lost.S02E02.1080p.HULU.WEBRip.DDP5.1.x264-SH3LBY[rartv]'
-print(process_download_name(to_process))
-
+download = 'www.scenetime.com.Lost.S02E02.1080p.HULU.WEBRip.DDP5.1.x264-SH3LBY[rartv]'
+epi_info = process_download_name(download)
+if epi_info['is_tvshow'] and epi_info['episodeid'] != 0:
+    sql = f'select mystatus from episodes where epiid = {epi_info["episodeid"]}'
+    result = execute_sql(sqltype='Fetch', sql=sql)[0][0]
+    if not result:
+        print(f'{time.strftime("%D %T")} Transmission: TVMaze Episode needs updating {epi_info["episodeid"]}')
+        result = update_tvmaze_episode_status(epi_info['episodeid'], 1)
+    else:
+        print(f'{time.strftime("%D %T")} Transmission: Episode {epi_info} already had the status "{result}"')
+else:
+    print(f'{time.strftime("%D %T")} Transmission: Did not find a valid episode id {epi_info}')

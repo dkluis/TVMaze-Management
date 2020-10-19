@@ -6,6 +6,7 @@ import time
 import os
 import re
 
+
 from Libraries.tvm_db import execute_sql, get_tvmaze_info
 
 
@@ -110,9 +111,7 @@ def process_download_name(download_name):
                                 or if it is considered a movie (Dict)
     """
     without_prefix = eliminate_prefixes(download_name)
-    # print(f'Without Prefix {without_prefix}')
     result = is_download_name_tvshow(without_prefix)
-    # print(f'Result is {result}')
     if not result['is_tvshow']:
         data = {'is_tvshow': False,
                 'showid': 0,
@@ -125,29 +124,41 @@ def process_download_name(download_name):
         raw_showname = without_prefix[:end_of_showname]
         raw_season_episode = result['match']
         clean_showname = fix_showname(str(raw_showname).replace('.', ' '))
-        # print(f'Clean Showname {clean_showname}')
         showinfo = get_showid(clean_showname)
-        split = raw_season_episode.lower().split('e')
-        season = int(split[0].lower().replace('s', ''))
-        episode = int(split[1])
-        episodeid = get_episodeid(showinfo['showid'], season, episode)
-        data = {'is_tvshow': True,
-                'showid': showinfo['showid'],
-                'real_showname': showinfo['real_showname'],
-                'season': season,
-                'episode': episode,
-                'episodeid': episodeid}
+        if showinfo['showid'] == 0 or showinfo['showid'] == 99999999:
+            data = {'is_tvshow': True,
+                    'showid': 0,
+                    'real_showname': '',
+                    'season': 0,
+                    'episode': 0,
+                    'episodeid': 0}
+        else:
+            split = raw_season_episode.lower().split('e')
+            season = int(split[0].lower().replace('s', ''))
+            episode = int(split[1])
+            episodeid = get_episodeid(showinfo['showid'], season, episode)
+            data = {'is_tvshow': True,
+                    'showid': showinfo['showid'],
+                    'real_showname': showinfo['real_showname'],
+                    'season': season,
+                    'episode': episode,
+                    'episodeid': episodeid}
     return data
 
 
 def get_showid(clean_showname):
     sql = f'select showid, showname from shows where alt_showname = "{clean_showname}" and status = "Followed"'
     result = execute_sql(sqltype='Fetch', sql=sql)
-    if len(result) != 1:
-        print(f'Something is up, either too many shows found or no show found', result)
-    showid = result[0][0]
-    showname = result[0][1]
-    return {'showid': showid, 'real_showname': showname}
+    if len(result) > 1:
+        print(f'Something is up, too many shows found', result)
+        return {'showid': 99999999, 'real_showname': 'Too Many Shows Found'}
+    elif len(result) == 0:
+        print(f'Something is up, no show found', result)
+        return {'showid': 0, 'real_showname': 'No ShowFound'}
+    else:
+        showid = result[0][0]
+        showname = result[0][1]
+        return {'showid': showid, 'real_showname': showname}
 
 
 def get_episodeid(showid, season, episode):
@@ -155,7 +166,9 @@ def get_episodeid(showid, season, episode):
     result = execute_sql(sqltype='Fetch', sql=sql)
     if len(result) != 1:
         print(f'Something is up, either too many episodes found or no episode found', result)
-    episodeid = result[0][0]
+        episodeid = 0
+    else:
+        episodeid = result[0][0]
     return episodeid
 
 
@@ -216,3 +229,24 @@ class operational_mode:
         else:
             prod = True
         self.prod = prod
+
+
+def convert_to_dict_within_list(data, data_type='DB', field_list=[]):
+    response = []
+    if data_type == 'DB' and len(data) != 0:
+        if len(field_list) == len(data[0]):
+            for rec in data:
+                json_element = {}
+                f_idx = 0
+                for field in rec:
+                    json_element[field_list[f_idx]] = field
+                    f_idx += 1
+                response.append(json_element)
+        else:
+            print(f'The number of fields in the record {len(data[0])} '
+                  f'does not match the number of fields in the field_list {len(field_list)}')
+            return False
+    else:
+        print(f'No result was found')
+        return [{}]
+    return response
