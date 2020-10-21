@@ -5,6 +5,8 @@ from datetime import datetime, timedelta, date
 import time
 import os
 import re
+import json
+import ast
 
 
 from Libraries.tvm_db import execute_sql, get_tvmaze_info
@@ -232,21 +234,17 @@ class operational_mode:
 
 
 def convert_to_dict_within_list(data, data_type='DB', field_list=[]):
-    response = []
-    if data_type == 'DB' and len(data) != 0:
-        if len(field_list) == len(data[0]):
-            for rec in data:
-                json_element = {}
-                f_idx = 0
-                for field in rec:
-                    json_element[field_list[f_idx]] = field
-                    f_idx += 1
-                response.append(json_element)
-        else:
-            print(f'The number of fields in the record {len(data[0])} '
-                  f'does not match the number of fields in the field_list {len(field_list)}')
-            return False
+    response = ''
+    if data_type == 'DB' and len(data) != 0 and len(field_list) == len(data[0]):
+        for rec in data:
+            row = "{"
+            f_idx = 0
+            for field in rec:
+                row += f'"{field_list[f_idx]}": "{field}", '
+                f_idx += 1
+            response = response + row[:-2] + "},"
+        response = "[" + response[:-1] + "]"
     else:
         print(f'No result was found')
-        return [{}]
+        return {}
     return response

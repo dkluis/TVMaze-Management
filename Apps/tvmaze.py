@@ -30,8 +30,8 @@ from dearpygui.core import *
 from dearpygui.simple import *
 from docopt import docopt
 
-from Libraries.tvm_db import *
 from Libraries.tvm_apis import *
+from Libraries.tvm_db import *
 from Libraries.tvm_functions import paths
 
 
@@ -41,6 +41,8 @@ class lists:
     maintenance_buttons = ['View on TVMaze', 'Find on the Web', 'Follow', 'Unfollow',
                            'Episode Skipping', 'Not Interested', 'Undecided', 'Change Getter']
     themes = ["Dark", "Light", "Classic", "Dark 2", "Grey", "Dark Grey", "Cherry", "Purple", "Gold", "Red"]
+    standard_windows = ['documentation##standard', 'about##standard', 'debug##standard',
+                        'style##standard', 'logger##standard']
 
 
 def func_accelerator_callback(sender, data):
@@ -52,15 +54,15 @@ def func_accelerator_callback(sender, data):
         "SHIFT": mvKey_Shift,
         "CTRL": 341,
         "CMD": 343
-        }
-
+    }
+    
     def are_all_true(short_cut):
         keys = short_cut.split("+")
         for it in keys:
             if not is_key_down(mapping[it.upper()]):
                 return False
         return True
-
+    
     items = get_all_items()
     for item in items:
         if get_item_type(item) == "mvAppItemType::MenuItem":
@@ -73,7 +75,7 @@ def func_accelerator_callback(sender, data):
 def func_async(sender, process):
     log_info(f'Starting subprocess {process}')
     subprocess.call(process, shell=True)
-    
+
 
 def func_async_return(sender, data):
     configure_item('Process', enabled=True)
@@ -152,10 +154,57 @@ def func_empty_logfile(sender='', data=''):
     else:
         log_warning(f'Did not process the emptying, could not find {sender}')
     delete_item(f'{win}##window')
-    
-    
+
+
 def func_episode_statuses(sender, data):
-    pass
+    erd = get_value(f'erd##Top 10 Graphs')
+    log_info(f'Show Statuses s {sender}, d {data}, srd {erd}')
+    set_value(f'erd#{sender}', erd)
+    if does_item_exist('Episodes##Top 10 Charts'):
+        clear_plot('Episodes##Top 10 Charts')
+        delete_series('Episodes##Top 10 Charts', sender)
+    else:
+        add_plot(f'Episodes##Top 10 Charts', parent='Followed Episodes - Network', xaxis_no_gridlines=True,
+                 xaxis_no_tick_labels=True, xaxis_no_tick_marks=True, yaxis_no_gridlines=True,
+                 yaxis_no_tick_labels=True, yaxis_no_tick_marks=True, no_mouse_pos=True)
+        set_plot_xlimits(f'Episodes##Top 10 Charts', -.1, 1.1)
+        set_plot_ylimits(f'Episodes##Top 10 Charts', -.1, 1.1)
+    es = ''
+    if erd == 0:
+        es = 'Running'
+        set_value(f'erd##{sender}', 0)
+    elif erd == 1:
+        es = 'In Development'
+        set_value(f'erd##{sender}', 1)
+    elif erd == 2:
+        es = 'To Be Determined'
+        set_value(f'erd##{sender}', 2)
+    elif erd == 3:
+        es = 'Ended'
+        set_value(f'erd##{sender}', 3)
+    sql = ''
+    if erd == 4:
+        sql = f'select s.network, count(*) from episodes e ' \
+              f'join shows s on e.showid = s.showid ' \
+              f'where s.status = "Followed" ' \
+              f'group by s.network order by count(*) desc limit 10'
+    else:
+        sql = f'select s.network, count(*) from episodes e ' \
+              f'join shows s on e.showid = s.showid ' \
+              f'where s.status = "Followed" and s.showstatus = "{es}" ' \
+              f'group by s.network order by count(*) desc limit 10'
+    result = func_exec_sql('Fetch', sql)
+    pie_data = []
+    for res in result:
+        rec = [res[0], res[1]]
+        pie_data.append(rec)
+    add_pie_series('Shows##Top 10 Charts', sender, pie_data, 0.5, 0.5, 0.5)
+    result = func_exec_sql('Fetch', sql)
+    pie_data = []
+    for res in result:
+        rec = [res[0], res[1]]
+        pie_data.append(rec)
+    add_pie_series('Episodes##Top 10 Charts', sender, pie_data, 0.5, 0.5, 0.5)
 
 
 def func_exec_sql(f='', s=''):
@@ -189,7 +238,7 @@ def func_every_frame(sender, data):
 def func_fill_watched_errors(sender, data):
     win = func_sender_breakup(sender, 1)
     log_info(f'Fill Watched Errors table s {sender}, d {data}, w {win}')
-    sql = f'''select * from plex_episodes where tvm_watch_status is null'''
+    sql = f'''select * from plex_episodes where tvM_update_status is null'''
     we = execute_sql('Fetch', sql)[0]
     print(we)
     # ToDo Finish the log for Watched Errors
@@ -278,7 +327,7 @@ def func_login(sender, data):
     else:
         set_value('##Error', 'Wrong Username or Password')
         set_item_color('##Error', style=mvGuiCol_Text, color=[250, 0, 0])
-        
+
 
 def func_plex_episode_table(sender, data):
     log_info(f'Fill Plex Episode {sender} {data}')
@@ -293,7 +342,7 @@ def func_plex_episode_table(sender, data):
             table_row.append(field)
         table.append(table_row)
     set_table_data(f'plex_episodes_table', table)
-    
+
 
 def func_recursively_show_main(container):
     for item in get_item_children(container):
@@ -328,12 +377,14 @@ def func_sender_breakup(sender, pos):
 
 
 def func_set_theme(sender, data):
+    log_info(f'Set Theme s {sender}, d {data}')
     ind = get_value('##Themesrd')
+    log_info(f'Radio Button index {ind}')
     theme = lists.themes[ind]
     log_info(f'Change the Theme s {sender} d {data}, t {theme}')
     set_theme(theme)
     close_popup()
-    
+
 
 def func_show_statuses(sender, data):
     srd = get_value(f'srd##Top 10 Graphs')
@@ -343,8 +394,9 @@ def func_show_statuses(sender, data):
         clear_plot('Shows##Top 10 Charts')
         delete_series('Shows##Top 10 Charts', sender)
     else:
-        add_plot(f'Shows##Top 10 Charts', xaxis_no_gridlines=True, xaxis_no_tick_labels=True, xaxis_no_tick_marks=True,
-                 yaxis_no_gridlines=True, yaxis_no_tick_labels=True, yaxis_no_tick_marks=True, no_mouse_pos=True)
+        add_plot(f'Shows##Top 10 Charts', parent='Followed Shows - Network', xaxis_no_gridlines=True,
+                 xaxis_no_tick_labels=True, xaxis_no_tick_marks=True, yaxis_no_gridlines=True,
+                 yaxis_no_tick_labels=True, yaxis_no_tick_marks=True, no_mouse_pos=True)
         set_plot_xlimits(f'Shows##Top 10 Charts', -.1, 1.1)
         set_plot_ylimits(f'Shows##Top 10 Charts', -.1, 1.1)
     ss = ''
@@ -679,8 +731,8 @@ def program_mainwindow():
                 add_text(f'##theme', color=[250, 250, 0, 250], wrap=-1)
                 add_button(name=f'Themes')
                 with popup(popupparent='Themes', name='##Themespopup', mousebutton=mvMouseButton_Left):
-                    add_radio_button(name='##Themesrd', items=lists.themes, default_value=9)
-                    add_button(name=f'Submit##Themesrd', callback=func_set_theme)
+                    add_radio_button(name='##Themesrd', items=lists.themes, default_value=8, callback=func_set_theme)
+                    # add_button(name=f'Submit##Themesrd', callback=func_set_theme)
                 add_spacing(count=1)
                 add_separator(name='ToolsSEP1')
                 add_spacing(count=1)
@@ -691,7 +743,7 @@ def program_mainwindow():
                 with menu('Debug Mode'):
                     add_menu_item('Show Debugger', callback=window_standards)
                     add_menu_item('Show Documentation', callback=window_standards)
-                    add_menu_item('Show Source Code', callback=window_standards)
+                    add_menu_item('Show Source Code', callback=window_standards, enabled=False)
                     add_menu_item('Show Style Editor', callback=show_style_editor)
                     add_spacing(count=1)
                     add_separator(name='Debug ModeSEP')
@@ -699,7 +751,7 @@ def program_mainwindow():
                     add_menu_item('Get Open Window Positions', callback=window_get_pos)
             with menu('Windows'):
                 add_menu_item('Close Open Windows', callback=window_close_all, shortcut='cmd+C')
-        
+    
     # add_additional_font("/System/Library/Fonts/Menlo.ttc", 14)
     add_additional_font("/Users/dick/Library/Fonts/KlokanTechNotoSans-Bold.ttf", 16,
                         custom_glyph_ranges=[[0x370, 0x377], [0x400, 0x4ff], [0x530, 0x58f], [0x10a0, 0x10ff],
@@ -921,16 +973,17 @@ def window_close_all(sender, data):
     all_windows = get_windows()
     for win in all_windows:
         log(f'Processing to close: {win}')
-        if 'MainWindow' in win:
+        if 'Main Window' in win:
+            continue
+        elif '##standard' in win:
             continue
         log_info(f'Closing window found: {win}')
         delete_item(win)
-    hide_item('documentation##standard')
-    hide_item('about##standard')
-    hide_item('metrics##standard')
-    hide_item('source##standard')
-    hide_item('debug##standard')
-    hide_item('style##standard')
+    
+    for sw in lists.standard_windows:
+        if does_item_exist(sw):
+            hide_item(sw)
+    
     hide_item('logger##standard')
 
 
@@ -975,8 +1028,8 @@ def window_episodes_all_graphs(sender, data):
     set_window_pos('Upcoming Episodes##graphs', 1420, 570)
     set_item_width('Upcoming Episodes##graphs', 690)
     set_item_height('Upcoming Episodes##graphs', 515)
-    
-    
+
+
 def window_getters(sender, data):
     return
 
@@ -1087,8 +1140,8 @@ def window_graphs(sender, data):
         graph_refresh(sender, 'Last 7 days')
         graph_refresh(sender, 'All Days')
         log_info(f'Create item (window): "{win}"')
-        
-        
+
+
 def window_plex_episodes(sender, data):
     with window(name='Plex Episode Maintenance', width=1300, height=600, x_pos=330, y_pos=225):
         with group(name='Header##PEM', parent='Plex Episode Maintenance'):
@@ -1222,7 +1275,7 @@ def window_standards(sender, data):
         set_window_pos('debug##standard', 1120, 445)
     elif sender == 'Show Source Code':
         paths_info = paths(get_value('mode'))
-        show_source(f'{paths_info.app_path}tvmaze.py')
+        # show_source(f'{paths_info.app_path}tvmaze.py')
         set_window_pos('source##standard', 520, 35)
         set_item_width('source##standard', 975)
         set_item_height('source##standard', 955)
@@ -1244,27 +1297,14 @@ def window_top_10(sender, data):
                         add_label_text(name=f'##rdl{sender}', default_value='Select Followed Shows by Status:')
                         set_value(f'srd##{sender}', 0)
                         add_radio_button(name=f'srd##{sender}', items=lists.show_statuses, horizontal=True,
-                                         callback=func_show_statuses)
-                        func_show_statuses(sender, '')
-                    with tab(f'Followed Episodes - Network##{sender}'):
+                                         default_value=0, callback=func_show_statuses)
+                        # func_show_statuses(sender, '')
+                    with tab(f'Followed Episodes - Network', parent=f'Tab Bar##{sender}'):
                         add_label_text(name=f'##edl{sender}', default_value='Select Followed Episodes by Status:')
                         set_value(f'erd##{sender}', 0)
                         add_radio_button(name=f'erd##{sender}', items=lists.show_statuses, horizontal=True,
                                          callback=func_episode_statuses)
-                        add_plot(f'Episodes##Top 10 Charts', xaxis_no_gridlines=True, xaxis_no_tick_labels=True,
-                                 xaxis_no_tick_marks=True,
-                                 yaxis_no_gridlines=True, yaxis_no_tick_labels=True, yaxis_no_tick_marks=True,
-                                 no_mouse_pos=True)
-                        set_plot_xlimits(f'Episodes##Top 10 Charts', -.1, 1.1)
-                        set_plot_ylimits(f'Episodes##Top 10 Charts', -.1, 1.1)
-                        sql = 'select s.network, count(*) from episodes e ' \
-                              'join shows s on e.showid = s.showid group by s.network order by count(*) desc limit 10'
-                        result = func_exec_sql('Fetch', sql)
-                        pie_data = []
-                        for res in result:
-                            rec = [res[0], res[1]]
-                            pie_data.append(rec)
-                        add_pie_series('Episodes##Top 10 Charts', sender, pie_data, 0.5, 0.5, 0.5)
+                        # func_episode_statuses(sender, '')
             else:
                 add_label_text(name=f'##uw{sender}', default_value='Tried to create an undefined Pie Graph Window')
         set_style_window_title_align(0.5, 0.5)

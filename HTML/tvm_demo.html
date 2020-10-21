@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>TVMaze API Demo</title>
+    <style>
+        th {
+            border: solid black 2px;
+        }
+
+        td {
+            border: solid red 1px;
+            text-align: center;
+        }
+    </style>
+
+    <script>
+        function execute_search(api) {
+            const api_result = fetch('http://127.0.0.1:5000/apis/v1/show/name/Lost', {
+                mode: 'cors',
+                headers: {
+                    'Access-Control-Allow-Origin': 'http://127.0.0.1'
+                }
+            })
+                .then(response => response.json())
+                .then(result =>
+                    let output = '';
+                    for (const row of api_result) {
+                        output += `</tr>
+                                     <td>${row['showid']}</td>
+                                    </tr>`;
+            })
+            const theList = document.getElementById("output_list")
+            const table_start = `<table id='theList'>
+                              <tr>
+                                <th>ShowID</th>
+                                <th>Name</th>
+                                <th>Alt Name</th>
+                            </tr>`;
+            let output = ''
+            for (const row of api_result) {
+                output += `</tr>
+                             <td>${row['showid']}</td>
+                           </tr>`
+            }
+            const table_end = '</table>'
+            theList.innerHTML = table_start + output + table_end
+        }
+
+        function toOutput(num, char) {
+            let result = ""
+            for (let ind = 1; ind < num; ind++) {
+                result = result + char
+            }
+            if (num % 1) {
+                result = result + ("1/2")
+            }
+            return result
+        }
+
+    </script>
+
+</head>
+
+<body>
+<h1>Simple demo of browser accessing TVMaze APIs (Shows Info)</h1>
+
+<details>
+    <summary>All Shows API</summary>
+    <p>
+        '/apis/v1/shows' returning: all shows
+        <button id="search_button_1" onclick="execute_search('All Shows')">Search</button>
+    </p>
+</details>
+<details>
+    <summary>All Followed Shows API</summary>
+    <p>
+        '/apis/v1/shows/followed' returning: all shows being followed
+    </p>
+</details>
+<details>
+    <summary>Find show via it's TVMaze ID API</summary>
+    <p>
+        '/apis/v1/show/"id"' returning: all shows being followed (id = integer)
+    </p>
+</details>
+
+<p>
+    Not Implemented Yet
+    <label for="rating"></label>
+    <select id="rating">
+        <option disabled selected value="0">Select one</option>
+        <option value="1">Show all restaurants</option>
+        <option value="2">Show 2-star or better</option>
+        <option value="3">Show 3-star or better</option>
+        <option value="4">Show 4-star or better</option>
+        <option value="5">Show only 5-star</option>
+    </select>
+</p>
+
+<p>
+    Filtering<br/>
+    <input id="followed_shows" type="checkbox">
+    <label for="followed_shows"> Followed Shows </label><br>
+    <input id="wild_card" type="checkbox">
+    <label for="wild_card"> Wild Card Name Search</label>
+</p>
+
+<p>
+    <label for="search_text_field">Look for: </label>
+    <input id="search_text_field" type="text"/>
+    <button id="search_button" onclick="listRestaurants()">Search</button>
+</p>
+<div id="output_list">
+</div>
+</body>
+
+</html>

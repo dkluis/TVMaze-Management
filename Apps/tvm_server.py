@@ -1,9 +1,12 @@
 from flask import Flask
+from flask_cors import CORS, cross_origin
 from Libraries.tvm_functions import execute_sql, convert_to_dict_within_list
 from Libraries.tvm_db import connect_pd, shows
 import pandas as pd
 
 app = Flask(__name__)
+cors = CORS(app)
+app.config['CORS_HEADERS'] = 'http://127.0.0.1'
 
 
 @app.route('/apis/v1/shows')
