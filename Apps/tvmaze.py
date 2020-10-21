@@ -46,6 +46,7 @@ class lists:
 
 
 def func_accelerator_callback(sender, data):
+    log_info(f'{sender}, {data}')
     mapping = {
         "Q": mvKey_Q,
         'S': mvKey_S,
@@ -73,11 +74,12 @@ def func_accelerator_callback(sender, data):
 
 
 def func_async(sender, process):
-    log_info(f'Starting subprocess {process}')
+    log_info(f'Starting subprocess {process}, {sender}')
     subprocess.call(process, shell=True)
 
 
 def func_async_return(sender, data):
+    log_info(f'{sender}, {data}')
     configure_item('Process', enabled=True)
     log_info(f'Ended subprocess {data}')
 
@@ -182,7 +184,6 @@ def func_episode_statuses(sender, data):
     elif erd == 3:
         es = 'Ended'
         set_value(f'erd##{sender}', 3)
-    sql = ''
     if erd == 4:
         sql = f'select s.network, count(*) from episodes e ' \
               f'join shows s on e.showid = s.showid ' \
@@ -224,6 +225,7 @@ def func_exec_sql(f='', s=''):
 
 
 def func_every_frame(sender, data):
+    log_info(f'{sender}, {data}')
     if is_item_clicked('Tools'):
         set_value(f'##db', get_value('db_opposite'))
         set_value(f'##theme', get_value('theme_opposite'))
@@ -331,8 +333,6 @@ def func_login(sender, data):
 
 def func_plex_episode_table(sender, data):
     log_info(f'Fill Plex Episode {sender} {data}')
-    win = func_sender_breakup(sender, 1)
-    button = func_sender_breakup(sender, 0)
     table = []
     sql = 'select * from plex_episodes order by`date_watched`'
     pe_recs = execute_sql(sqltype='Fetch', sql=sql)
@@ -412,7 +412,6 @@ def func_show_statuses(sender, data):
     elif srd == 3:
         ss = 'Ended'
         set_value(f'srd##{sender}', 3)
-    sql = ''
     if srd == 4:
         sql = f'select network, count(*) from shows ' \
               f'where status = "Followed" ' \
@@ -473,7 +472,7 @@ def func_tvm_update(fl, si):
 
 
 def func_toggle_db(sender, data):
-    log_info(f'Toggle DB')
+    log_info(f'Toggle DB, {sender}, {data}')
     if get_value('mode') == 'Prod':
         set_value('mode', 'Test')
         set_value('db_opposite', 'Production DB')
@@ -487,6 +486,7 @@ def func_toggle_db(sender, data):
 
 
 def func_toggle_theme(sender, data):
+    log_info(f'{sender}, {data}')
     ot = get_value('theme_opposite')
     set_theme(str(ot))
     if ot == 'Dark':
@@ -880,7 +880,7 @@ def shows_table_click(sender, data):
 
 
 def tvmaze_calendar(sender, data):
-    log_info('TVM Calendar started in Safari')
+    log_info(f'TVM Calendar started in Safari {sender}, {data}')
     subprocess.call("open -a safari  https://www.tvmaze.com/calendar", shell=True)
 
 
@@ -898,6 +898,7 @@ def tvmaze_change_getter(sender, data):
 
 
 def tvmaze_logout(sender, data):
+    log_info(f'{sender}, {data}')
     hide_item('MainWindow', children_only=True)
     window_close_all('', '')
     window_login()
@@ -951,6 +952,7 @@ def tvmaze_update(sender, data):
 
 
 def tvmaze_view_show(sender, data):
+    log_info(f'{sender}, {data}')
     win = func_sender_breakup(sender, 1)
     selected = get_value(f'selected##{win}')
     if not selected:
@@ -965,11 +967,11 @@ def tvmaze_view_show(sender, data):
 def window_close(sender, data):
     win = f'{sender}'
     delete_item(win)
-    log_info(f'Delete item (window): "{win}"')
+    log_info(f'Delete item (window): "{win}", {data}')
 
 
 def window_close_all(sender, data):
-    log_info('Close Open Windows')
+    log_info(f'Close Open Windows {sender}, {data}')
     all_windows = get_windows()
     for win in all_windows:
         log(f'Processing to close: {win}')
@@ -989,7 +991,7 @@ def window_close_all(sender, data):
 
 def window_episodes(sender, data):
     win = f'{sender}##window'
-    log_info(f'Window Shows {sender}')
+    log_info(f'Window Shows {sender} {data}')
     if not does_item_exist(win):
         with window(name=win, width=1500, height=750, x_pos=30, y_pos=70, no_resize=True, on_close=window_close):
             add_input_int(f'Show ID##{sender}', default_value=0, width=250)
@@ -1004,6 +1006,7 @@ def window_episodes(sender, data):
 
 
 def window_episodes_all_graphs(sender, data):
+    log_info(f'{sender}, {data}')
     window_graphs('All Episodes', None)
     set_window_pos('All Episodes##graphs', 15, 35)
     set_item_width('All Episodes##graphs', 690)
@@ -1031,10 +1034,12 @@ def window_episodes_all_graphs(sender, data):
 
 
 def window_getters(sender, data):
+    log_info(f'{sender}, {data}')
     return
 
 
 def window_key_values(sender, data):
+    log_info(f'{sender}, {data}')
     return
 
 
@@ -1116,6 +1121,7 @@ def window_logs_refresh(sender, data):
 
 
 def window_get_pos(sender, data):
+    log_info(f'{sender}, {data}')
     all_windows = get_windows()
     log_info(f'Log Open Window Positions for {all_windows}')
     if len(all_windows) >= 2:
@@ -1139,10 +1145,11 @@ def window_graphs(sender, data):
         set_style_window_title_align(0.5, 0.5)
         graph_refresh(sender, 'Last 7 days')
         graph_refresh(sender, 'All Days')
-        log_info(f'Create item (window): "{win}"')
+        log_info(f'Create item (window): "{win}", {data}')
 
 
 def window_plex_episodes(sender, data):
+    log_info(f'{sender}, {data}')
     with window(name='Plex Episode Maintenance', width=1300, height=600, x_pos=330, y_pos=225):
         with group(name='Header##PEM', parent='Plex Episode Maintenance'):
             add_input_int(f'Show ID##{sender}', default_value=0, width=250)
@@ -1165,14 +1172,17 @@ def window_plex_episodes(sender, data):
 
 
 def window_plex_shows(sender, data):
+    log_info(f'{sender}, {data}')
     return
 
 
 def window_quit(sender, data):
+    log_info(f'{sender}, {data}')
     stop_dearpygui()
 
 
 def window_shows(sender, data):
+    log_info(f'{sender}, {data}')
     if sender == 'New Shows Found: ':
         sender = 'Maintenance'
         ens = True
@@ -1246,6 +1256,7 @@ def window_shows(sender, data):
 
 
 def window_shows_all_graphs(sender, data):
+    log_info(f'{sender}, {data}')
     window_graphs('Other Shows', None)
     set_window_pos('Other Shows##graphs', 830, 600)
     set_item_width('Other Shows##graphs', 800)
@@ -1265,6 +1276,7 @@ def window_shows_all_graphs(sender, data):
 
 
 def window_standards(sender, data):
+    log_info(f'{data}')
     if sender == 'Show Logger':
         show_logger()
         set_window_pos('logger##standard', 1120, 1015)
@@ -1274,7 +1286,7 @@ def window_standards(sender, data):
         show_debug()
         set_window_pos('debug##standard', 1120, 445)
     elif sender == 'Show Source Code':
-        paths_info = paths(get_value('mode'))
+        # paths_info = paths(get_value('mode'))
         # show_source(f'{paths_info.app_path}tvmaze.py')
         set_window_pos('source##standard', 520, 35)
         set_item_width('source##standard', 975)
