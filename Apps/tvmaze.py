@@ -32,12 +32,14 @@ from docopt import docopt
 
 from Libraries.tvm_apis import *
 from Libraries.tvm_db import *
-from Libraries.tvm_functions import paths
+from Libraries.tvm_functions import paths, date_delta
 
 
 class lists:
     getters = ['Multi', 'ShowRSS', 'rarbgAPI', 'eztvAPI', 'piratebay', 'magnetdl', 'eztv', 'Skip']
     show_statuses = ['Running', 'In Development', 'To Be Determined', 'Ended', 'All']
+    episode_statuses = ['Watched', 'To Watch', 'Skipped', 'All']
+    time_frames = ['All', 'Last 30 Days', 'Last 7 Days']
     maintenance_buttons = ['View on TVMaze', 'Find on the Web', 'Follow', 'Unfollow',
                            'Episode Skipping', 'Not Interested', 'Undecided', 'Change Getter']
     themes = ["Dark", "Light", "Classic", "Dark 2", "Grey", "Dark Grey", "Cherry", "Purple", "Gold", "Red"]
@@ -160,8 +162,10 @@ def func_empty_logfile(sender='', data=''):
 
 def func_episode_statuses(sender, data):
     erd = get_value(f'erd##Top 10 Graphs')
-    log_info(f'Show Statuses s {sender}, d {data}, srd {erd}')
+    etrd = get_value(f'etrd##Top 10 Graphs')
+    log_info(f'Episode Statuses s {sender}, d {data}, srd {erd}, etrd {etrd}')
     set_value(f'erd#{sender}', erd)
+    set_value(f'etrd#{sender}', etrd)
     if does_item_exist('Episodes##Top 10 Charts'):
         clear_plot('Episodes##Top 10 Charts')
         delete_series('Episodes##Top 10 Charts', sender)
@@ -173,33 +177,36 @@ def func_episode_statuses(sender, data):
         set_plot_ylimits(f'Episodes##Top 10 Charts', -.1, 1.1)
     es = ''
     if erd == 0:
-        es = 'Running'
+        es = 'Watched'
         set_value(f'erd##{sender}', 0)
     elif erd == 1:
-        es = 'In Development'
+        es = 'Downloaded'
         set_value(f'erd##{sender}', 1)
     elif erd == 2:
-        es = 'To Be Determined'
+        es = 'Skipped'
         set_value(f'erd##{sender}', 2)
     elif erd == 3:
-        es = 'Ended'
+        es = 'All'
         set_value(f'erd##{sender}', 3)
-    if erd == 4:
-        sql = f'select s.network, count(*) from episodes e ' \
-              f'join shows s on e.showid = s.showid ' \
-              f'where s.status = "Followed" ' \
-              f'group by s.network order by count(*) desc limit 10'
+    if erd == 3:
+        sql_start = f'select s.network, count(*) from episodes e ' \
+                    f'join shows s on e.showid = s.showid ' \
+                    f'where s.status = "Followed" '
+        sql_end = f'group by s.network order by count(*) desc limit 10'
     else:
-        sql = f'select s.network, count(*) from episodes e ' \
-              f'join shows s on e.showid = s.showid ' \
-              f'where s.status = "Followed" and s.showstatus = "{es}" ' \
-              f'group by s.network order by count(*) desc limit 10'
-    result = func_exec_sql('Fetch', sql)
-    pie_data = []
-    for res in result:
-        rec = [res[0], res[1]]
-        pie_data.append(rec)
-    add_pie_series('Shows##Top 10 Charts', sender, pie_data, 0.5, 0.5, 0.5)
+        sql_start = f'select s.network, count(*) from episodes e ' \
+                    f'join shows s on e.showid = s.showid ' \
+                    f'where s.status = "Followed" and e.mystatus = "{es}" '
+        sql_end = f'group by s.network order by count(*) desc limit 10'
+    if etrd == 0:
+        sql_time = ''
+    elif etrd == 1:
+        sql_date = date_delta('Now', -30)
+        sql_time = f'and e.mystatus_date >= "{sql_date}" '
+    else:
+        sql_date = date_delta('Now', -7)
+        sql_time = f'and e.mystatus_date >= "{sql_date}" '
+    sql = sql_start + sql_time + sql_end
     result = func_exec_sql('Fetch', sql)
     pie_data = []
     for res in result:
@@ -225,16 +232,15 @@ def func_exec_sql(f='', s=''):
 
 
 def func_every_frame(sender, data):
-    log_info(f'{sender}, {data}')
     if is_item_clicked('Tools'):
         set_value(f'##db', get_value('db_opposite'))
         set_value(f'##theme', get_value('theme_opposite'))
-        log_info(f'Every Frame: Tools was clicked')
+        log_info(f'Every Frame: Tools was clicked, {sender} {data}')
     elif is_item_clicked('Shows'):
         sql = tvm_views.shows_to_review_count
         count = func_exec_sql('Fetch', sql)
         set_value('##no_new_shows: ', str(count[0][0]))
-        log_info(f'Every Frame: Shows was clicked')
+        log_info(f'Every Frame: Shows was clicked, {sender} {data}')
 
 
 def func_fill_watched_errors(sender, data):
@@ -388,7 +394,8 @@ def func_set_theme(sender, data):
 
 def func_show_statuses(sender, data):
     srd = get_value(f'srd##Top 10 Graphs')
-    log_info(f'Show Statuses s {sender}, d {data}, srd {srd}')
+    strd = get_value(f'strd##Top 10 Graphs')
+    log_info(f'Show Statuses s {sender}, d {data}, srd {srd} strd{strd}')
     set_value(f'srd#{sender}', srd)
     if does_item_exist('Shows##Top 10 Charts'):
         clear_plot('Shows##Top 10 Charts')
@@ -413,13 +420,22 @@ def func_show_statuses(sender, data):
         ss = 'Ended'
         set_value(f'srd##{sender}', 3)
     if srd == 4:
-        sql = f'select network, count(*) from shows ' \
-              f'where status = "Followed" ' \
-              f'group by network order by count(*) desc limit 10'
+        sql_start = f'select network, count(*) from shows ' \
+                   f'where status = "Followed" '
+        sql_end = f'group by network order by count(*) desc limit 10'
     else:
-        sql = f'select network, count(*) from shows ' \
-              f'where status = "Followed" and showstatus = "{ss}" ' \
-              f'group by network order by count(*) desc limit 10'
+        sql_start = f'select network, count(*) from shows ' \
+                   f'where status = "Followed" and showstatus = "{ss}" '
+        sql_end = f'group by network order by count(*) desc limit 10'
+    if strd == 0:
+        sql_time = ''
+    elif strd == 1:
+        sql_date = date_delta('Now', -30)
+        sql_time = f'and tvmaze_upd_date >= "{sql_date}" '
+    else:
+        sql_date = date_delta('Now', -7)
+        sql_time = f'and tvmaze_upd_date >= "{sql_date}" '
+    sql = sql_start + sql_time + sql_end
     result = func_exec_sql('Fetch', sql)
     pie_data = []
     for res in result:
@@ -433,16 +449,16 @@ def func_tvm_update(fl, si):
     api = f'{tvm_apis.update_followed_shows}/{si}'
     sql = []
     if fl == "F":
-        shows = execute_tvm_request(api, req_type='put', code=True)
-        if not shows:
+        result = execute_tvm_request(api, req_type='put', code=True)
+        if not result:
             log_error(f"Web error trying to follow show: {si}")
             return False
         success = 'Followed'
         download = 'Multi'
         sql.append(f'update shows set status = "{success}", download = "{download}" where `showid` = {si}')
     elif fl == "U":
-        shows = execute_tvm_request(api, req_type='delete', code=True)
-        if not shows:
+        result = execute_tvm_request(api, req_type='delete', code=True)
+        if not result:
             log_error(f"Web error trying to unfollow show: {si}")
             return False
         success = 'Skipped'
@@ -1288,9 +1304,10 @@ def window_standards(sender, data):
     elif sender == 'Show Source Code':
         # paths_info = paths(get_value('mode'))
         # show_source(f'{paths_info.app_path}tvmaze.py')
-        set_window_pos('source##standard', 520, 35)
-        set_item_width('source##standard', 975)
-        set_item_height('source##standard', 955)
+        # set_window_pos('source##standard', 520, 35)
+        # set_item_width('source##standard', 975)
+        # set_item_height('source##standard', 955)
+        pass
     elif sender == 'Show Documentation':
         show_documentation()
         set_window_pos('documentation##standard', 540, 135)
@@ -1310,13 +1327,19 @@ def window_top_10(sender, data):
                         set_value(f'srd##{sender}', 0)
                         add_radio_button(name=f'srd##{sender}', items=lists.show_statuses, horizontal=True,
                                          default_value=0, callback=func_show_statuses)
-                        # func_show_statuses(sender, '')
+                        set_value(f'strd##{sender}', 0)
+                        add_radio_button(name=f'strd##{sender}', items=lists.time_frames, horizontal=True,
+                                         default_value=0, callback=func_show_statuses)
+                        func_show_statuses(sender, '')
                     with tab(f'Followed Episodes - Network', parent=f'Tab Bar##{sender}'):
                         add_label_text(name=f'##edl{sender}', default_value='Select Followed Episodes by Status:')
                         set_value(f'erd##{sender}', 0)
-                        add_radio_button(name=f'erd##{sender}', items=lists.show_statuses, horizontal=True,
+                        add_radio_button(name=f'erd##{sender}', items=lists.episode_statuses, horizontal=True,
                                          callback=func_episode_statuses)
-                        # func_episode_statuses(sender, '')
+                        set_value(f'etrd##{sender}', 1)
+                        add_radio_button(name=f'etrd##{sender}', items=lists.time_frames, horizontal=True,
+                                         default_value=1, callback=func_episode_statuses)
+                        func_episode_statuses(sender, '')
             else:
                 add_label_text(name=f'##uw{sender}', default_value='Tried to create an undefined Pie Graph Window')
         set_style_window_title_align(0.5, 0.5)
