@@ -26,13 +26,14 @@ Options:
 import subprocess
 from datetime import datetime, timedelta
 
-from dearpygui.core import *
-from dearpygui.simple import *
+# from dearpygui.core import *
+# from dearpygui.simple import *
 from docopt import docopt
 
 from Libraries.tvm_apis import *
 from Libraries.tvm_db import *
 from Libraries.tvm_functions import paths, date_delta
+from Libraries.tvm_dpg import *
 
 
 class lists:
@@ -531,13 +532,7 @@ def epis_fill_table(sender, data):
     else:
         log_error(f'Unknown Button Pressed to fill the table b {button}')
     
-    table = []
-    for rec in found_shows:
-        table_row = []
-        for field in rec:
-            table_row.append(field)
-        table.append(table_row)
-    set_table_data(f'shows_table##{win}', table)
+    func_fill_a_table(f'table##{win}', found_shows)
     func_buttons(win=win, fc='Show')
     epis_view_clear('fill_table##View', 'input_fields_only')
 
@@ -546,7 +541,7 @@ def epis_view_clear(sender, data):
     log_info(f'Epi Maint clear {sender} {data}')
     win = func_sender_breakup(sender, 1)
     if data != 'input_fields_only':
-        set_table_data(f'shows_table##{win}', [])
+        set_table_data(f'table##{win}', [])
         set_value(f'##show_showname{win}', "")
         func_buttons(win=win, fc='Show')
     
@@ -713,10 +708,13 @@ def program_mainwindow():
                     add_spacing(count=1)
                     add_menu_item('All Graphs##episodes', callback=window_episodes_all_graphs, shortcut='cmd+E')
             with menu(name='System Maintenance'):
-                add_menu_item(name='Plex Shows', callback=window_plex_shows)
-                add_menu_item(name='Plex Episodes', callback=window_plex_episodes)
-                add_menu_item(name='Getters', callback=window_getters)
-                add_menu_item(name='Key Values', callback=window_key_values)
+                add_menu_item(name='Plex Shows', callback=window_crud_maintenance, callback_data='Plex Shows')
+                add_menu_item(name='Plex Episodes', callback=window_crud_maintenance, callback_data='Plex Episodes')
+                add_menu_item(name='Key Values', callback=window_crud_maintenance, callback_data='Key Values')
+                add_separator(name='SS##SEP1')
+                with menu(name='View Tables'):
+                    add_menu_item(f'Search through Shows')
+                    add_menu_item(f'Search through Episodes')
             add_menu_item('Top 10 Graphs', callback=window_top_10)
             with menu('Process'):
                 add_menu_item('Get Episodes', callback=tvmaze_processes)
@@ -807,14 +805,8 @@ def shows_fill_table(sender, data):
         found_shows = func_find_shows(0, 'Shows Due')
     else:
         log_error(f'Unknown Button Pressed to fill the table b {button}')
-    
-    table = []
-    for rec in found_shows:
-        table_row = []
-        for field in rec:
-            table_row.append(str(field).replace('None', ''))
-        table.append(table_row)
-    set_table_data(f'shows_table##{win}', table)
+        
+    func_fill_a_table(f'shows_table##{win}', found_shows)
     func_buttons(win=win, fc='Hide', buttons=lists.maintenance_buttons)
     shows_maint_clear('fill_table##Maintenance', 'input_fields_only')
 
@@ -915,7 +907,7 @@ def tvmaze_change_getter(sender, data):
 
 def tvmaze_logout(sender, data):
     log_info(f'{sender}, {data}')
-    hide_item('MainWindow', children_only=True)
+    hide_item('Main Window', children_only=True)
     window_close_all('', '')
     window_login()
 
@@ -1142,7 +1134,7 @@ def window_get_pos(sender, data):
     log_info(f'Log Open Window Positions for {all_windows}')
     if len(all_windows) >= 2:
         for win in all_windows:
-            if win == 'MainWindow':
+            if win == 'Main Window':
                 continue
             pos = get_window_pos(win)
             height = get_item_height(win)

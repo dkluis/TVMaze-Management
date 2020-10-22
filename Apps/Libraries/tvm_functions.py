@@ -1,12 +1,10 @@
-import smtplib
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
+# import smtplib
+# from email.mime.multipart import MIMEMultipart
+# from email.mime.text import MIMEText
 from datetime import datetime, timedelta, date
 import time
 import os
 import re
-import json
-import ast
 
 
 from Libraries.tvm_db import execute_sql, get_tvmaze_info
@@ -19,6 +17,13 @@ class release:
     
 
 def get_today(tp='human', fmt='full'):
+    """
+    Function to get today in human or epoch form.
+    
+    :param tp:      'human' or 'system' are the options
+    :param fmt:     for 'human' -> 'full' return the full datetime.now otherwise only the date portion
+    :return:        false if the tp param is not 'human' or 'system'
+    """
     now = datetime.now()
     if tp == 'human':
         if fmt == 'full':
@@ -32,6 +37,14 @@ def get_today(tp='human', fmt='full'):
 
 
 def date_delta(d='Now', delta=0):
+    """
+            Function to get a date back with plus or minus a number of date.
+            If 'Now' today's date is the basis, otherwise you have to feed in 'yyyy-mm-dd'
+            
+    :param d:       'now' or date
+    :param delta:   plus or minus integer in days
+    :return:        'yyyy-mm-dd'
+    """
     if d == 'Now':
         dn = date.today()
     else:
@@ -68,6 +81,12 @@ def send_txt_message(message):
 
 
 def eliminate_prefixes(sn):
+    """
+                Function to eliminate show and movie prefixes from the name.
+                Prefixes are retrieved from the key-values table
+    :param sn:  Full name to be cleaned up
+    :return:    cleaned name without any prefixes
+    """
     plexprefs = execute_sql(sqltype='Fetch', sql="SELECT info FROM key_values WHERE `key` = 'plexprefs'")[0]
     plexprefs = str(plexprefs).replace('(', '').replace(')', '').replace("'", "")
     plexprefs = str(plexprefs).split(',')
@@ -233,8 +252,10 @@ class operational_mode:
         self.prod = prod
 
 
-def convert_to_dict_within_list(data, data_type='DB', field_list=[]):
+def convert_to_dict_within_list(data, data_type='DB', field_list=None):
     response = ''
+    if not field_list:
+        field_list = []
     if data_type == 'DB' and len(data) != 0 and len(field_list) == len(data[0]):
         for rec in data:
             row = "{"
