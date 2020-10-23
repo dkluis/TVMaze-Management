@@ -261,7 +261,7 @@ def convert_to_dict_within_list(data, data_type='DB', field_list=None):
             row = "{"
             f_idx = 0
             for field in rec:
-                row += f'"{field_list[f_idx]}": "{field}", '
+                row += f'''"{field_list[f_idx]}": "{str(field).replace('"', '~~')}", '''
                 f_idx += 1
             response = response + row[:-2] + "},"
         response = "[" + response[:-1] + "]"

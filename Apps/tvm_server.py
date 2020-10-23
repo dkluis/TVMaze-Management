@@ -9,18 +9,35 @@ cors = CORS(app)
 app.config['CORS_HEADERS'] = 'http://127.0.0.1'
 
 
-@app.route('/apis/v1/shows')
-def get_shows():
-    result = execute_sql(sqltype='Fetch', sql=f'select * from shows')
+@app.route('/apis/v1/shows/page/<page>')
+def get_shows_page(page):
+    if int(page) <= 0:
+        result = execute_sql(sqltype='Fetch', sql=f'select * from shows where showid < 1000')
+    else:
+        start = int(page) * 1000
+        end = int(page) * 1000 + 999
+        result = execute_sql(sqltype='Fetch', sql=f'select * from shows where showid between {start} and {end}')
     result = convert_to_dict_within_list(result, data_type='DB', field_list=shows.field_list)
-    return f'{result}'
+    return result
+
+
+@app.route('/apis/v1/shows/page/<page>/followed')
+def get_shows_page_followed(page):
+    if int(page) <= 0:
+        result = execute_sql(sqltype='Fetch', sql=f'select * from shows where showid < 1000 and status = "Followed"')
+    else:
+        start = int(page) * 1000
+        end = int(page) * 1000 + 999
+        result = execute_sql(sqltype='Fetch', sql=f'select * from shows where status = "Followed" and showid between {start} and {end}')
+    result = convert_to_dict_within_list(result, data_type='DB', field_list=shows.field_list)
+    return result
 
 
 @app.route('/apis/v1/shows/followed')
 def get_shows_followed():
     result = execute_sql(sqltype='Fetch', sql=f'select * from shows where status = "Followed"')
     result = convert_to_dict_within_list(result, data_type='DB', field_list=shows.field_list)
-    return f'{result}'
+    return result
 
 
 @app.route('/apis/v1/show/<showid>')
