@@ -21,7 +21,7 @@ def window_crud_maintenance(sender, data):
             add_input_text(name=f'{data}_input', no_spaces=True, multiline=False, decimal=False, label=data, width=200)
             add_same_line(spacing=10)
             add_button(name=f'Search##{data}', callback=func_crud_search, callback_data=data)
-            if data == 'Key Values':
+            if data == 'Key Values' or data == 'Plex Shows':
                 add_same_line(spacing=10)
                 add_button(name=f"Add New##{data}")
             add_same_line(spacing=10)
@@ -29,28 +29,47 @@ def window_crud_maintenance(sender, data):
             if data == 'Key Values':
                 add_same_line(spacing=10)
                 add_button(name=f"Delete##{data}")
-            add_same_line(spacing=30)
+            add_same_line(spacing=10)
             add_button(name=f"Clear##{data}", callback=func_crud_clear, callback_data=f'Table##{data}')
             add_separator(name=f'##{data}SEP1')
             add_table(name=f'Table##{data}', headers=table_headers)
             add_separator(name=f'##{data}SEP1')
-            
+
+
+def func_crud_add(sender, data):
+    log_info(f'Add CRUD {sender}, {data}')
+    pass
+
 
 def func_crud_clear(sender, data):
+    log_info(f'Emptying Table {sender}, {data}')
     func_fill_a_table(data, [])
             
-            
+
+def func_crud_edit(sender, data):
+    log_info(f'Edit CRUD {sender}, {data}')
+    pass
+
+
+def func_crud_delete(sender, data):
+    log_info(f'DELETE CRUD {sender}, {data}')
+    pass
+
+
 def func_crud_search(sender, data):
+    log_info(f'Searching CRUD {sender}, {data}')
     key = get_value(f'{data}_input')
     if data == 'Key Values':
         sql = f"select * from key_values where `key` like '%{key}%' order by `key`"
     elif data == 'Plex Shows':
-        sql = f"select * from TVMazeDB.plex_shows where showname like '%{key}%' order by `showid`, 'cleaned_showname'"
+        sql = f"select * from TVMazeDB.plex_shows where showname like '%{key}%' " \
+              f"order by `showid`, 'cleaned_showname'"
     elif data == 'Plex Episodes':
         sql = f"select * from TVMazeDB.plex_episodes where showname like '%{key}%' " \
               f"order by `showname`, 'season', `episode`"
     else:
-        sql = ''
+        sql = f'Should not happen, sql is ""'
+        
     result = execute_sql(sqltype='Fetch', sql=sql)
     func_fill_a_table(f'Table##{data}', result)
 

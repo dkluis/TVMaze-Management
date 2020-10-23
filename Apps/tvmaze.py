@@ -678,7 +678,7 @@ def program_mainwindow():
                 add_spacing(count=1)
                 add_separator(name=f'##TVMazeSEP2')
                 add_spacing(count=1)
-                add_menu_item('Quit', callback=window_quit, shortcut='cmd+Q')
+                add_menu_item('Quit', callback=window_quit, shortcut='ctrl+Q')
             with menu('Shows'):
                 add_menu_item('New Shows Found: ', callback=window_shows)
                 add_same_line(xoffset=125)
@@ -692,7 +692,7 @@ def program_mainwindow():
                     add_spacing(count=1)
                     add_separator(name=f'Graphs##ShowsSEP1')
                     add_spacing(count=1)
-                    add_menu_item('All Graphs##Shows', callback=window_shows_all_graphs, shortcut='cmd+S')
+                    add_menu_item('All Graphs##Shows', callback=window_shows_all_graphs, shortcut='ctrl+S')
             with menu('Episodes'):
                 add_menu_item('View', callback=window_episodes)
                 add_menu_item('Watched Updated Errors', callback=window_episodes)
@@ -706,7 +706,7 @@ def program_mainwindow():
                     add_spacing(count=1)
                     add_separator(name='Graphs##episodesSEP1')
                     add_spacing(count=1)
-                    add_menu_item('All Graphs##episodes', callback=window_episodes_all_graphs, shortcut='cmd+E')
+                    add_menu_item('All Graphs##episodes', callback=window_episodes_all_graphs, shortcut='ctrl+E')
             with menu(name='System Maintenance'):
                 add_menu_item(name='Plex Shows', callback=window_crud_maintenance, callback_data='Plex Shows')
                 add_menu_item(name='Plex Episodes', callback=window_crud_maintenance, callback_data='Plex Episodes')
@@ -764,7 +764,7 @@ def program_mainwindow():
                     add_spacing(count=1)
                     add_menu_item('Get Open Window Positions', callback=window_get_pos)
             with menu('Windows'):
-                add_menu_item('Close Open Windows', callback=window_close_all, shortcut='cmd+C')
+                add_menu_item('Close Open Windows', callback=window_close_all, shortcut='ctrl+C')
     
     # add_additional_font("/System/Library/Fonts/Menlo.ttc", 14)
     add_additional_font("/Users/dick/Library/Fonts/KlokanTechNotoSans-Bold.ttf", 16,
@@ -833,7 +833,7 @@ def shows_find_on_web(sender, data):
             else:
                 link_str = li[1]
             full_link = f'{link_str}{str(showinfo[1]).replace(" ", li[3]).lower()}{sfx}'
-            start_find = 'open -a safari ' + full_link
+            start_find = f'open -a safari "{full_link}"'
             os.system(start_find)
 
 

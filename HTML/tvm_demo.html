@@ -16,20 +16,20 @@
 
     <script>
         function execute_search(api) {
-            const api_result = fetch('http://127.0.0.1:5000/apis/v1/show/name/Lost', {
+            fetch('http://127.0.0.1:5000/apis/v1/show/name/Lost', {
                 mode: 'cors',
                 headers: {
                     'Access-Control-Allow-Origin': 'http://127.0.0.1'
                 }
             })
                 .then(response => response.json())
-                .then(result =>
-                    let output = '';
-                    for (const row of api_result) {
-                        output += `</tr>
-                                     <td>${row['showid']}</td>
-                                    </tr>`;
-            })
+                .then(result => process_json(result))
+        }
+
+        function process_json(data) {
+            console.log(data)
+        }
+        /*
             const theList = document.getElementById("output_list")
             const table_start = `<table id='theList'>
                               <tr>
@@ -38,7 +38,7 @@
                                 <th>Alt Name</th>
                             </tr>`;
             let output = ''
-            for (const row of api_result) {
+            for (const row of data) {
                 output += `</tr>
                              <td>${row['showid']}</td>
                            </tr>`
@@ -46,6 +46,7 @@
             const table_end = '</table>'
             theList.innerHTML = table_start + output + table_end
         }
+        */
 
         function toOutput(num, char) {
             let result = ""
