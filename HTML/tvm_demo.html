@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <title>TVMaze API Demo</title>
     <style>
+        table {
+            background-color: aliceblue;
+        }
+
         th {
             border-style: none;
             background-color: #cccccc;
@@ -21,6 +25,41 @@
     </style>
 
     <script>
+        window.onload = function () {
+            set_global_vars()
+        }
+
+        document.getElementById('all_shows_details').onclick = function() {
+            alert('All Shows has been clicked')
+        }
+
+        function set_global_vars() {
+            window.page_size = 25
+            window.page_no = 0
+            document.getElementById('page_size').innerHTML = window.page_size.toString()
+        }
+
+        function change_page_size(new_page_size) {
+            window.page_size = new_page_size
+            window.page_no = 0
+            const data = window.json_result
+            window.no_pages = Math.floor(data.length / window.page_size)
+            window.last_page_remainder = data.length - (window.no_pages * window.page_size)
+            document.getElementById('page_size').innerHTML = window.page_size.toString()
+            console.log(`No of Records to display: ${data.length} - Page size: ${window.page_size} - No of full Pages: ${window.no_pages} - Recs on Last (partial page): ${window.last_page_remainder}`)
+            display_json()
+        }
+
+        function plot_it() {
+            const plot = document.getElementById('output_plot');
+            Plotly.newPlot(plot, [{
+                x: ['Networks', 'Shows', 'In development', 'Followed', 'To Watch'],
+                y: [345, 50345, 8532, 821, 267]
+            }], {
+                margin: {t: 0}
+            })
+        }
+
         function execute_search(api, button) {
             if (button == 'All Shows') {
                 const page_num = Number(document.getElementById("page_input").value)
@@ -36,14 +75,21 @@
                 }
             })
                 .then(response => response.json())
-                .then(result => process_json(result))
+                .then(result => {
+                    if (result.lenght != 0) {
+                        window.json_result = result
+                        change_page_size(25)
+                        display_json()
+                    }
+                })
         }
 
-        function process_json(data) {
+        function display_json() {
             const theList = document.getElementById("output_list")
+            const data = window.json_result
             if (data.length) {
                 const table_start = `<table id='theListings'>
-                                        <tr>
+                                        <tr id="heading">
                                             <th> ShowID </th>
                                             <th> Name </th>
                                             <th> TVM url </th>
@@ -57,50 +103,85 @@
                                             <th> No. Episodes </th>
                                         </tr>`
                 let output = ''
-                console.log("Number of Records: ", data.length)
-                idx = 2
-                for (const row of data) {
-                    if (idx % 2) {
+                let row_color_idx = 2
+                let td_class = ''
+                if (window.page_no == 0) {
+                    view_start = 0
+                } else {
+                    view_start = window.page_no * window.page_size
+                }
+                console.log(`Start of View ${view_start} - Loop to <= ${window.page_no * window.page_size + window.page_size - 1}`)
+                for (let view_idx = view_start; view_idx <= window.page_no * window.page_size + window.page_size - 1; view_idx++) {
+                    if (data.length <= view_idx) {
+                        console.log(`Breaking because ${data.length} <= ${view_start + view_idx}`)
+                        break
+                    }
+                    if (row_color_idx % 2) {
                         td_class = 'class="on"'
                     } else {
                         td_class = 'class="off"'
                     }
-                    if (row.eps_count == 'None' || row.eps_count == "0") {
-                        row.eps_count = ''
+                    if (data[view_idx].eps_count == 'None' || data[view_idx].eps_count == "0") {
+                        data[view_idx].eps_count = ''
                     }
-                    if (row.status == 'Followed') {
-                        row.status = "Yes"
+                    if (data[view_idx].status == 'Followed') {
+                        data[view_idx].status = "Yes"
                     } else {
-                        row.status = ""
+                        data[view_idx].status = ""
                     }
-                    if (row.premiered == 'None' || row.premiered == '2030-12-31') {
-                        row.premiered = ""
+                    if (data[view_idx].premiered == 'None' || data[view_idx].premiered == '2030-12-31') {
+                        data[view_idx].premiered = ""
                     }
-
                     output += `<tr>
-                                 <td ${td_class}>${row.showid}</td>
-                                 <td ${td_class}>${row.showname}</td>
-                                 <td ${td_class}><a href="${row.url}" target="_blank"><img src="../resources/tvmaze.jpeg" width="24", height="24"> </a></td>
-                                 <td ${td_class}>${row.premiered}</td>
-                                 <td ${td_class}>${row.showstatus}</td>
-                                 <td ${td_class}>${row.language}</td>
-                                 <td ${td_class}>${row.network}</td>
-                                 <td ${td_class}>${row.country}</td>
-                                 <td ${td_class}>${row.type}</td>
-                                 <td ${td_class}>${row.status}</td>
-                                 <td ${td_class}>${row.eps_count}</td>
+                                 <td ${td_class}>${data[view_idx].showid}</td>
+                                 <td ${td_class}>${data[view_idx].showname}</td>
+                                 <td ${td_class}><a href="${data[view_idx].url}" target="_blank"><img src="../resources/tvmaze.jpeg" width="24", height="24"> </a></td>
+                                 <td ${td_class}>${data[view_idx].premiered}</td>
+                                 <td ${td_class}>${data[view_idx].showstatus}</td>
+                                 <td ${td_class}>${data[view_idx].language}</td>
+                                 <td ${td_class}>${data[view_idx].network}</td>
+                                 <td ${td_class}>${data[view_idx].country}</td>
+                                 <td ${td_class}>${data[view_idx].type}</td>
+                                 <td ${td_class}>${data[view_idx].status}</td>
+                                 <td ${td_class}>${data[view_idx].eps_count}</td>
                                </tr>`
-                    idx++
+                    row_color_idx++
                 }
                 const table_end = '</table>'
                 theList.innerHTML = table_start + output + table_end
+                document.getElementById('current_page').innerHTML = (window.page_no + 1).toString()
+                document.getElementById('no_table_pages').innerHTML = (window.no_pages + 1).toString()
+                document.getElementById('paging').style.visibility = 'visible'
             } else {
                 theList.innerHTML = ''
             }
         }
 
+        function next_page_size() {
+            if (window.page_no >= window.no_pages) {
+                alert('This is the last page')
+
+            } else {
+                window.page_no += 1
+                console.log(`Next ${window.page_size}: ${window.page_no}`)
+                display_json()
+            }
+        }
+
+        function previous_page_size() {
+            if (window.page_no == 0) {
+                alert('You are on the first page already')
+
+            } else {
+                window.page_no -= 1
+                console.log(`Previous ${window.page_size}: ${window.page_no}`)
+                display_json()
+            }
+        }
 
     </script>
+
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 
 </head>
 
@@ -109,18 +190,20 @@
 
 <h2>Using the APIs from my TVMaze Management System</h2>
 
-<p><em>Technologies used: <br> APIs (Python3, MariaDB and Flask)<br> Browser (HTML, CSS and JavaScript)</em></p>
+<p><em>Technologies used: <br> APIs (Python3, MariaDB and Flask)<br> Browser (HTML5, CSS3, Plotly and JavaScript)</em>
+</p>
 
-<details>
+<details id="all_shows_details">
     <summary>All Shows API</summary>
     <p>
-        <strong>'/apis/v1/shows/page/page-number'</strong> <br>
-        input:  'page-number' as integer.   There are currently ~51 pages of shows in the system
+        <strong>'/apis/v1/shows/page/data-set'</strong> <br>
+        input: 'data-set' as integer. There are currently ~51 data-sets of a ~1000 shows in the system
         <br>
-        output: A table with show info.  Each page can contains up to 1000 shows.
+        output: A table with show info. Each set can contains up to 1000 shows and is initially divided into table pages
+        of 25.
         <br>
     </p>
-    <label for="page_input">Page Number: </label>
+    <label for="page_input">Data Set Number: </label>
     <input id="page_input" type="text"/>
     <button id="search_button_1" onclick="execute_search('http://127.0.0.1:5000/apis/v1/shows/page/', 'All Shows')">
         Search
@@ -151,10 +234,13 @@
         <strong>'/apis/v1/show/name/showname'</strong> returning: Show Info (showname = string)
         <button id="search_button_4" onclick="execute_search('http://127.0.0.1:5000/apis/v1/show/name/Lost')">Search
         </button>
+        <label for="search_text_field">Look For: </label>
+        <input id="search_text_field" type="text"/>
+        <button id="search_button" onclick="plot_it()">Search</button>
     </p>
 </details>
 
-<p>
+<p style="visibility: hidden">
     Not Implemented Yet
     <label for="rating"></label>
     <select id="rating">
@@ -168,25 +254,34 @@
 </p>
 
 <p>
-    Filtering<br/>
+    Filtering<br><br>
     <input id="followed_shows" type="checkbox">
-    <label for="followed_shows"> Followed Shows </label>
+    <label for="followed_shows"> Followed Shows (Server Level Filtering via API)</label>
     <br>
     <input id="in_dev" type="checkbox">
-    <label for="in_dev"> In Development </label>
+    <label for="in_dev"> In Development (Local level Filtering via JavaScript)</label>
     <br>
     <input id="wild_card" type="checkbox">
     <label for="wild_card"> Wild Card Name Search</label>
     <br>
 </p>
 
-<p>
-    <label for="search_text_field">Look for: </label>
-    <input id="search_text_field" type="text"/>
-    <button id="search_button" onclick="listRestaurants()">Search</button>
-</p>
-<div id="output_list">
-</div>
+
+<div>
+    <p>The Table will be here: displaying <span id="page_size">`${window.page_size}`</span> records per table page</p>
+    <div id='paging' style="visibility: hidden">View:
+        <span id="current_page"></span> of:
+        <span id="no_table_pages"></span>
+        <button id="next_table_page" onclick="next_page_size()">Next Page</button>
+        <button id="previous_table_page" onclick="previous_page_size()">Previous Page</button>
+        <button id="10_recs" onclick="change_page_size(10)">10 Recs</button>
+        <button id="25_recs" onclick="change_page_size(25)">25 Recs</button>
+        <button id="50_recs" onclick="change_page_size(50)">50 Recs</button>
+        <button id="1000_recs" onclick="change_page_size(1000)">All Recs</button>
+    </div>
+    <span id="output_list"></span></div>
+<br>
+<div id="output_plot" style="width:600px;height:600px;">The Plot will be here</div>
 </body>
 
 </html>

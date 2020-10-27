@@ -128,8 +128,12 @@ def process_all_shows(start, end, sync):
 
 
 def process_update_all_shows(mdb, mcur):
-    response = execute_tvm_request(api=tvm_apis.get_updated_shows)
-    response = response.json()
+    response = execute_tvm_request(api=tvm_apis.get_updated_shows, err=True)
+    if response:
+        response = response.json()
+    else:
+        print(f"{time.strftime(('%D %T'))} Shows: Response did not contain a json")
+        return
     if vli > 1:
         print(f'{time.strftime(("%D %T"))} Shows: Number of Shows to potentially update', len(response))
     updated = 0

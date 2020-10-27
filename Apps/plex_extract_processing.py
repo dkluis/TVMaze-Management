@@ -157,7 +157,10 @@ for episode in we:
         if vli > 3:
             print(f'{time.strftime("%D %T")} Plex Extract Processing: '
                   f'Found Show in Plex Shows {plex_sn} with id {p_show}')
-        result = do_update_tvmaze(p_show, plex_season, plex_epi, plex_watch_date)
+        if p_show:
+            result = do_update_tvmaze(p_show, plex_season, plex_epi, plex_watch_date)
+        else:
+            result = None
         if result:
             if vli > 2:
                 print(f'{time.strftime("%D %T")} Plex Extract Processing: '
