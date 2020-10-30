@@ -19,7 +19,7 @@ Options:
 """
 
 from docopt import docopt
-from Libraries.tvm_db import connect_sdb, close_sdb, execute_sqlite
+from Libraries.tvm_db import execute_sqlite
 import os
 
 
