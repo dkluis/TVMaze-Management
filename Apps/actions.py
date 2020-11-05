@@ -18,7 +18,7 @@ Options:
 
 """
 
-from datetime import datetime, timedelta, date
+from datetime import datetime, timedelta
 from bs4 import BeautifulSoup as Soup
 import re
 
@@ -121,7 +121,7 @@ def get_eztv_api_options(imdb_id, seas, showname):
                            sql='SELECT link_prefix FROM download_options '
                                'where `providername` = "eztvAPI"')[0][0] + eztv_show[2:]
     # eztv_data = requests.get(eztv_url).json()
-    eztv_req_result = execute_tvm_request(api=eztv_url, timeout=(20,20), err=False)
+    eztv_req_result = execute_tvm_request(api=eztv_url, timeout=(20, 20), err=False)
     if not eztv_req_result:
         return download_options
     eztv_data = eztv_req_result.json()
