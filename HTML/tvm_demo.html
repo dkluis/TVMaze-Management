@@ -71,7 +71,7 @@
             fetch(api, {
                 mode: 'cors',
                 headers: {
-                    'Access-Control-Allow-Origin': 'http://127.0.0.1'
+                    'Access-Control-Allow-Origin': 'http://172.0.0.1'
                 }
             })
                 .then(response => response.json())
@@ -205,7 +205,7 @@
     </p>
     <label for="page_input">Data Set Number: </label>
     <input id="page_input" type="text"/>
-    <button id="search_button_1" onclick="execute_search('http://127.0.0.1:5000/apis/v1/shows/page/', 'All Shows')">
+    <button id="search_button_1" onclick="execute_search('http://localhost:8081/apis/v1/shows/page/', 'All Shows')">
         Search
     </button>
 </details>
@@ -215,7 +215,7 @@
     <p>
         <strong>'/apis/v1/shows/followed'</strong> returning: Shows Info of all shows with the Followed status
 
-        <button id="search_button_2" onclick="execute_search('http://127.0.0.1:5000/apis/v1/shows/followed')">Search
+        <button id="search_button_2" onclick="execute_search('http://localhost:8081/apis/v1/shows/followed')">Search
         </button>
     </p>
 </details>
@@ -224,7 +224,7 @@
     <summary>Find show via it's TVMaze ID API</summary>
     <p>
         <strong>'/apis/v1/show/id'</strong> returning: Show Info (id = integer)
-        <button id="search_button_3" onclick="execute_search('http://127.0.0.1:5000/apis/v1/show/13')">Search</button>
+        <button id="search_button_3" onclick="execute_search('http://localhost:8081/apis/v1/show/13')">Search</button>
     </p>
 </details>
 <br>
@@ -232,7 +232,7 @@
     <summary>Find show via it's Show Name API</summary>
     <p>
         <strong>'/apis/v1/show/name/showname'</strong> returning: Show Info (showname = string)
-        <button id="search_button_4" onclick="execute_search('http://127.0.0.1:5000/apis/v1/show/name/Lost')">Search
+        <button id="search_button_4" onclick="execute_search('http://localhost:8081/apis/v1/show/name/Lost')">Search
         </button>
         <label for="search_text_field">Look For: </label>
         <input id="search_text_field" type="text"/>

@@ -120,7 +120,11 @@ def get_eztv_api_options(imdb_id, seas, showname):
     eztv_url = execute_sql(sqltype='Fetch',
                            sql='SELECT link_prefix FROM download_options '
                                'where `providername` = "eztvAPI"')[0][0] + eztv_show[2:]
-    eztv_data = requests.get(eztv_url).json()
+    # eztv_data = requests.get(eztv_url).json()
+    eztv_req_result = execute_tvm_request(api=eztv_url, timeout=(20,20), err=False)
+    if not eztv_req_result:
+        return download_options
+    eztv_data = eztv_req_result.json()
     if vli > 2:
         print(f'Actions: Checking eztvAPi url: {eztv_url}', flush=True)
     eztv_count = eztv_data['torrents_count']
@@ -144,7 +148,10 @@ def get_eztv_api_options(imdb_id, seas, showname):
 
 def get_eztv_options(show, seas):
     eztv_titles = []
-    api = f'https://eztv.io/search/{show}-{seas}'
+    api = execute_sql(sqltype='Fetch',
+                      sql='SELECT link_prefix FROM download_options '
+                          'where `providername` = "eztv"')[0][0] + show + '-' + seas
+    # api = f'https://eztv.io/search/{show}-{seas}'
     eztv_data = execute_tvm_request(api=api, timeout=(20, 20), err=False)
     if not eztv_data:
         return eztv_titles

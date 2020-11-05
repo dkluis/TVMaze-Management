@@ -332,7 +332,7 @@ def func_login(sender, data):
     log_info(f'Password Checker s {sender}, d {data}')
     mdb_info = mdbi(None, None)
     if get_value('Password') == mdb_info.admin_password:
-        close_popup()
+        close_popup("Sign In")
     else:
         set_value('##Error', 'Wrong Username or Password')
         set_item_color('##Error', style=mvGuiCol_Text, color=[250, 0, 0])
@@ -390,7 +390,7 @@ def func_set_theme(sender, data):
     theme = lists.themes[ind]
     log_info(f'Change the Theme s {sender} d {data}, t {theme}')
     set_theme(theme)
-    close_popup()
+    close_popup('##Themespopup')
 
 
 def func_show_statuses(sender, data):
@@ -444,6 +444,11 @@ def func_show_statuses(sender, data):
         pie_data.append(rec)
     add_pie_series('Shows##Top 10 Charts', sender, pie_data, 0.5, 0.5, 0.5)
 
+
+def func_test_tab_bar(sender, data):
+    log_info(f'Tab Bar Callback test sender: {sender} with data: {data}')
+    #ToDo delete after the tab bar callback works.
+    
 
 def func_tvm_update(fl, si):
     log_info(f'TVMaze update {fl}, {si}')
@@ -902,7 +907,7 @@ def tvmaze_change_getter(sender, data):
         log_info(f'Getter Selected {lists.getters[ind]}')
         sql = f'update shows set download = "{lists.getters[ind]}" where `showid` = {si}'
         func_exec_sql('Commit', sql)
-    close_popup()
+    close_popup('Change Getter##getterpopup')
 
 
 def tvmaze_logout(sender, data):
@@ -1313,7 +1318,7 @@ def window_top_10(sender, data):
     if not does_item_exist(win):
         with window(name=win, width=890, height=970, x_pos=15, y_pos=35, on_close=window_close):
             if sender == 'Top 10 Graphs':
-                with tab_bar(f'Tab Bar##{sender}'):
+                with tab_bar(f'Tab Bar##{sender}', callback=func_test_tab_bar):
                     with tab(f'Followed Shows - Network', parent=f'Tab Bar##{sender}'):
                         add_label_text(name=f'##rdl{sender}', default_value='Select Followed Shows by Status:')
                         set_value(f'srd##{sender}', 0)
