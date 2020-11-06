@@ -171,17 +171,18 @@ def get_eztv_options(show, seas):
         magnet_link = str(split1).split('" rel=')[0]
         split1 = str(magnet_link).split(';dn=')[1]
         showname = str(split1).split('%')[0]
-        split1 = str(dlo).split(' (')[1]
-        sizeraw = str(split1).split(') ')[0]
-        s = sizeraw.split(' ')
-        if s[1] == 'MB':
-            size = float(s[0])
-            size = int(size)
-            size = str(size).zfill(6)
-        elif s[1] == 'GB':
-            size = float(s[0]) * 1000
-            size = int(size)
-            size = str(size).zfill(6)
+        if ' (' in str(dlo):
+            split1 = str(dlo).split(' (')[1]
+            sizeraw = str(split1).split(') ')[0]
+            s = sizeraw.split(' ')
+            if s[1] == 'MB':
+                size = float(s[0])
+                size = int(size)
+                size = str(size).zfill(6)
+            elif s[1] == 'GB':
+                size = float(s[0]) * 1000
+                size = int(size)
+        size = str(size).zfill(6)
         if vli > 2:
             print(f"{time.strftime('%D %T')} Actions: {dlo} \n Validating {showname}, True, {seas}, {show} ",
                   flush=True)
