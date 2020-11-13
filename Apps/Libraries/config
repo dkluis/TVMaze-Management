@@ -1,12 +1,12 @@
-{'host_network' : '192.168.1,11', 'host_local' : 'localhost', 'db_admin' : 'mariadb_admin', 'db_password' : 'password', 'db_prod' : 'productionDB', 'db_test' : 'testDB', 'user_admin' :'admin', 'user_password' : 'password'}
+{'host_network' : 'server_name', 'host_local' : 'localhost', 'db_admin' : 'mariadb_admin', 'db_password' : 'password', 'db_prod' : 'productionDB', 'db_test' : 'testDB', 'user_admin' :'admin', 'user_password' : 'password'}
 
 ## Example Config File.   Delete this comment info when you implement this file
-It is a Python Dictionary with key, value pairs.
+It is a Python Dictionary with key, value pairs.   Replace all values with your setup information.
 
 More readable:
 
 {
-    'host_network'  : '192.168.1,11',
+    'host_network'  : 'server_name',
     'host_local'    : 'localhost',
     'db_admin'      : 'mariadb_admin',
     'db_password'   : 'password',
