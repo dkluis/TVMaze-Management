@@ -22,6 +22,7 @@ Options:
 
 from Libraries.tvm_db import execute_sql
 from Libraries.tvm_apis import execute_tvm_request
+from Libraries.tvm_functions import fix_showname
 import os
 import shutil
 
@@ -256,6 +257,18 @@ def update_tvmaze(showinfo, found_showid):
                       f"Updated TVMaze as downloaded for {epi[2]}, Season {epi[4]}, Episode {epi[5]}")
 
 
+def shorten_showname(info):
+    """
+    ShowNames can include suffixs with years and country codes, they should not be used when creating
+    directories for plex.
+
+    :param info:   contains tuple:  Showname, season-episode, etc, etc) only the Showname is needed
+    :return:       same tuple:      With the Shawname shortened
+    """
+    shortened_showname = fix_showname(info[0])
+    result = (shortened_showname, info[1], info[2], info[3], info[4])
+    return result
+
 '''
 Main Program start
 '''
@@ -362,7 +375,10 @@ for dl in download:
             dc = cleanup_name(d)
             if vli > 3:
                 print(f'{time.strftime("%D %T")} Plex TVM Update: Cleaned Name "{dc}"')
-            ds = find_showname(dc)
+            # ds_tmp = fix_showname(dc)
+            ds_tmp = find_showname(dc)
+            ds = shorten_showname(ds_tmp)
+            print(f"#################################### dc: {dc} ds: {ds}")
             if vli > 3:
                 print(f'{time.strftime("%D %T")} Plex TVM Update: Find Showname output: {ds}')
             if not ds[0]:
