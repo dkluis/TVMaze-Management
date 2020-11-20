@@ -80,6 +80,8 @@ def func_get_tvmaze_show_info(showid):
           f"imdb = '{showinfo['externals']['imdb']}' " \
           f"where `showid` = {showid}"
     sql = sql.replace('None', 'NULL')
+    if 'NULL' in sql:
+        print(f'{time.strftime("%D %T")} SQL with a NULL statement {sql} #################################', flush=True)
     result = execute_sql(sqltype='Commit', sql=sql)
     if not result:
         print(f'{time.strftime("%D %T")} Error when updating show {showid} {result}', flush=True)
@@ -101,7 +103,7 @@ def func_update_the_show(showid, showname):
     if vli > 2:
         print(f'{time.strftime("%D %T")} Updating show {showid}, {showname}', flush=True)
     func_get_tvmaze_show_info(showid)
-    time.sleep(1)
+    # time.sleep(1)
 
 
 def main():
