@@ -6,6 +6,8 @@ Usage:
   shows_update.py -f [--vl=<vlevel>]
   shows_update.py -o [--vl=<vlevel>]
   shows_update.py -a [--vl=<vlevel]
+  shows_update.py -t <showid> [--vl=<vlevel]
+  shows_update.py -r <showid> [--vl=<vlevel]
   shows_update.py -h | --help
   shows_update.py --version
 
@@ -13,7 +15,7 @@ Options:
   -h --help             Show this screen
   --vl=<vlevel>         Level of verbosity
                           1 = Warnings & Errors Only, 2 = High Level Info,
-                          3 = Medium Level Info, 4 = Low Level Info, 5 = all [default: 1]
+                          3 = Medium Level Info, 4 = Low Level Info, 5 = all [default: 5]
 """
 
 from Libraries.tvm_apis import *
@@ -40,6 +42,10 @@ def func_get_cli():
         sql = 'select showid, showname from shows where status = "Followed"'
     elif options['-o']:
         sql = 'select showid, showname from shows where status != "Followed"'
+    elif options['-t']:
+        sql = f'select showid, showname from shows where showid = {options["<showid>"]}'
+    elif options['r']:
+        sql = f'select showid, showname from shows where showid >= {options["<showid>"]}'
     else:
         print(f"{time.strftime('%D %T')} Shows: No known - parameter given, try plex_extract.py -h", flush=True)
         quit(1)
@@ -55,6 +61,9 @@ def func_get_the_shows():
 
 def func_get_tvmaze_show_info(showid):
     showinfo = execute_tvm_request(f'http://api.tvmaze.com/shows/{showid}')
+    if not showinfo:
+        print(f'This show does not exist: {showid} and should be deleted #############################################')
+        return
     showinfo = showinfo.json()
     sql = f"update shows " \
           f"set showstatus = '{showinfo['status']}', " \
