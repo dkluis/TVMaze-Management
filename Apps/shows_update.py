@@ -44,7 +44,7 @@ def func_get_cli():
         sql = 'select showid, showname from shows where status != "Followed"'
     elif options['-t']:
         sql = f'select showid, showname from shows where showid = {options["<showid>"]}'
-    elif options['r']:
+    elif options['-r']:
         sql = f'select showid, showname from shows where showid >= {options["<showid>"]}'
     else:
         print(f"{time.strftime('%D %T')} Shows: No known - parameter given, try plex_extract.py -h", flush=True)
