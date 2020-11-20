@@ -16,8 +16,8 @@ Options:
   --vl=<vlevel>         Level of verbosity
                           1 = Warnings & Errors Only, 2 = High Level Info,
                           3 = Medium Level Info, 4 = Low Level Info, 5 = all [default: 5]
-  -r <showid>           restart at showid
-  -t <showid>           try updating only showid
+  -r                    restart at showid
+  -t                    try updating only showid
   -a                    all shows
   -f                    only the followed shows
   -o                    all non-followed shows
