@@ -79,9 +79,7 @@ def func_get_tvmaze_show_info(showid):
           f"thetvdb = '{showinfo['externals']['thetvdb']}', " \
           f"imdb = '{showinfo['externals']['imdb']}' " \
           f"where `showid` = {showid}"
-    sql = sql.replace('None', 'NULL')
-    if 'NULL' in sql:
-        print(f'{time.strftime("%D %T")} SQL with a NULL statement {sql} #################################', flush=True)
+    sql = sql.replace("'None'", 'NULL').replace('None', 'NULL')
     result = execute_sql(sqltype='Commit', sql=sql)
     if not result:
         print(f'{time.strftime("%D %T")} Error when updating show {showid} {result}', flush=True)
