@@ -375,10 +375,8 @@ for dl in download:
             dc = cleanup_name(d)
             if vli > 3:
                 print(f'{time.strftime("%D %T")} Plex TVM Update: Cleaned Name "{dc}"')
-            # ds_tmp = fix_showname(dc)
             ds_tmp = find_showname(dc)
             ds = shorten_showname(ds_tmp)
-            print(f"#################################### dc: {dc} ds: {ds}")
             if vli > 3:
                 print(f'{time.strftime("%D %T")} Plex TVM Update: Find Showname output: {ds}')
             if not ds[0]:

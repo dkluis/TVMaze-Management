@@ -3,7 +3,9 @@
 shows_update.py    The App that update all followed shows with the latest tvmaze information
 
 Usage:
-  shows_update.py [--vl=<vlevel>]
+  shows_update.py -f [--vl=<vlevel>]
+  shows_update.py -o [--vl=<vlevel>]
+  shows_update.py -a [--vl=<vlevel]
   shows_update.py -h | --help
   shows_update.py --version
 
@@ -23,19 +25,30 @@ from docopt import docopt
 
 def func_get_cli():
     global vli
-    options = docopt(__doc__, version='Shows Release 1.0')
+    global sql
+    options = docopt(__doc__, version='Update Shows Release 1.0')
     vli = int(options['--vl'])
     if vli > 5 or vli < 0:
-        print(f"{time.strftime('%D %T')} Shows: Unknown Verbosity level of {vli}, try plex_extract.py -h", flush=True)
+        print(f"{time.strftime('%D %T')} Update Shows: Unknown Verbosity level of {vli}, try plex_extract.py -h", flush=True)
         quit()
     elif vli > 1:
-        print(f'{time.strftime("%D %T")} Shows: Verbosity level is set to: {options["--vl"]}', flush=True)
+        print(f'{time.strftime("%D %T")} Update Shows: Verbosity level is set to: {options["--vl"]}', flush=True)
+        
+    if options['-a']:
+        sql = 'select showid, showname from shows'
+    elif options['-f']:
+        sql = 'select showid, showname from shows where status = "Followed"'
+    elif options['-o']:
+        sql = 'select showid, showname from shows where status != "Followed"'
+    else:
+        print(f"{time.strftime('%D %T')} Shows: No known - parameter given, try plex_extract.py -h", flush=True)
+        quit(1)
     paths_info = paths('Prod')
     print(paths_info.shows_update, flush=True)
     
 
 def func_get_the_shows():
-    sql = f'select showid, showname from shows where status = "Followed"'
+    ## sql = f'select showid, showname from shows where status != "Followed"'
     shows = execute_sql(sqltype='Fetch', sql=sql)
     return shows
 
