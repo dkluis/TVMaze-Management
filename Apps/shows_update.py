@@ -78,7 +78,7 @@ def func_get_tvmaze_show_info(showid):
             result = execute_sql(sqltype='Commit', sql=sql)
             print(f'Delete result:', result)
         return
-    print(showinfo)
+    
     showinfo = showinfo.json()
     sql = f"update shows " \
           f"set showstatus = '{showinfo['status']}', " \
