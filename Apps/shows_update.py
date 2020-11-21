@@ -65,12 +65,20 @@ def func_get_the_shows():
 
 
 def func_get_tvmaze_show_info(showid):
-    showinfo = execute_tvm_request(f'http://api.tvmaze.com/shows/{showid}')
+    showinfo = execute_tvm_request(f'http://api.tvmaze.com/shows/{showid}', timeout=(20, 10), return_err=True)
     if not showinfo:
-        print(f'{time.strftime("%D %T")}'
-              f'This show does not exist: {showid} and should be deleted #############################################',
-              flush=True)
+        print(f'Error with API call {showinfo}')
         return
+    if 'Error Code:' in showinfo:
+        print(f'{time.strftime("%D %T")}'
+              f'This show gives an error: {showid} {showinfo} ', flush=True)
+        if "404" in showinfo:
+            print(f'Now Deleting:', showid)
+            sql = f'delete from shows where `showid` = {showid}'
+            result = execute_sql(sqltype='Commit', sql=sql)
+            print(f'Delete result:', result)
+        return
+    print(showinfo)
     showinfo = showinfo.json()
     sql = f"update shows " \
           f"set showstatus = '{showinfo['status']}', " \

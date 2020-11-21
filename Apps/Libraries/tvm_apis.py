@@ -21,13 +21,15 @@ class tvm_apis:
     update_episode_status = 'https://api.tvmaze.com/v1/user/episodes/'
 
 
-def execute_tvm_request(api, req_type='get', data='', err=True, sleep=1.25, code=False, redirect=5, timeout=(10, 5)):
+def execute_tvm_request(api, req_type='get', data='', err=True, return_err=False, sleep=1.25, code=False, redirect=5,
+                        timeout=(10, 5)):
     """
     Call TVMaze APIs
     
     :param api:         The TVMaze API to call
     :param data:        Some APIs (the put) can requirement data
     :param err:         If True: generates an error on any none 200 response code for the request
+    :param return_err:  if True: return 'Error Code {http: responce.status_code}, instead of False
     :param sleep:       Wait time between API calls [Default: 1.25 seconds]
     :param code:        Some API require a token because they are premium API
     :param req_type:    get, put, delete [Default: get]
@@ -84,7 +86,10 @@ def execute_tvm_request(api, req_type='get', data='', err=True, sleep=1.25, code
         if err:
             print(f"Error response: {response} for api call: {api}, header {header_info}, code {code}, data {data}",
                   flush=True)
-            return False
+            if return_err:
+                return f'Error Code: {response.status_code}'
+            else:
+                return False
     return response
 
 
