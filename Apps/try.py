@@ -24,6 +24,7 @@ Options:
 """
 
 from docopt import docopt
+from Libraries.tvm_db import execute_sql
 import sys
 from Libraries.tvm_db import execute_sql
 from Libraries.tvm_apis import execute_tvm_request
@@ -39,7 +40,7 @@ print(f'Option -s was selected {args["-s"]} list of show = {args["<sshow>"]}')
 print(f'Option -b was selected {args["-b"]} DB schema to use = {args["--db"]}')
 print(f'Option -v was selected {args["-v"]}')
 
-
+"""
 sys.stdout = open(f'try.log', 'a')
 
 etu_sql = "select epiid, airdate from episodes where mystatus = 'Watched' and mystatus_date is None"
@@ -55,3 +56,16 @@ for eptu in eps_to_update:
     response = execute_tvm_request(baseurl, data=data, req_type='put', code=True)
 
 sys.stdout.close()
+"""
+
+logfile = open('/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Logs/ShowsUpdate.log', 'r')
+for line in logfile:
+    if "[404]" in line:
+        splitbycomma = line.split(",")
+        splitbyslash = splitbycomma[0].split("/")
+        showid = splitbyslash[4]
+        print(f'Now Deleting:', showid)
+        sql = f'delete from shows where `showid` = {showid}'
+        result = execute_sql(sqltype='Commit', sql=sql)
+        print(f'Delete result:', result)
+
