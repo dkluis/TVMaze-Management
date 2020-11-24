@@ -1,7 +1,7 @@
 # TVMaze-Management
 ### Purpose:
 
-Created for myself.  The system is based on TVMaze and extracts all info necessary necessary to manage my setup and also updates my personal data in TVMaze.  I use the publicly as well as the premium ($38/Year) TVMaze APIs.  
+Created for myself.  The system is based on TVMaze and extracts all info necessary to manage my setup and also updates my personal data in TVMaze.  I use the publicly as well as the premium ($38/Year) TVMaze APIs.  
 
 The general steps have been as follows:
 
@@ -16,7 +16,7 @@ The general steps have been as follows:
     1. Every 30 minutes: Keep it up-to-date by checking TVMaze via the updated shows API for all 'Followed' shows and asking for their episodes'
     
 * **Getters** (~5)
-    1. Initial setup: Define the website to 'scrape' or use their APIs to find out if episode for a show are available and how to get them 
+    1. Initial setup: Define the websites to 'scrape' or use their APIs to find out if episode for a show are available and how to get them 
     
 * **Actions**
     1. Every 30 minutes:
@@ -27,7 +27,7 @@ The general steps have been as follows:
         1. Extract Plex info on what show episodes have been watched
             1. Update TVMaze that this episode is watched
  
-* **TVMaze UI** (onDemand)
+* **TVMaze UI** (onDemand) (Python based with DearPyGui)
     1. Evaluate newly detected shows to see if I want to follow them
         1. Note: Not all newly detected shows make it to the "Evaluate" list since I have some 'business rules' in the system to only put show with certain criteria on the list.
         2. Typically that means an average of ~10 shows a day to evaluate
@@ -40,6 +40,20 @@ The general steps have been as follows:
         1. Finder log
     1. Review all Shows Graphs (7 sets)
     1. Review all Episode Graphs (7 sets)
+    
+* **Technologies**
+    1. TVMaze.com APIs
+    1. Plex Media Server (sqlite)
+    1. Python3 with DearPyGui
+    1. MariaDB
+    1. macOS (crontab, zsh)
+    1. Flask (my APIs for React webUI)   
+
+* **Future** 
+    1. Looking into a React based webUI
+    1. Looking into a way to automatically initialize a new setup
+    
+    
     
 ********************************************************************
 Old Documentation - To Be Reviewed
