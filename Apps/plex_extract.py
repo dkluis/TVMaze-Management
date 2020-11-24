@@ -122,6 +122,12 @@ def func_update_episode_and_tvm(epi_showid, epi_season, epi_episode, epi_watched
                   f' {epi_season}, {epi_episode} with name {epi_to_update[0][1]}', flush=True)
         return False
     result = update_tvmaze_episode_status(epiid=epi_to_update[0][5], status=0, upd_date=epi_to_update[0][3])
+    if not result:
+        print(f'{time.strftime("%D %T")} Plex Extract: >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Update did not work on TVM with',
+              epi_showid, epi_season, epi_episode, epi_watched_date, fixed_showname,
+              "################################################################",
+              flush=True)
+        return False
     print(f'{time.strftime("%D %T")} Plex Extract: >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Updated TVM with',
           epi_showid, epi_season, epi_episode, epi_watched_date, fixed_showname, ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>",
           flush=True)
