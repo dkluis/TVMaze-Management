@@ -93,15 +93,22 @@ def execute_tvm_request(api, req_type='get', data='', err=True, return_err=False
     return response
 
 
-def update_tvmaze_episode_status(epiid, status):
+def update_tvmaze_episode_status(epiid, status=1, upd_date=None):
     """
-                    Go Update TVMaze that the show is
-    :param epiid:   Episode ID
-    :param status:  Type of update: 0 = Watched, 1 = Acquired, 2 = Skipped
-    :return:        HTML response
+                     Go Update TVMaze that the show is
+    :param epiid:    Episode ID
+    :param status:   Type of update: 0 = Watched, 1 = Acquired, 2 = Skipped
+    :param upd_date: The date (human readable) to update the episode with
+    :return:         HTML response
     """
     baseurl = 'https://api.tvmaze.com/v1/user/episodes/' + str(epiid)
-    epoch_date = int(date.today().strftime("%s"))
-    data = {"marked_at": epoch_date, "type": 1}
+    if not upd_date:
+        epoch_date = int(date.today().strftime("%s"))
+    else:
+        epoch_date = int(upd_date.strftime('%s'))
+    data = {"marked_at": epoch_date, "type": status}
     response = execute_tvm_request(baseurl, data=data, req_type='put', code=True)
     return response
+
+
+
