@@ -3,7 +3,7 @@
 
 Created for myself.  The system is based on TVMaze and extracts all info necessary to manage my setup and also updates my personal data in TVMaze.  I use the publicly as well as the premium ($38/Year) TVMaze APIs.  
 
-The general steps have been as follows:
+## General Approach:
 
 * **Show Info** (~50K records)
     1. Initial setup: Extract all TV Show info needed from TVMaze
@@ -16,7 +16,7 @@ The general steps have been as follows:
     1. Every 30 minutes: Keep it up-to-date by checking TVMaze via the updated shows API for all 'Followed' shows and asking for their episodes'
     
 * **Getters** (~5)
-    1. Initial setup: Define the websites to 'scrape' or use their APIs to find out if episode for a show are available and how to get them 
+    1. Initial setup: Define the websites to 'scrape' or use their APIs to find out if episode for a show is available and how to get them
     
 * **Actions**
     1. Every 30 minutes:
