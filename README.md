@@ -30,7 +30,7 @@ Created for myself.  The system is based on TVMaze and extracts all info necessa
         2. Typically that means an average of ~10 shows a day to evaluate
     1. Determine the appropriate Getter for a 'Followed' show
         1. Default: use the multi getter which evaluates 4 different ones
-    1. Review all logs of all the above process, empty them as needed
+    1. Review all logs of all the above processes, empty them as needed
         1. 30 minute process log
         1. Monthly log
         1. Python error log

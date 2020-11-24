@@ -213,7 +213,8 @@ def func_episode_statuses(sender, data):
     for res in result:
         rec = [res[0], res[1]]
         pie_data.append(rec)
-    add_pie_series('Episodes##Top 10 Charts', sender, pie_data, 0.5, 0.5, 0.5)
+    all_pie_data = graph_split_data(pie_data)
+    add_pie_series('Episodes##Top 10 Charts', sender, all_pie_data[1], all_pie_data[0], 0.5, 0.5, 0.5, radius=1)
 
 
 def func_exec_sql(f='', s=''):
@@ -442,7 +443,8 @@ def func_show_statuses(sender, data):
     for res in result:
         rec = [res[0], res[1]]
         pie_data.append(rec)
-    add_pie_series('Shows##Top 10 Charts', sender, pie_data, 0.5, 0.5, 0.5)
+    all_pie_data = graph_split_data(pie_data)
+    add_pie_series('Shows##Top 10 Charts', sender, all_pie_data[0], all_pie_data[1], 0.5, 0.5, 0.5, radius=1)
 
 
 def func_test_tab_bar(sender, data):
@@ -559,6 +561,7 @@ def epis_view_clear(sender, data):
 def graph_execute_get_value(sql, sender, pi, g_filter):
     log_info(f'Filling the plot data for {sender} with {sql} and {g_filter}')
     data = func_exec_sql('Fetch', sql)
+    all_data = graph_split_data(data)
     plot_index = sender
     if sender == 'Other Shows':
         plot_index = pi
@@ -566,7 +569,7 @@ def graph_execute_get_value(sql, sender, pi, g_filter):
         plot_index = f'{plot_index} - {g_filter}'
     else:
         plot_index = f'{plot_index} - All Days'
-    add_line_series(f'{sender}##plot', f'{plot_index}', data)
+    add_line_series(f'{sender}##plot', f'{plot_index}', x=all_data[0], y=all_data[1])
 
 
 def graph_get_value(sender, g_filter):
@@ -594,7 +597,8 @@ def graph_get_value(sender, g_filter):
         graph_refresh_other('Other Shows', g_filter)
         return
     else:
-        add_line_series(f'{sender}##plot', "Unknown", data)
+        all_data = graph_split_data(data)
+        add_line_series(f'{sender}##plot', "Unknown", data, x=all_data[0], y=all_data[1])
         return
     sql = func_filter_graph_sql(sql, g_filter)
     graph_execute_get_value(sql, sender, data, g_filter)
@@ -627,6 +631,17 @@ def graph_refresh_other(sender, g_filter):
     sql = f'select statepoch, myshowstbd from statistics where statrecind = "TVMaze"'
     sql = func_filter_graph_sql(sql, g_filter)
     graph_execute_get_value(sql, 'Other Shows', f'TBD', g_filter)
+    
+    
+def graph_split_data(all_data):
+    log_info(f'Splitting Graph Data')
+    x_data = []
+    y_data = []
+    for data in all_data:
+        x_data.append(data[0])
+        y_data.append(data[1])
+
+    return x_data, y_data
 
 
 def program_callback(sender, data):
@@ -986,6 +1001,7 @@ def window_close(sender, data):
 def window_close_all(sender, data):
     log_info(f'Close Open Windows {sender}, {data}')
     all_windows = get_windows()
+    print(all_windows)
     for win in all_windows:
         log(f'Processing to close: {win}')
         if 'Main Window' in win:
@@ -998,7 +1014,8 @@ def window_close_all(sender, data):
     for sw in lists.standard_windows:
         if does_item_exist(sw):
             hide_item(sw)
-    
+            
+    # Waiting for logger to show up in the list of standard windows.   It is not now.
     hide_item('logger##standard')
 
 
@@ -1013,7 +1030,7 @@ def window_episodes(sender, data):
             add_same_line(spacing=10)
             add_button(f'Search##{sender}', callback=epis_fill_table)
             add_separator(name='##epSEP1')
-            add_table(name=f'table##{sender}', headers=['Some Info'])
+            add_table(name=f'table##{sender}', headers=['Some Info'], width=0, height=0)
             set_value(f'table##{sender}', func_fill_watched_errors)
         set_style_window_title_align(0.5, 0.5)
 
@@ -1092,7 +1109,7 @@ def window_logs(sender, data):
             add_input_text(f'##{sender}ft', hint='No wildcards, case does not matter')
             add_spacing(count=2)
             add_separator(name=f'{sender}##windowSEP')
-            add_table(f'log_table##{sender}',
+            add_table(f'log_table##{sender}', width=0, height=0,
                       headers=[f'{sender} - Info'])
             window_logs_refresh(f'Refresh##{sender}', data)
 
@@ -1177,7 +1194,7 @@ def window_plex_episodes(sender, data):
             add_separator(name=f'PEMaintenance##SEP2')
             add_spacing()
         with group(name='Table##PEM', parent='Plex Episode Maintenance'):
-            add_table(f'plex_episodes_table',
+            add_table(f'plex_episodes_table', width=0, height=0,
                       headers=['Plex Show Name', 'Season', 'Episode', 'Date/Time Watched', 'TVM Updated', 'TVM Status'],
                       callback=func_plex_episode_table)
             func_plex_episode_table('', '')
@@ -1255,7 +1272,7 @@ def window_shows(sender, data):
                     add_spacing(count=1)
                 add_separator(name=f'Maintenance##SEP2')
                 add_spacing()
-                add_table(f'shows_table##{sender}',
+                add_table(f'shows_table##{sender}', width=0, height=0,
                           headers=['Show ID', 'Show Name', 'Network', 'Language', 'Type', 'Status', 'My Status',
                                    'Premiered', 'Getter', 'IMDB', 'TheTVDB'],
                           callback=shows_table_click)
