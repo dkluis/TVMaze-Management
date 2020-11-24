@@ -20,12 +20,9 @@ Created for myself.  The system is based on TVMaze and extracts all info necessa
     
 * **Actions**
     1. Every 30 minutes:
-        1. Extract Plex info on what show episodes have been watched
-            1. Update TVMaze that this episode is watched
         1. Use the episode info to use the getters to find all yesterday's released show episodes
         1. Move newly found episodes into Plex and update TVMaze that the episode is found
-        1. Extract Plex info on what show episodes have been watched
-            1. Update TVMaze that this episode is watched
+        1. Extract Plex info on what show episodes have been watched and update TVMaze that this episode is watched
  
 * **TVMaze UI** (onDemand) (Python based with DearPyGui)
     1. Evaluate newly detected shows to see if I want to follow them
