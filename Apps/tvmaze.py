@@ -214,7 +214,7 @@ def func_episode_statuses(sender, data):
         rec = [res[0], res[1]]
         pie_data.append(rec)
     all_pie_data = graph_split_data(pie_data)
-    add_pie_series('Episodes##Top 10 Charts', sender, all_pie_data[1], all_pie_data[0], 0.5, 0.5, 0.5, radius=1)
+    add_pie_series('Episodes##Top 10 Charts', sender, all_pie_data[1], all_pie_data[0], 0.5, 0.5, 0.5)
 
 
 def func_exec_sql(f='', s=''):
@@ -444,7 +444,7 @@ def func_show_statuses(sender, data):
         rec = [res[0], res[1]]
         pie_data.append(rec)
     all_pie_data = graph_split_data(pie_data)
-    add_pie_series('Shows##Top 10 Charts', sender, all_pie_data[0], all_pie_data[1], 0.5, 0.5, 0.5, radius=1)
+    add_pie_series('Shows##Top 10 Charts', sender, all_pie_data[1], all_pie_data[0], 0.5, 0.5, 0.5)
 
 
 def func_test_tab_bar(sender, data):
@@ -572,6 +572,7 @@ def graph_execute_get_value(sql, sender, pi, g_filter):
     add_line_series(f'{sender}##plot', f'{plot_index}', x=all_data[0], y=all_data[1])
 
 
+
 def graph_get_value(sender, g_filter):
     log_info(f'Grabbing the graphs for {sender}')
     data = []
@@ -640,8 +641,12 @@ def graph_split_data(all_data):
     for data in all_data:
         x_data.append(data[0])
         y_data.append(data[1])
-
-    return x_data, y_data
+    x_max = max(x_data)
+    x_min = min(x_data)
+    y_max = max(y_data)
+    y_min = min(y_data)
+    
+    return x_data, y_data, x_min, x_max, y_min, y_max
 
 
 def program_callback(sender, data):
