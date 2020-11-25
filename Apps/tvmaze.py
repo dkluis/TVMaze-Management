@@ -75,14 +75,15 @@ def func_accelerator_callback(sender, data):
 
 
 def func_async(sender, process):
-    log_info(f'Starting subprocess {process}, {sender}')
-    subprocess.call(process, shell=True)
+    log_info(f'Starting subprocess {process[0]} for function {process[1]}, with s {sender}')
+    subprocess.call(process[0], shell=True)
+    return process[1]
 
 
 def func_async_return(sender, data):
-    log_info(f'{sender}, {data}')
+    log_info(f'Async Callback s {sender} with d {data}')
     configure_item('Process', enabled=True)
-    log_info(f'Ended subprocess {data}')
+    window_logs_refresh(f'Refresh##Async Processing Log', '')
 
 
 def func_db_opposite():
@@ -743,11 +744,15 @@ def program_mainwindow():
                     add_menu_item(f'Search through Episodes')
             add_menu_item('Top 10 Graphs', callback=window_top_10)
             with menu('Process'):
+                add_menu_item('Plex - TVM', callback=tvmaze_processes)
+                add_menu_item('Update Shows', callback=tvmaze_processes)
+                add_menu_item('Update Episodes', callback=tvmaze_processes)
                 add_menu_item('Get Episodes', callback=tvmaze_processes)
+                add_menu_item('Update Statistics', callback=tvmaze_processes)
                 add_spacing(count=1)
                 add_separator(name='ProcessSEP1')
                 add_spacing(count=1)
-                add_menu_item('Refresh Show Info', callback=tvmaze_processes)
+                add_menu_item('Refresh Followed Shows Info', callback=tvmaze_processes)
                 add_spacing(count=1)
                 add_separator(name='ProcessSEP2')
                 add_spacing(count=1)
@@ -759,10 +764,6 @@ def program_mainwindow():
                 add_menu_item('Python Errors', callback=window_logs)
                 add_menu_item('Transmission Log', callback=window_logs)
                 add_menu_item('TVMaze Log', callback=window_logs)
-                add_spacing(count=1)
-                add_separator(name='LogsSEP1')
-                add_spacing(count=1)
-                add_menu_item('Process: Refresh Show Info', callback=window_logs)
             with menu('Tools'):
                 add_menu_item('Toggle Database to: ', callback=func_toggle_db)
                 add_same_line(xoffset=140)
@@ -943,14 +944,25 @@ def tvmaze_processes(sender, data):
     log_info(f'TVMaze processes Started s {sender}, d {data}')
     paths_info = paths(get_value('mode'))
     action = ''
-    if sender == 'Get Episodes':
+    if sender == 'Plex - TVM':
+        action = f"python3 {paths_info.app_path}plex_tvm_update.py --vl=2"
+    elif sender == 'Update Shows':
+        action = f"python3 {paths_info.app_path}shows.py -u --vl=2"
+    elif sender == 'Update Episodes':
+        action = f"python3 {paths_info.app_path}episodes.py --vl=2"
+    elif sender == 'Get Episodes':
         action = f"python3 {paths_info.app_path}actions.py -d --vl=2"
+    elif sender == 'Update Statistics':
+        action = f"python3 {paths_info.app_path}statistics.py -s --vl=2"
     elif sender == 'Run full Process':
         action = f"{paths_info.scr_path}tvm_process.sh"
-    elif sender == 'Refresh: Refresh Show Info':
-        action = f'{paths_info.app_path}shows_update.py --vl=5'
-    async_action = action + f' >>{paths_info.async_process} 2>>{paths_info.async_process}'
-    
+    elif sender == 'Refresh Followed Shows Info':
+        action = f'{paths_info.app_path}shows_update.py -f --vl=2'
+    else:
+        print(f'TVMaze Processes: Not Found "{action}"')
+        quit()
+    async_action = ((action + f' >>{paths_info.async_process} 2>>{paths_info.async_process}'), sender)
+    log_info(f'TVMaze processes starting with: {async_action}')
     configure_item('Process', enabled=False)
     run_async_function(func_async, async_action, return_handler=func_async_return)
     log_info(f'TVMaze processes ASYNC Finished s {async_action}')
@@ -1141,7 +1153,7 @@ def window_logs_refresh(sender, data):
         logfile = paths_info.cleanup
     elif win == 'Transmission Log':
         logfile = paths_info.transmission
-    elif win == 'Process: Refresh Show Info':
+    elif win == 'Refresh Followed Shows Info':
         logfile = paths_info.shows_update
     else:
         log_error(f'Refresh for {sender} not defined')
