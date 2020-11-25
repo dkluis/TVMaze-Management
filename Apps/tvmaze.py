@@ -82,7 +82,7 @@ def func_async(sender, process):
 
 def func_async_return(sender, data):
     log_info(f'Async Callback s {sender} with d {data}')
-    configure_item('Process', enabled=True)
+    configure_item('Processes', enabled=True)
     window_logs_refresh(f'Refresh##Async Processing Log', '')
 
 
@@ -95,10 +95,10 @@ def func_db_opposite():
     log_info(f'Retrieving Mode {get_value("mode")}')
     if get_value('mode') == 'Prod':
         set_value('db_opposite', 'Test DB')
-        configure_item('Process', enabled=True)
+        configure_item('Processes', enabled=True)
     else:
         set_value('db_opposite', "Production DB")
-        configure_item('Process', enabled=False)
+        configure_item('Processes', enabled=False)
     log_info(f'db_opposite {get_value("db_opposite")}')
 
 
@@ -504,12 +504,12 @@ def func_toggle_db(sender, data):
         set_value('mode', 'Test')
         set_value('db_opposite', 'Production DB')
         set_main_window_title(f'TVMaze Management - Test DB')
-        configure_item('Process', enabled=False)
+        configure_item('Processes', enabled=False)
     else:
         set_value('mode', 'Prod')
         set_value('db_opposite', 'Test DB')
         set_main_window_title(f'TVMaze Management - Production DB')
-        configure_item('Process', enabled=True)
+        configure_item('Processes', enabled=True)
 
 
 def func_toggle_theme(sender, data):
@@ -743,20 +743,23 @@ def program_mainwindow():
                     add_menu_item(f'Search through Shows')
                     add_menu_item(f'Search through Episodes')
             add_menu_item('Top 10 Graphs', callback=window_top_10)
-            with menu('Process'):
-                add_menu_item('Plex - TVM', callback=tvmaze_processes)
-                add_menu_item('Update Shows', callback=tvmaze_processes)
-                add_menu_item('Update Episodes', callback=tvmaze_processes)
-                add_menu_item('Get Episodes', callback=tvmaze_processes)
-                add_menu_item('Update Statistics', callback=tvmaze_processes)
+            with menu('Processes'):
+                with menu('30 Minute Processes##Processes'):
+                    add_menu_item('Plex - TVM', callback=tvmaze_processes)
+                    add_menu_item('Update Shows', callback=tvmaze_processes)
+                    add_menu_item('Update Episodes', callback=tvmaze_processes)
+                    add_menu_item('Get Episodes', callback=tvmaze_processes)
+                    add_menu_item('Update Statistics', callback=tvmaze_processes)
                 add_spacing(count=1)
                 add_separator(name='ProcessSEP1')
                 add_spacing(count=1)
-                add_menu_item('Refresh Followed Shows Info', callback=tvmaze_processes)
+                with menu('Monthly Processes##Processes'):
+                    add_menu_item('Refresh Followed Shows Info', callback=tvmaze_processes)
+                    add_menu_item('Refresh All Shows Info', callback=tvmaze_processes, enabled=False)
                 add_spacing(count=1)
                 add_separator(name='ProcessSEP2')
                 add_spacing(count=1)
-                add_menu_item('Run full Process', callback=tvmaze_processes)
+                add_menu_item('Run full Process', callback=tvmaze_processes, enabled=False)
             with menu('Logs'):
                 add_menu_item('Cleanup Log', callback=window_logs)
                 add_menu_item('Processing Log', callback=window_logs)
@@ -963,7 +966,7 @@ def tvmaze_processes(sender, data):
         quit()
     async_action = ((action + f' >>{paths_info.async_process} 2>>{paths_info.async_process}'), sender)
     log_info(f'TVMaze processes starting with: {async_action}')
-    configure_item('Process', enabled=False)
+    configure_item('Processes', enabled=False)
     run_async_function(func_async, async_action, return_handler=func_async_return)
     log_info(f'TVMaze processes ASYNC Finished s {async_action}')
     window_logs('Async Processing Log', '')
@@ -1405,9 +1408,9 @@ if options['-s']:
 program_data()
 program_mainwindow()
 if get_value('mode') == 'Prod':
-    configure_item('Process', enabled=True)
+    configure_item('Processes', enabled=True)
 else:
-    configure_item('Process', enabled=False)
+    configure_item('Processes', enabled=False)
 set_render_callback(func_every_frame)
 
 if options['-l']:
