@@ -957,7 +957,7 @@ def tvmaze_processes(sender, data):
     elif sender == 'Run full Process':
         action = f"{paths_info.scr_path}tvm_process.sh"
     elif sender == 'Refresh Followed Shows Info':
-        action = f'{paths_info.app_path}shows_update.py -f --vl=2'
+        action = f'python3 {paths_info.app_path}shows_update.py -f --vl=5'
     else:
         print(f'TVMaze Processes: Not Found "{action}"')
         quit()
