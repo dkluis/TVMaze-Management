@@ -225,6 +225,7 @@ class paths:
         self.watched = lp + 'Watched.log'
         self.transmission = lp + "Transmission.log"
         self.shows_update = lp + "Shows_Update.log"
+        self.async_process = lp + 'Process_Async.log'
         
         
 class def_downloader:

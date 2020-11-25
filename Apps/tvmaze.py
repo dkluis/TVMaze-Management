@@ -26,8 +26,6 @@ Options:
 import subprocess
 from datetime import datetime, timedelta
 
-# from dearpygui.core import *
-# from dearpygui.simple import *
 from docopt import docopt
 
 from Libraries.tvm_apis import *
@@ -148,6 +146,10 @@ def func_empty_logfile(sender='', data=''):
         log_info(f'Removing Cleanup Log {logfile}')
     elif win == 'Processing Log':
         logfile = paths_info.process
+        func_remove_logfile(logfile)
+        log_info(f'Removing Run Log: {logfile}')
+    elif win == 'Async Processing Log':
+        logfile = paths_info.async_process
         func_remove_logfile(logfile)
         log_info(f'Removing Run Log: {logfile}')
     elif win == 'Python Errors':
@@ -310,7 +312,7 @@ def func_key_main(sender, data):
             func_login(sender, data)
             log_info(f'{win} Key detected for Function {function}')
     elif win == 'Cleanup Log' or win == 'Processing Log' or win == 'Python Errors' \
-            or win == 'Transmission Log' or win == 'TVMaze Log':
+            or win == 'Transmission Log' or win == 'TVMaze Log' or win == 'Async Processing Log':
         if data == mvKey_Return:
             func_log_filter(f'Refresh##{win}', get_value(f'{win}ft'))
             log_info(f'{win} Key detected for Function {function}')
@@ -449,7 +451,7 @@ def func_show_statuses(sender, data):
 
 def func_test_tab_bar(sender, data):
     log_info(f'Tab Bar Callback test sender: {sender} with data: {data}')
-    #ToDo delete after the tab bar callback works.
+    # ToDo delete after the tab bar callback works.
     
 
 def func_tvm_update(fl, si):
@@ -572,7 +574,6 @@ def graph_execute_get_value(sql, sender, pi, g_filter):
     add_line_series(f'{sender}##plot', f'{plot_index}', x=all_data[0], y=all_data[1])
 
 
-
 def graph_get_value(sender, g_filter):
     log_info(f'Grabbing the graphs for {sender}')
     data = []
@@ -599,7 +600,7 @@ def graph_get_value(sender, g_filter):
         return
     else:
         all_data = graph_split_data(data)
-        add_line_series(f'{sender}##plot', "Unknown", data, x=all_data[0], y=all_data[1])
+        add_line_series(f'{sender}##plot', "Unknown", x=all_data[0], y=all_data[1])
         return
     sql = func_filter_graph_sql(sql, g_filter)
     graph_execute_get_value(sql, sender, data, g_filter)
@@ -754,6 +755,7 @@ def program_mainwindow():
             with menu('Logs'):
                 add_menu_item('Cleanup Log', callback=window_logs)
                 add_menu_item('Processing Log', callback=window_logs)
+                add_menu_item('Async Processing Log', callback=window_logs)
                 add_menu_item('Python Errors', callback=window_logs)
                 add_menu_item('Transmission Log', callback=window_logs)
                 add_menu_item('TVMaze Log', callback=window_logs)
@@ -942,16 +944,17 @@ def tvmaze_processes(sender, data):
     paths_info = paths(get_value('mode'))
     action = ''
     if sender == 'Get Episodes':
-        action = f"python3 {paths_info.app_path}actions.py -d"
+        action = f"python3 {paths_info.app_path}actions.py -d --vl=2"
     elif sender == 'Run full Process':
         action = f"{paths_info.scr_path}tvm_process.sh"
     elif sender == 'Refresh: Refresh Show Info':
-        action = f'{paths_info.app_path}shows_update.py --vl=5 >>{paths_info.shows_update} 2>>{paths_info.shows_update}'
+        action = f'{paths_info.app_path}shows_update.py --vl=5'
+    async_action = action + f' >>{paths_info.async_process} 2>>{paths_info.async_process}'
+    
     configure_item('Process', enabled=False)
-    run_async_function(func_async, action, return_handler=func_async_return)
-    log_info(f'TVMaze processes ASYNC Finished s {action}')
-    window_logs('TVMaze Log', '')
-    window_logs('Python Errors', '')
+    run_async_function(func_async, async_action, return_handler=func_async_return)
+    log_info(f'TVMaze processes ASYNC Finished s {async_action}')
+    window_logs('Async Processing Log', '')
 
 
 def tvmaze_update(sender, data):
@@ -1014,7 +1017,8 @@ def window_close_all(sender, data):
         elif '##standard' in win:
             continue
         log_info(f'Closing window found: {win}')
-        delete_item(win)
+        if does_item_exist(win):
+            delete_item(win)
     
     for sw in lists.standard_windows:
         if does_item_exist(sw):
@@ -1093,7 +1097,7 @@ def window_logs(sender, data):
     if does_item_exist(f'{sender}##window'):
         log_info(f'{sender}##window already running')
     else:
-        if sender == 'Processing Log':
+        if sender == 'Processing Log' or sender == 'Async Processing Log':
             width = 1955
             height = 600
             sx = 135
@@ -1127,6 +1131,8 @@ def window_logs_refresh(sender, data):
     logfile = ''
     if win == 'Processing Log':
         logfile = paths_info.process
+    elif win == 'Async Processing Log':
+        logfile = paths_info.async_process
     elif win == 'TVMaze Log':
         logfile = paths_info.console
     elif win == 'Python Errors':
