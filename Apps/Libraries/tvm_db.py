@@ -4,7 +4,6 @@ from sqlalchemy import create_engine
 import sys
 import os
 import ast
-import json
 
 
 def read_secrets():

@@ -1,13 +1,13 @@
 
 """
 
-transmission.py The App that handles all transmission generated files (or directories) by processing the
+plex_tvm_update.py The App that handles all transmission generated files (or directories) by processing the
                 transmission log and archiving it.  And updating TVMaze that the show or movie has been acquired.
 
 Usage:
-  transmission.py [--vl=<vlevel>] [<to_process>]
-  transmission.py -h | --help
-  transmission.py --version
+  plex_tvm_update.py    [--vl=<vlevel>] [<to_process>]
+  plex_tvm_update.py    -h | --help
+  plex_tvm_update.py    --version
 
 Options:
   <to_process>   The transmission download to process.  If not provided the program will read the transmission log as
@@ -437,7 +437,9 @@ for dl in download:
                                 print(f'{time.strftime("%D %T")} Plex TVM Update: Creating directory {du}')
                             os.makedirs(du)
                         to = du + fn
-                        if vli > 2:
+                        # ToDo - clean the suffixes of the filename via the key_values
+                        to = str(to).replace('[eztv.re]', '').replace('[eztv.io]', '')
+                        if vli > 1:
                             print(f'{time.strftime("%D %T")} Plex TVM Update: Move the episode {sf} to ------> {to}')
                         os.rename(rf'{sf}', rf'{to}')
                         chd = d
