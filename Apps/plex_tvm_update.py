@@ -267,6 +267,8 @@ def shorten_showname(info):
     :return:       same tuple:      With the Shawname shortened
     """
     shortened_showname = fix_showname(info[0])
+    if not shortened_showname:
+        shortened_showname = info[0]
     result = (shortened_showname, info[1], info[2], info[3], info[4])
     return result
 

@@ -35,6 +35,9 @@ Created for myself.  The system is based on TVMaze and extracts all info necessa
         1. Monthly log
         1. Python error log
         1. Finder log
+    1. Allow individual processes to run (in async mode)
+        1. see all 30-minute, monthly and other processes
+        1. monitor them running with via their own async log-file
     1. Review all Shows Graphs (7 sets)
     1. Review all Episode Graphs (7 sets)
     
