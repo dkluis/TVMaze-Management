@@ -25,6 +25,7 @@ Options:
 
 import subprocess
 from datetime import datetime, timedelta
+from time import sleep
 
 from docopt import docopt
 
@@ -253,8 +254,6 @@ def func_fill_watched_errors(sender, data):
     log_info(f'Fill Watched Errors table s {sender}, d {data}, w {win}')
     sql = f'''select * from plex_episodes where tvM_update_status is null'''
     we = execute_sql('Fetch', sql)[0]
-    print(we)
-    # ToDo Finish the log for Watched Errors
     set_value(f'table##{sender}', we)
 
 
@@ -756,6 +755,7 @@ def program_mainwindow():
                 with menu('Monthly Processes##Processes'):
                     add_menu_item('Refresh Followed Shows Info', callback=tvmaze_processes)
                     add_menu_item('Refresh All Shows Info', callback=tvmaze_processes, enabled=False)
+                    add_menu_item('Refresh Single Show', callback=tvmaze_processes, enabled=False)
                 add_spacing(count=1)
                 add_separator(name='ProcessSEP2')
                 add_spacing(count=1)
@@ -1024,7 +1024,6 @@ def window_close(sender, data):
 def window_close_all(sender, data):
     log_info(f'Close Open Windows {sender}, {data}')
     all_windows = get_windows()
-    print(all_windows)
     for win in all_windows:
         log(f'Processing to close: {win}')
         if 'Main Window' in win:
@@ -1125,6 +1124,11 @@ def window_logs(sender, data):
         with window(name=f'{sender}##window', x_pos=sx, y_pos=sy, width=width, height=height, on_close=window_close):
             set_style_window_title_align(0.5, 0.5)
             add_button(f'Refresh##{sender}', callback=window_logs_refresh)
+            add_same_line(spacing=10)
+            add_button(f'Auto Refresh On##{sender}', callback=window_logs_auto_refresh, callback_data=True)
+            add_same_line(spacing=10)
+            add_button(f'Auto Refresh Off##{sender}', callback=window_logs_auto_refresh, callback_data=False,
+                       enabled=False)
             if sender != 'Transmission Log':
                 add_same_line(spacing=10)
                 add_button(f"Empty Log##{sender}", callback=func_empty_logfile)
@@ -1136,7 +1140,34 @@ def window_logs(sender, data):
             add_table(f'log_table##{sender}', width=0, height=0,
                       headers=[f'{sender} - Info'])
             window_logs_refresh(f'Refresh##{sender}', data)
+            
 
+def func_start_refresh_timer(win, data):
+    log_info(f'Start Timer w {win} d {data}')
+    sleep(3)
+    return data
+
+
+def window_do_logs_refresh(win, data):
+    log_info(f'Refresh after time ends w {win} d {data}')
+    window_logs_refresh(f'timer##{data}', '')
+    auto_refresh_off = get_item_configuration(f"Auto Refresh Off##{data}")
+    if auto_refresh_off['enabled']:
+        run_async_function(func_start_refresh_timer, data, return_handler=window_do_logs_refresh)
+        
+        
+def window_logs_auto_refresh(sender, on_off):
+    win = func_sender_breakup(sender, 1)
+    function = func_sender_breakup(sender, 0)
+    log_info(f'Log Refresh s {sender}, d {on_off}, f {function}, w {win}')
+    if on_off:
+        run_async_function(func_start_refresh_timer, win, return_handler=window_do_logs_refresh)
+        configure_item(f'Auto Refresh Off##{win}', enabled=True)
+        configure_item(f'Auto Refresh On##{win}', enabled=False)
+    else:
+        configure_item(f'Auto Refresh Off##{win}', enabled=False)
+        configure_item(f'Auto Refresh On##{win}', enabled=True)
+    
 
 def window_logs_refresh(sender, data):
     win = func_sender_breakup(sender, 1)
@@ -1166,7 +1197,7 @@ def window_logs_refresh(sender, data):
         log_warning(f'Console log file IOError: {err}, {win}, {function}, {logfile}')
         open(logfile, 'a').close()
         return
-    log_info(f'refresh console file: {sender}, {data}')
+    log_info(f'Refreshing console file: {logfile} for s{sender}, d {data}')
     consolelines = file.readlines()
     table = []
     for line in consolelines:
