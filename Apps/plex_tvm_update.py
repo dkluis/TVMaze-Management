@@ -465,7 +465,7 @@ for dl in download:
                     if vli > 2:
                         print(f'{time.strftime("%D %T")} Plex TVM Update: Moved to Trash {d + t}', flush=True)
                     try:
-                        shutil.move(d, f'{plex_trash_dir}/{d + t}', flush=True)
+                        shutil.move(d, f'{plex_trash_dir}/{d + t}')
                     except OSError as err:
                         print(f'Deleted directly instead {d}', flush=True)
                         shutil.rmtree(d)
