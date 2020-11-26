@@ -283,7 +283,7 @@ vli = int(options['--vl'])
 if vli > 5 or vli < 1:
     print(f"{time.strftime('%D %T')} Plex TVM Update: Unknown Verbosity level of {vli}, try plex_extract.py -h")
     quit()
-elif vli > 1:
+elif vli >= 1:
     print(f'{time.strftime("%D %T")} Plex TVM Update: Verbosity level is set to: {options["--vl"]}')
 
 if options['<to_process>']:
@@ -429,8 +429,9 @@ for dl in download:
                             fn = fn[len(fn) - 1]
                             to = plex_movie_dir + fn
                         if not skip:
-                            print(f'{time.strftime("%D %T")} Plex TVM Update: Move the movie {f} to ------> {to}'
-                                  , flush=True)
+                            if vli > 1:
+                                print(f'{time.strftime("%D %T")} Plex TVM Update: Move the movie to ------> {to}',
+                                      flush=True)
                             os.rename(rf'{f}', rf'{to}')
                         if dl_dir:
                             chd = dl
@@ -448,7 +449,7 @@ for dl in download:
                         # ToDo - clean the suffixes of the filename via the key_values
                         to = str(to).replace('[eztv.re]', '').replace('[eztv.io]', '')
                         if vli > 1:
-                            print(f'{time.strftime("%D %T")} Plex TVM Update: Move the episode {sf} to ------> {to}'
+                            print(f'{time.strftime("%D %T")} Plex TVM Update: Move the episode to ------> {to}'
                                   , flush=True)
                         os.rename(rf'{sf}', rf'{to}')
                         chd = d

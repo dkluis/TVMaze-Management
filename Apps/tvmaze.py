@@ -948,7 +948,7 @@ def tvmaze_processes(sender, data):
     paths_info = paths(get_value('mode'))
     action = ''
     if sender == 'Plex - TVM':
-        action = f"python3 {paths_info.app_path}plex_tvm_update.py --vl=5"
+        action = f"python3 {paths_info.app_path}plex_tvm_update.py --vl=4"
     elif sender == 'Update Shows':
         action = f"python3 {paths_info.app_path}shows.py -u --vl=2"
     elif sender == 'Update Episodes':
