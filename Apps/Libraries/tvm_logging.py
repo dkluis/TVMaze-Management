@@ -62,17 +62,15 @@ class logging:
             self.logfile.close()
             self.file_status = False
     
-    def write(self, message='', level=1, oc=False, read=False):
+    def write(self, message='', level=1, read=False):
         """
                     Write the message to the log file
         :param message:     Text to be written
         :param level:       Information Level Indicator
-        :param oc:          Open/Close indicator: False (default) the log file will be in original open mode
-                                                  True the log file will be closed
         :param read:        Also read file into log file .content
         :return:
         """
-        message = f"{self.caller} > Level {level} {time.strftime('%D %T')}: {message}\n"
+        message = f"{self.caller} > Level {level} > {time.strftime('%D %T')}: {message}\n"
         if not self.file_status:
             self.open(mode='a+')
             self.logfile.write(message)
@@ -89,7 +87,7 @@ class logging:
         """
         if self.file_status:
             self.logfile.close()
-        self.open(self.filename, 'w+')
+        self.open(mode='w+')
         self.logfile.close()
         self.file_status = False
         
@@ -99,7 +97,7 @@ class logging:
         :return:        Note: all content pushed into log file .content
         """
         self.close()
-        self.open(self.filename, 'r+')
+        self.open(mode='r+')
         self.content = self.logfile.read()
         self.close()
         

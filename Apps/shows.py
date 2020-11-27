@@ -314,9 +314,9 @@ def process_followed_shows():
 
 
 ''' Main Program'''
-log = logging(caller='Shows', filename='Try Shows')
+log = logging(caller='Shows', filename='Process')
 log.open()
-log.close()
+log.close()   # Closing so that the log.writes are saved individually to the log file for monitoring
 log.write('Shows Started >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>')
 options = docopt(__doc__, version='Shows Release 1.0')
 vli = int(options['--vl'])

@@ -20,26 +20,29 @@ Options:
 
 from Libraries.tvm_apis import *
 from Libraries.tvm_db import *
-from docopt import docopt
+from Libraries.tvm_logging import logging
 
+from docopt import docopt
 from timeit import default_timer as timer
 from datetime import datetime, date
 
 
 '''Main Program'''
-print()
-print(f'{time.strftime("%D %T")} Episodes >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Started')
+log = logging(caller='Episodes', filename='Process')
+log.open()
+log.close()
+log.write(f'Episodes Started >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>')
 options = docopt(__doc__, version='Episodes Release 1.0')
 vli = int(options['--vl'])
 if vli > 5 or vli < 1:
-    print(f"{time.strftime('%D %T')} Episodes: Unknown Verbosity level of {vli}, try plex_extract.py -h")
+    log.write(f"Unknown Verbosity level of {vli}, try plex_extract.py -h", 0)
     quit()
 elif vli > 1:
-    print(f'{time.strftime("%D %T")} Episodes: Verbosity level is set to: {options["--vl"]}')
+    log.write(f'Verbosity level is set to: {options["--vl"]}')
 
 started = timer()
 if vli > 1:
-    print(f'{time.strftime("%D %T")} Episodes: Starting to process recently updated episodes for insert and re-sync')
+    log.write(f'Starting to process recently updated episodes for insert and re-sync')
 shows_sql = "SELECT * FROM shows where status = 'Followed' and  (record_updated = current_date or eps_updated is None)"
 shows_sql = shows_sql.replace('None', 'Null')
 shows = execute_sql(sqltype='Fetch', sql=shows_sql)
@@ -82,7 +85,7 @@ for show in shows:
             inserted += 1
         elif len(result) == 1:
             if vli > 3:
-                print(f'{time.strftime("%D %T")} Episodes: Working on EPI: {epi["id"]}')
+                log.write(f'Working on EPI: {epi["id"]}', 4)
             if epi['airdate'] is None or epi['airdate'] == '':
                 sql = generate_update_sql(epiname=str(epi['name']).replace('"', ' '),
                                           url=epi['url'],
@@ -104,38 +107,30 @@ for show in shows:
             execute_sql(sql=sql, sqltype='Commit')
             updated += 1
         else:
-            print(f"{time.strftime('%D %T')} Episodes: "
-                  f"Found more than 1 record for {epi['id']} episode which should not happen")
-            print(f'{time.strftime("%D %T")} Episodes '
-                  f'>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Ended')
+            log.write(f"Found more than 1 record for {epi['id']} episode which should not happen", 0)
+            log.write(f'Episodes Ended >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>')
             quit()
         if (updated + inserted) % 250 == 0:
             if vli > 2:
-                print(f'{time.strftime("%D %T")} Episodes: Processed {updated + inserted} records')
+                log.write(f'Processed {updated + inserted} records', 3)
     if vli > 2:
-        print(f'{time.strftime("%D %T")} Episodes: Do Show update for {show[0]}')
+        log.write(f'Do Show update for {show[0]}', 3)
     execute_sql(sqltype='Commit', sql=f'UPDATE shows '
                                       f'set eps_updated = current_date, eps_count = {num_eps} '
                                       f'WHERE showid = {show[0]}')
 
-print(f"{time.strftime('%D %T')} Episodes: "
-      f"{time.strftime('%D %T')} Episodes: "
-      f"Updated existing episodes: {updated} and Inserted new episodes: {inserted}")
-print(f"{time.strftime('%D %T')} Episodes: "
-      f"Episodes Table --->", "Total number of shows:   ", len(shows))
-print(f"{time.strftime('%D %T')} Episodes: "
-      f"Episodes Table --->", "Total number of episodes:", total_episodes)
+log.write(f"Updated existing episodes: {updated} and Inserted new episodes: {inserted}")
+log.write(f"Total number of shows: {len(shows)}")
+log.write(f"Total number of episodes: {total_episodes}")
 ended = timer()
-print(f'{time.strftime("%D %T")} Episodes: '
-      f'The process (including calling the TVMaze APIs) took: {ended - started} seconds')
+log.write(f'The process (including calling the TVMaze APIs) took: {ended - started} seconds')
 
-print(f"{time.strftime('%D %T')} Episodes: "
-      f"Starting update of episode statuses and date")
+log.write(f"Starting update of episode statuses and date")
 episodes = execute_tvm_request(api=tvm_apis.get_episodes_status, code=True, sleep=0)
 eps_updated = episodes.json()
 updated = 0
 if vli > 2:
-    print(f"{time.strftime('%D %T')} Episodes: Episodes to process: ", len(eps_updated))
+    log.write(f"Episodes to process: {len(eps_updated)}", 3)
 for epi in eps_updated:
     if epi['type'] == 0:
         watch = "Watched"
@@ -164,11 +159,11 @@ for epi in eps_updated:
     updated += 1
     if updated % 5000 == 0:
         if vli > 2:
-            print(f"{time.strftime('%D %T')} Episodes: Processed {updated} records")
+            log.write(f"Processed {updated} records", 3)
 
-print(f"{time.strftime('%D %T')} Episodes: Total Episodes updated:", updated)
+log.write(f"Total Episodes updated: {updated}")
 
-print(f'{time.strftime("%D %T")} Episodes: Starting to find episodes to reset')
+log.write(f'Starting to find episodes to reset')
 found = False
 result = execute_sql(sqltype='Fetch', sql=std_sql.episodes)
 count = 0
@@ -185,27 +180,27 @@ for res in result:
         ep_list.append(res[0])
     if count % 5000 == 0:
         if vli > 2:
-            print(f'{time.strftime("%D %T")} Episodes: Processed {count} records')
+            log.write(f'Processed {count} records', 3)
 
-print(f'{time.strftime("%D %T")} Episodes: Number of Episodes to reset is {len(ep_list)}')
+log.write(f'Number of Episodes to reset is {len(ep_list)}')
 for epi in ep_list:
     result = execute_sql(sqltype='Commit', sql=f'UPDATE episodes '
                                                f'SET mystatus = NULL, mystatus_date = NULL '
                                                f'WHERE epiid = {epi}')
     if not result:
-        print(f'{time.strftime("%D %T")} Episodes: Epi reset for {epi} went wrong {result}')
+        log.write(f'Epi reset for {epi} went wrong {result}')
 
 # Checking to see if there are any episodes with no status on TVMaze for Followed shows set to skip downloading
 # and tracking so that we can set them to skipped on TVMaze
 
 eps_to_update = execute_sql(sqltype='Fetch', sql=tvm_views.eps_to_check)
 if len(eps_to_update) != 0:
-    print(f'{time.strftime("%D %T")} Episodes: There are {len(eps_to_update)} episodes to update')
+    log.write(f'There are {len(eps_to_update)} episodes to update')
     for epi in eps_to_update:
         baseurl = 'https://api.tvmaze.com/v1/user/episodes/' + str(epi[0])
         epoch_date = int(date.today().strftime("%s"))
         data = {"marked_at": epoch_date, "type": 2}
         response = execute_tvm_request(baseurl, data=data, req_type='put', code=True)
-        print(f'Updating Epi {epi[0]} as Skipped since the Show download is set to Skip')
-        
-print(f'{time.strftime("%D %T")} Episodes >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Ended')
+        log.write(f'Updating Epi {epi[0]} as Skipped since the Show download is set to Skip')
+
+log.write(f'Episodes Ended >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>')
