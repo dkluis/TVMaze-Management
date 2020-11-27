@@ -25,6 +25,7 @@ import re
 from Libraries.tvm_db import *
 from Libraries.tvm_functions import def_downloader, date_delta
 from Libraries.tvm_apis import *
+from Libraries.tvm_logging import logging
 
 from docopt import docopt
 
@@ -44,7 +45,7 @@ def update_show_status(showid, status):
         sql = f'UPDATE shows SET status = "{status}", download = "{dl}" WHERE `showid` = {showid}'
     result = execute_sql(sqltype='Commit', sql=sql)
     if not result:
-        print(f'{time.strftime("%D %T")} Actions: Error updating show status {result}', flush=True)
+        log.write(f'Error updating show status {result}', 0)
     return
 
 
@@ -66,8 +67,7 @@ def update_tvmaze_episode_status(epiid):
 
 def validate_requirements(filename, extension, epi_no, showname):
     if vli > 2:
-        print(f'{time.strftime("%D %T")} Actions: '
-              f'Starting to validate for {filename}, --> {showname}, --> {epi_no}, and {extension}', flush=True)
+        log.write(f'Starting to validate for {filename}, --> {showname}, --> {epi_no}, and {extension}', 3)
     res1 = '1080p'
     res2 = '720p'
     res3 = '480p'
@@ -96,19 +96,15 @@ def validate_requirements(filename, extension, epi_no, showname):
         priority += 5
     if showname:
         if vli > 2:
-            print(f'''{time.strftime('%D %T')} Actions: '''
-                  f'''Checking showname with filename {showname.replace(' ', '.').lower()} ---> {filename}.lower()''',
-                  flush=True)
-        # if showname.replace(' ', '.').lower() not in filename.lower():
+            log.write(f'''Checking showname {showname.replace(' ', '.').lower()} > {filename}.lower()''', 3)
         if showname.replace(' ', '.').lower() != filename[0:len(showname)].lower():
             priority = 0
         else:
             if str(epi_no.lower() + ".") not in filename.lower():
                 priority = 1
     if vli > 2:
-        print(f'{time.strftime("%D %T")} Actions: '
-              f'Validated Requirement - Showname: {showname.replace(" ", ".").lower()} and got Priority: {priority}, '
-              f'Filename: {filename.lower()} and Season {epi_no}', flush=True)
+        log.write(f'Validated Requirement - Showname: {showname.replace(" ", ".").lower()} and got Priority: '
+                  f'{priority}, Filename: {filename.lower()} and Season {epi_no}', 3)
     return priority
 
 
@@ -126,7 +122,7 @@ def get_eztv_api_options(imdb_id, seas, showname):
         return download_options
     eztv_data = eztv_req_result.json()
     if vli > 2:
-        print(f'Actions: Checking eztvAPi url: {eztv_url}', flush=True)
+        log.write(f'Actions: Checking eztvAPi url: {eztv_url}', 3)
     eztv_count = eztv_data['torrents_count']
     if eztv_count == 0:
         return download_options
@@ -139,8 +135,7 @@ def get_eztv_api_options(imdb_id, seas, showname):
         size = str(size).zfill(6)
         prio = validate_requirements(filename, True, seas, showname)
         if vli > 2:
-            print(f'{time.strftime("%D %T")} Actions: '
-                  f'Checking filename eztvAPI {filename} with {seas} got prio {prio}', flush=True)
+            log.write(f'Checking filename eztvAPI {filename} with {seas} got prio {prio}', 3)
         if prio > 100:
             download_options.append((prio, filename, mag_url, size, 'eztvAPI'))
     return download_options
@@ -184,11 +179,10 @@ def get_eztv_options(show, seas):
                 size = int(size)
         size = str(size).zfill(6)
         if vli > 2:
-            print(f"{time.strftime('%D %T')} Actions: {dlo} \n Validating {showname}, True, {seas}, {show} ",
-                  flush=True)
+            log.write(f"{dlo} \n Validating {showname}, True, {seas}, {show} ", 3)
         prio = validate_requirements(showname, True, seas, show)
         if vli > 2:
-            print(f'{time.strftime("%D %T")} Actions: Prio returned {prio} for {showname}', flush=True)
+            log.write(f'Prio returned {prio} for {showname}', 3)
         if prio > 100:
             prio = prio - 5
             eztv_titles.append((prio, showname, magnet_link, size, 'eztv'))
@@ -207,12 +201,11 @@ def get_rarbg_api_options(show, seas):
     if f'No results found' in str(main_request):
         return dl_options
     if vli > 4:
-        print(f'{time.strftime("%D %T")} Actions: Found main_request {main_request}', flush=True)
+        log.write(f'Found main_request {main_request}', 5)
     records = main_request['torrent_results']
     for record in records:
         name = record['title']
         magnet = record['download']
-        # seeders = record['seeders']
         size = str(int(record['size'] / 1000000)).zfill(6)
         prio = validate_requirements(name, True, seas, show)
         if prio > 100:
@@ -278,14 +271,14 @@ def get_episodes_to_download():
     todownload = execute_sql(sqltype='Fetch', sql=tvm_views.eps_to_download)
     if not todownload:
         if vli > 2:
-            print(f'{time.strftime("%D %T")} Actions: No episodes to download {todownload}', flush=True)
+            log.write(f'No episodes to download {todownload}', 3)
     return todownload
 
 
 def get_download_apis():
     results = execute_sql(sqltype='Fetch', sql="SELECT * from download_options")
     if not results:
-        print(f'{time.strftime("%D %T")} Actions: Error getting the download_options {results}', flush=True)
+        log.write(f'Error getting the download_options {results}', 0)
     return results
 
 
@@ -344,8 +337,6 @@ def do_api_process(epi_tdl, req):
     elif formatted_call[1] == 'eztvAPI':
         dl_options = get_eztv_api_options(epi_tdl[12], req, epi_tdl[11])
         dler = 'eztvAPI'
-    # elif formatted_call[1] == 'magnetdl_new':
-    #    dl_options = magnetdl_download(epi_tdl[11], req)
     elif formatted_call[1] == 'piratebay':
         dl_options = get_piratebay_api_options(epi_tdl[11], req)
         dler = 'piratebay'
@@ -363,10 +354,10 @@ def do_api_process(epi_tdl, req):
     else:
         for sdl_o in sdl_options:
             if vli > 2:
-                print(f'The Options are {sdl_o[0]}, {sdl_o[3]}, {sdl_o[1]}, {sdl_o[4]}', flush=True)
+                log.write(f'The Options are {sdl_o[0]}, {sdl_o[3]}, {sdl_o[1]}, {sdl_o[4]}', 3)
         for dlo in sdl_options:
             if vli > 2:
-                print(f'Selected Option = {dlo[0]}, {dlo[3]}, {dlo[1]}, {dlo[4]}', flush=True)
+                log.write(f'Selected Option = {dlo[0]}, {dlo[3]}, {dlo[1]}, {dlo[4]}', 3)
             command_str = f'''open -a transmission '{dlo[2]}' '''
             os.system(command_str)
             return True, main_link, dler
@@ -378,22 +369,19 @@ def display_status(processed, epi_to_download, do_text, season):
     else:
         do_text = do_text + f" ---> {processed[2]}"
     tvmaze = "https://www.tvmaze.com/shows/" + str(epi_to_download[1]).ljust(5) + do_text
-    print(f'{str(epi_to_download[11][0:48]).ljust(51)} {season.ljust(10)} {str(epi_to_download[6]).ljust(14)} '
-          f'{str(processed[1]).ljust(119)} {tvmaze}', flush=True)
+    log.write(f'{str(epi_to_download[11][0:48]).ljust(51)} {season.ljust(10)} {str(epi_to_download[6]).ljust(14)} '
+              f'{str(processed[1]).ljust(119)} {tvmaze}')
     
 
 def process_the_episodes_to_download():
     episodes_to_download = get_episodes_to_download()
     if vli > 1:
-        print(f"{time.strftime('%D %T')} Actions: "
-              f"Episodes to Download:", len(episodes_to_download), flush=True)
+        log.write(f"Episodes to Download: {len(episodes_to_download)}", 2)
     if len(episodes_to_download) == 0:
         return
-    # process the episodes that need to be downloading
-    print(flush=True)
-    print(f'{"Shows To Download".rjust(120)}', flush=True)
-    print(f'{"Show Name:".ljust(51)} {"Season:".ljust(10)} {"Air Date:".ljust(14)} {"Link:".ljust(119)} '
-          f'{"Acquisition Info:"}', flush=True)
+    log.write(f'{"Shows To Download".rjust(120)}')
+    log.write(f'{"Show Name:".ljust(51)} {"Season:".ljust(10)} {"Air Date:".ljust(14)} {"Link:".ljust(119)} '
+              f'{"Acquisition Info:"}')
     # message_txt = "TVM "
     downloaded_show = ''
     season_dled = False
@@ -401,8 +389,8 @@ def process_the_episodes_to_download():
         hour_now = int(str(datetime.now())[11:13])
         if epi_to_download[6] == date_delta('Now', -1) and hour_now < 6:
             if vli > 2:
-                print(f'Skipping {epi_to_download[3]} because of air date is {epi_to_download[6]} '
-                      f'and time {str(hour_now)} is before 6am', flush=True)
+                log.write(f'Skipping {epi_to_download[3]} because of air date is {epi_to_download[6]} '
+                          f'and time {str(hour_now)} is before 6am', 3)
             continue
         season_info = do_season_process(epi_to_download)
         do_text = " ---> Not Downloading"
@@ -410,10 +398,10 @@ def process_the_episodes_to_download():
         if season_info[2]:
             processed = do_api_process(epi_to_download, season_info[0])
             if vli > 2:
-                print(f'Whole Season Processed is {processed}', flush=True)
+                log.write(f'Whole Season Processed is {processed}', 3)
             if processed[0]:
                 if vli > 2:
-                    print(f'Whole Season Processed is {processed}', flush=True)
+                    log.write(f'Whole Season Processed is {processed}', 3)
                 downloaded_show = epi_to_download[11]
                 do_text = f" ---> Whole Season downloading "
                 season = season_info[0]
@@ -424,17 +412,17 @@ def process_the_episodes_to_download():
                                                         f'WHERE showid = {epi_to_download[1]} AND '
                                                         f'season = {epi_to_download[4]}')
                 if len(epis) == 0:
-                    print(f'Process the Epi(s) to Download: '
-                          f'No episodes found while they should exist for show {epi_to_download[1]}', flush=True)
+                    log.write(f'Process the Epi(s) to Download: '
+                              f'No episodes found while they should exist for show {epi_to_download[1]}')
                 for epi in epis:
-                    print(f'Process The Epi(s) to download: {epi[0]}', flush=True)
+                    log.write(f'Process The Epi(s) to download: {epi[0]}')
                     update_tvmaze_episode_status(epi[0])
                 continue
             else:
                 display_status(processed, epi_to_download, do_text, season_info[0])
                 downloaded_show = ''
                 if vli > 2:
-                    print('If Whole Season is not downloading try the first episode of the season', flush=True)
+                    log.write('If Whole Season is not downloading try the first episode of the season', 3)
                 processed = do_api_process(epi_to_download, season_info[1])
                 if processed[0]:
                     do_text = " ---> Episode now downloading "
@@ -460,26 +448,26 @@ def process_the_episodes_to_download():
     Main program
     First get all the supporting lists we use
 '''
-print(flush=True)
-print(f'{time.strftime("%D %T")} Actions >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Started',
-      flush=True)
+log = logging(caller='Actions', filename='Process')
+log.open()
+log.close()
+
+log.write(f'Started >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>')
 options = docopt(__doc__, version='Statistics Release 1.0')
 vli = int(options['--vl'])
 if vli > 5 or vli < 1:
-    print(f"{time.strftime('%D %T')} Actions: Unknown Verbosity level of {vli}, try statistics.py -h", flush=True)
+    log.write(f"Unknown Verbosity level of {vli}, try statistics.py -h", 0)
     quit()
 elif vli > 1:
-    print(f'{time.strftime("%D %T")} Actions: Verbosity level is set to: {options["--vl"]}', flush=True)
+    log.write(f'Verbosity level is set to: {options["--vl"]}', 2)
 
 download_apis = get_download_apis()
 if not download_apis:
-    print(f"{time.strftime('%D %T')} Actions: Error getting Download Options: {download_apis}", flush=True)
-    print(f'{time.strftime("%D %T")} Actions'
-          f' >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Ended', flush=True)
+    log.write(f"Error getting Download Options: {download_apis}", 0)
+    log.write(f'Ended >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>')
     quit()
 
 if options['-d']:
     process_the_episodes_to_download()
 
-print(f'{time.strftime("%D %T")} Actions >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Ended',
-      flush=True)
+log.write(f'Ended >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>')
