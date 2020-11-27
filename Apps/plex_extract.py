@@ -30,6 +30,7 @@ from Libraries.tvm_db import execute_sqlite
 from Libraries.tvm_db import execute_sql
 from Libraries.tvm_functions import fix_showname
 from Libraries.tvm_apis import update_tvmaze_episode_status
+from Libraries.tvm_logging import logging
 
 
 class sdb_info:
@@ -53,7 +54,7 @@ class log_file:
         try:
             self.we = open(wetxt, "w")
         except IOError as error:
-            print(f'{time.strftime("%D %T")} Plex Extract: Error Opening the txt file {error}', flush=True)
+            log.write(f'Error Opening the txt file {error}', 0)
             quit()
     
     def save(self, info):
@@ -66,14 +67,14 @@ class log_file:
 def func_get_plex_watched_episodes():
     if process_all:
         if vli > 1:
-            print(f'{time.strftime("%D %T")} Plex Extract: Getting all Plex Watched Episodes', flush=True)
+            log.write(f'Getting all Plex Watched Episodes', 2)
         sqlw = f"select grandparent_title, parent_index, `index`, viewed_at " \
                f"from metadata_item_views " \
                f"where parent_index > 0 and metadata_type = 4 " \
                f"order by grandparent_title, parent_index, `index`"
     else:
         if vli > 1:
-            print(f'{time.strftime("%D %T")} Plex Extract: Getting Plex Watched Episodes since yesterday', flush=True)
+            log.write(f'Getting Plex Watched Episodes since yesterday', 2)
         sqlw = f"select grandparent_title, parent_index, `index`, viewed_at " \
                f"from metadata_item_views " \
                f"where parent_index > 0 and metadata_type = 4 and viewed_at > date('now', '-1 day') " \
@@ -81,7 +82,7 @@ def func_get_plex_watched_episodes():
                f"order by grandparent_title, parent_index, `index`"
     
     episodes = execute_sqlite(sqltype='Fetch', sql=sqlw)
-    print(f'{time.strftime("%D %T")} Plex Extract: Found {len(episodes)} episodes to process')
+    log.write(f'Found {len(episodes)} episodes to process')
     return episodes
 
 
@@ -118,19 +119,15 @@ def func_update_episode_and_tvm(epi_showid, epi_season, epi_episode, epi_watched
         return False
     if epi_to_update[0][4] == 'Watched':
         if vli > 3:
-            print(f'{time.strftime("%D %T")} Plex Extract: "{fixed_showname}" Episode Already Watched before'
-                  f' {epi_season}, {epi_episode} with name {epi_to_update[0][1]}', flush=True)
+            log.write(f'Episode Already Watched before "{fixed_showname}"'
+                      f' {epi_season}, {epi_episode} with name {epi_to_update[0][1]}', 4)
         return False
     result = update_tvmaze_episode_status(epiid=epi_to_update[0][5], status=0, upd_date=epi_to_update[0][3])
     if not result:
-        print(f'{time.strftime("%D %T")} Plex Extract: >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Update did not work on TVM with',
-              epi_showid, epi_season, epi_episode, epi_watched_date, fixed_showname,
-              "################################################################",
-              flush=True)
+        log.write(f'Update did not work on TVM with {epi_showid}, {epi_season}, {epi_episode}, {epi_watched_date}, '
+                  f'{fixed_showname}', 0)
         return False
-    print(f'{time.strftime("%D %T")} Plex Extract: >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Updated TVM with',
-          epi_showid, epi_season, epi_episode, epi_watched_date, fixed_showname, ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>",
-          flush=True)
+    log.write(f'Updated TVM with {epi_showid}, {epi_season}, {epi_episode}, {epi_watched_date}, {fixed_showname}', 0)
     return True
 
 
@@ -148,16 +145,13 @@ def func_update_plex(episodes):
         result = execute_sql(sqltype='Fetch', sql=sql)
         if not result:
             if vli > 3:
-                print(f'{time.strftime("%D %T")} Plex Extract: Watched Showid not Found for "{fixed_showname}"'
-                      f' {episode}', flush=True)
+                log.write(f'Watched Showid not Found for "{fixed_showname}" {episode}', 4)
             continue
         if len(result) > 1:
-            print(f'{time.strftime("%D %T")} Plex Extract: More than 1 Showid Found for "{fixed_showname}"'
-                  f' {episode} with result {result}', flush=True)
+            log.write(f'More than 1 Showid Found for "{fixed_showname}" {episode} with result {result}', 2)
             found_sh = func_narrow_down_showids(result, epi_season, epi_episode)
             if not found_sh or len(found_sh) > 1:
-                print(f'{time.strftime("%D %T")} Plex Extract: Could not determine the right show "{fixed_showname}"'
-                      f' {episode}', flush=True)
+                log.write(f'Could not determine the right show "{fixed_showname}" {episode}')
                 found_show = []
             else:
                 found_show = found_sh[0][0]
@@ -184,21 +178,24 @@ def func_write_the_log_file(episodes):
         lf.save(f'{str(watched).strip()}\n')
         ew += 1
         if vli > 2:
-            print(f'{time.strftime("%D %T")} Plex Extract: Processed {episode}', flush=True)
+            log.write(f'Processed {episode}', 3)
     lf.end()
     return ew
 
 
 ''' Main Program'''
 ''' Get Options'''
+log = logging(caller='Plex Extract', filename='Process')
+log.open()
+log.close()
+
 options = docopt(__doc__, version='Plex Extract Release 0.1')
 vli = int(options['--vl'])
 if vli > 5 or vli < 1:
-    print(f'{time.strftime("%D %T")} Plex Extract: Unknown Verbosity level of {vli}, try plex_extract.py -h',
-          flush=True)
+    log.write(f'Unknown Verbosity level of {vli}, try plex_extract.py -h', 0)
     quit()
 elif vli > 1:
-    print(f'{time.strftime("%D %T")} Plex Extract: Verbosity level is set to: {options["--vl"]}', flush=True)
+    log.write(f'Verbosity level is set to: {options["--vl"]}', 2)
 process_all = False
 write_watched = True
 update_plex = False
@@ -215,8 +212,7 @@ if options['-p']:
 '''Get Plex Watched Episodes'''
 watched_episodes = func_get_plex_watched_episodes()
 if not watched_episodes:
-    print(f'{time.strftime("%D %T")} Plex Extract: Reading Plex DB while trying to get the watched episodes '
-          f'{watched_episodes}', flush=True)
+    log.write(f'Reading Plex DB while trying to get the watched episodes {watched_episodes}', 0)
     quit()
 
 '''Process the watched episodes'''
@@ -229,5 +225,4 @@ if update_plex or process_all:
 
 '''End of Program'''
 if vli > 1:
-    print(f'{time.strftime("%D %T")} Plex Extract: Updated Plex Episodes {updated} '
-          f'and written {written} to the log', flush=True)
+    log.write(f'Updated Plex Episodes {updated} and written {written} to the log', 2)
