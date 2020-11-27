@@ -24,11 +24,6 @@ Options:
 """
 
 from docopt import docopt
-from Libraries.tvm_db import execute_sql
-import sys
-from Libraries.tvm_db import execute_sql
-from Libraries.tvm_apis import execute_tvm_request
-from Libraries.tvm_functions import print_tvm, operational_mode
 
 args = docopt(__doc__, version='Try Release 1.0')
 print(args)
@@ -58,14 +53,38 @@ for eptu in eps_to_update:
 sys.stdout.close()
 """
 
-logfile = open('/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Logs/ShowsUpdate.log', 'r')
-for line in logfile:
-    if "[404]" in line:
-        splitbycomma = line.split(",")
-        splitbyslash = splitbycomma[0].split("/")
-        showid = splitbyslash[4]
-        print(f'Now Deleting:', showid)
-        sql = f'delete from shows where `showid` = {showid}'
-        result = execute_sql(sqltype='Commit', sql=sql)
-        print(f'Delete result:', result)
+from Libraries.tvm_logging import logging
 
+log = logging(caller='Try out')
+log1 = logging(caller='Another Try out')
+
+print(log.content, log1.content)
+
+log1.open('Tryout1', 'a+')
+log1.write('Messagae 1')
+log1.write('Messaage 2')
+print('Log: ' + str(log.content) + 'Log1 :' + str(log1.content))
+log.open('Tryout', 'a')
+log.write('Message 1')
+log.write('Message 2')
+print('Log: ' + str(log.content) + 'Log1 :' + str(log1.content))
+log.empty()
+log.write('Message 3')
+log.write('Message 4', read=True)
+print('Log: ' + str(log.content) + 'Log1 :' + str(log1.content))
+log.close()
+log.write('Hello Again')
+
+log1 = logging(caller='Another Try Out')
+log1.open('Tryout1', 'w+')
+print('Log: ' + str(log.content) + 'Log1 :' + str(log1.content))
+log1.write('Messaage 3', level=5)
+log1.write('Message 4')
+print('Log: ' + str(log.content) + 'Log1 :' + str(log1.content))
+log1.close()
+log1.write('Helalo Again')
+
+log1.read()
+log.read()
+
+print('Log: ' + str(log.content) + 'Log1 :' + str(log1.content))
