@@ -30,7 +30,9 @@ class logging:
         else:
             lp = get_tvmaze_info('path_tst_logs')
             ap = get_tvmaze_info('path_tst_apps')
-        
+        if 'SharedFolders' in os.getcwd():
+            lp = str(lp).replace('HD-Data-CA-Server', 'SharedFolders')
+
         self.log_path = lp
         self.app_path = ap
         self.scr_path = sp
