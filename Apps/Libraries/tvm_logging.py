@@ -9,12 +9,13 @@ from Libraries.tvm_db import get_tvmaze_info
 
 
 class logging:
-    def __init__(self, env='Prod', caller=''):
+    def __init__(self, env=False, caller='', filename='Unknown'):
         """
                         Initialization
         :param env:     Anything but 'Prod' (is default) will put the log file in the test environment mode
                           All paths come from the key_values in the DB
         :param caller   The program opening the log file
+        :param filename The filename to use
         """
         if not env:
             if 'Pycharm' in os.getcwd():
@@ -35,11 +36,11 @@ class logging:
         self.scr_path = sp
         self.logfile = 'NotSet'
         self.caller = caller
-        self.filename = ''
+        self.filename = filename
         self.file_status = False
         self.content = []
     
-    def open(self, file, mode='a+', read=False):
+    def open(self, mode='a+', read=False):
         """
                     Open the log file
         :param file:    The filename (is appended with .log automatically)
@@ -47,8 +48,7 @@ class logging:
         :param read:    Also read file into log file .content
         :return:
         """
-        self.filename = file
-        self.logfile = open(f'{self.log_path}{file}.log', mode)
+        self.logfile = open(f'{self.log_path}{self.filename}.log', mode)
         self.file_status = True
         if read:
             self.logfile.read()
@@ -62,9 +62,9 @@ class logging:
             self.logfile.close()
             self.file_status = False
     
-    def write(self, message='', level=0, oc=False, read=False):
+    def write(self, message='', level=1, oc=False, read=False):
         """
-                    Write the messsage to the log file
+                    Write the message to the log file
         :param message:     Text to be written
         :param level:       Information Level Indicator
         :param oc:          Open/Close indicator: False (default) the log file will be in original open mode
@@ -72,9 +72,9 @@ class logging:
         :param read:        Also read file into log file .content
         :return:
         """
-        message = f"{time.strftime('%D %T')} > {self.caller} > Level {level}: {message}'\n'"
+        message = f"{self.caller} > Level {level} {time.strftime('%D %T')}: {message}\n"
         if not self.file_status:
-            self.open(self.filename, 'a+')
+            self.open(mode='a+')
             self.logfile.write(message)
             self.close()
         else:
