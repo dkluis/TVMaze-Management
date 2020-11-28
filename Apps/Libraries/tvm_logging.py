@@ -49,10 +49,8 @@ class logging:
     def open(self, mode='a+', read=False):
         """
                     Open the log file
-        :param file:    The filename (is appended with .log automatically)
         :param mode:    The open mode for the file, default = a+
         :param read:    Also read file into log file .content
-        :return:
         """
         self.logfile = open(f'{self.log_path}{self.filename}.log', mode)
         self.file_status = True
@@ -62,7 +60,6 @@ class logging:
     def close(self):
         """
                     Close the file
-        :return:
         """
         if self.file_status:
             self.logfile.close()
@@ -74,7 +71,6 @@ class logging:
         :param message:     Text to be written
         :param level:       Information Level Indicator
         :param read:        Also read file into log file .content
-        :return:
         """
         message = f"{self.caller} > Level {level} > {time.strftime('%D %T')}: {message}\n"
         if not self.file_status:
@@ -100,7 +96,7 @@ class logging:
     def read(self):
         """
                     Read the whole log file
-        :return:        Note: all content pushed into log file .content
+                    Info is in the .content list
         """
         self.close()
         self.open(mode='r+')
