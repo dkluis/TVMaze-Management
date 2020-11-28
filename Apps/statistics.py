@@ -24,6 +24,7 @@ Options:
 
 from Libraries.tvm_functions import get_today
 from Libraries.tvm_db import stat_views, execute_sql, count_by_download_options, connect_pd
+from Libraries.tvm_logging import logging
 import pandas as pd
 import time
 from docopt import docopt
@@ -32,7 +33,6 @@ from docopt import docopt
 def go_store_statistics(f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12):
     today_epoch = int(get_today('system'))
     today_human = f"'{str(get_today('human'))[:-7]}'"
-    # Make sure that only new info is stored
     last_rec = view_history(True)
     if last_rec:
         if (str(f1) == str(last_rec[2]) and
@@ -47,8 +47,8 @@ def go_store_statistics(f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12):
                 str(f10) == str(last_rec[11]) and
                 str(f11) == str(last_rec[12]) and
                 str(f12) == str(last_rec[13])):
-            if vli > 2:
-                print(f"{time.strftime('%D %T')} Statistics: No Update for TVMaze")
+            if vli > 1:
+                log.write(f"No Update for TVMaze", 2)
             return False
     sql = f"INSERT INTO statistics VALUES ({today_epoch}, {today_human}, {f1}, {f2}, {f3}, {f4}, {f5}, {f6}, {f7}, " \
           f"{f8}, {f9}, {f10}, {f11}, {f12}, " \
@@ -56,7 +56,7 @@ def go_store_statistics(f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12):
     sql = sql.replace('None', 'NULL')
     execute_sql(sqltype='Commit', sql=sql)
     if vli > 1:
-        print(f"{time.strftime('%D %T')} Statistics: Updated TVMaze")
+        log.write(f"Updated TVMaze", 2)
     return True
 
 
@@ -77,8 +77,8 @@ def go_store_download_options(dls):
                 str(dls[9]) == str(stats[24]) and
                 str(dls[10]) == str(stats[25]) and
                 str(dls[11]) == str(stats[26])):
-            if vli > 2:
-                print(f"{time.strftime('%D %T')} Statistics: No Update for Download Options")
+            if vli > 1:
+                log.write(f"No Update for Download Options", 2)
         else:
             time.sleep(1)
             today_epoch = int(get_today('system'))
@@ -90,7 +90,7 @@ def go_store_download_options(dls):
             sql = sql.replace('None', 'NULL')
             execute_sql(sql=sql, sqltype='Commit')
             if vli > 1:
-                print(f"{time.strftime('%D %T')} Statistics: Updated Download Options")
+                log.write(f"Updated Download Options", 2)
 
 
 def view_history(last: False):
@@ -117,15 +117,18 @@ def view_history(last: False):
 '''
 Main Program
 '''
-print()
-print(f'{time.strftime("%D %T")} Statistics >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Started')
+log = logging(caller='Statistics', filename='Process')
+log.open()
+log.close()
+
+log.write(f'Starting Statistics >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>')
 options = docopt(__doc__, version='Statistics Release 1.0')
 vli = int(options['--vl'])
 if vli > 5 or vli < 1:
-    print(f"{time.strftime('%D %T')} Statistics: Unknown Verbosity level of {vli}, try statistics.py -h")
+    log.write(f"Unknown Verbosity level of {vli}, try statistics.py -h", 0)
     quit()
 elif vli > 1:
-    print(f'{time.strftime("%D %T")} Statistics: Verbosity level is set to: {options["--vl"]}')
+    log.write(f'Verbosity level is set to: {options["--vl"]}')
 
 tvmshows = execute_sql(sql=stat_views.count_all_shows, sqltype="Fetch")[0][0]
 myshows = execute_sql(sql=stat_views.count_my_shows, sqltype="Fetch")[0][0]
@@ -145,11 +148,11 @@ myfutureeps = execute_sql(sql=stat_views.count_my_episodes_future, sqltype='Fetc
 dls = count_by_download_options()
 
 if options['-s']:
-    print(f"{time.strftime('%D %T')} Statistics: Storing")
+    log.write(f"Storing Option Selected")
     go_store_statistics(tvmshows, myshows, myshowsrunning, myshowsended, myshowstbd, myshowsid,
                         myeps, mywatchedeps, mytowatcheps, myskippedeps, mytodownloadeps, myfutureeps)
     go_store_download_options(dls)
 else:
-    print(f'{time.strftime("%D %T")} Statistics: No option like -d, -s, or -v was supplied')
+    log.write(f'No option like -d, -s, or -v was supplied', 0)
     
-print(f'{time.strftime("%D %T")} Statistics >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Ended')
+log.write(f'Statistics Ended >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>')
