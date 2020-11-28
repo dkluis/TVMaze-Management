@@ -76,7 +76,7 @@ class logging:
         :param level:       Information Level Indicator
         :param read:        Also read file into log file .content
         """
-        message = f"{self.caller} # Level {level} # {time.strftime('%D %T')} # {message}\n"
+        message = f"{self.caller} > Level {level} > {time.strftime('%D %T')} > {message}\n"
         if not self.file_status:
             self.open(mode='a+')
             self.logfile.write(message)
