@@ -22,7 +22,7 @@ PATH=/Library/Frameworks/Python.framework/Versions/3.8/bin:/usr/local/bin:/usr/b
 export PATH
 
 echo "$(date) >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
+
 python3 shows_update.py -a --vl=5
-echo ""
+
 echo "$(Date) <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
-echo ""

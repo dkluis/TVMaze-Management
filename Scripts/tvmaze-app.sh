@@ -20,5 +20,4 @@ cd $TVMDir
 PYTHONPATH=/Library/Frameworks/Python.framework/Versions/3.8/lib/python3.8/site-packages
 export PYTHONPATH
 
-# echo "$(date) TVMaze Episode Downloads"
 python3 tvmaze.py -p >>$TVMLogs/TVMaze.log 2>>$TVMLogs/Errors.log &
