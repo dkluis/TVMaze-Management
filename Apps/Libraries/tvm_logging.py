@@ -37,6 +37,10 @@ class logging:
         self.app_path = ap
         self.scr_path = sp
         self.logfile = 'NotSet'
+        if len(caller) < 15:
+            spaces = '               '
+            needed = 15 - len(caller)
+            caller = caller + spaces[:needed]
         self.caller = caller
         self.filename = filename
         self.file_status = False
