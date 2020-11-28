@@ -360,7 +360,7 @@ for dl in download:
                     if not ignore:
                         fedl.append(df)
         if vli > 3:
-            log.write(f'Working on edl {edl} \n, with fedl {fedl}', 4)
+            log.write(f'Working on edl {edl}, with fedl {fedl}', 4)
         if len(fedl) == 0:
             log.write(f'Found no video files to move for {dl}')
             if os.path.exists(dl):
