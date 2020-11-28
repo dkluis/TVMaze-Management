@@ -76,7 +76,7 @@ class logging:
         :param level:       Information Level Indicator
         :param read:        Also read file into log file .content
         """
-        message = f"{self.caller} > Level {level} > {time.strftime('%D %T')}: {message}\n"
+        message = f"{self.caller} # Level {level} # {time.strftime('%D %T')} # {message}\n"
         if not self.file_status:
             self.open(mode='a+')
             self.logfile.write(message)
@@ -92,20 +92,22 @@ class logging:
         :return:
         """
         if self.file_status:
-            self.logfile.close()
+            self.close()
         self.open(mode='w+')
-        self.logfile.close()
+        self.close()
         self.file_status = False
         
     def read(self):
         """
                     Read the whole log file
                     Info is in the .content list
+        return:     Log File content
         """
         self.close()
         self.open(mode='r+')
         self.content = self.logfile.read()
         self.close()
+        return self.content
         
     def start(self):
         """
@@ -120,5 +122,5 @@ class logging:
         """
         self.ended = timer()
         self.elapsed = self.ended - self.started
-        self.write(f'{self.caller} Elapsed Time is: {round(self.elapsed, 3)} seconds')
+        self.write(f'{self.caller} Elapsed Time is:s {round(self.elapsed, 3)} seconds')
         self.write('<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<')

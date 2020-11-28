@@ -55,36 +55,15 @@ sys.stdout.close()
 
 from Libraries.tvm_logging import logging
 
-log = logging(caller='Try out')
-log1 = logging(caller='Another Try out')
-
-print(log.content, log1.content)
-
-log1.open('Tryout1', 'a+')
-log1.write('Messagae 1')
-log1.write('Messaage 2')
-print('Log: ' + str(log.content) + 'Log1 :' + str(log1.content))
-log.open('Tryout', 'a')
-log.write('Message 1')
-log.write('Message 2')
-print('Log: ' + str(log.content) + 'Log1 :' + str(log1.content))
-log.empty()
-log.write('Message 3')
-log.write('Message 4', read=True)
-print('Log: ' + str(log.content) + 'Log1 :' + str(log1.content))
+log = logging(caller='Try out', filename='Try Out')
+log.open()
 log.close()
-log.write('Hello Again')
-
-log1 = logging(caller='Another Try Out')
-log1.open('Tryout1', 'w+')
-print('Log: ' + str(log.content) + 'Log1 :' + str(log1.content))
-log1.write('Messaage 3', level=5)
-log1.write('Message 4')
-print('Log: ' + str(log.content) + 'Log1 :' + str(log1.content))
-log1.close()
-log1.write('Helalo Again')
-
-log1.read()
+log.start()
+print(type(log.content))
 log.read()
+log.write('Hello There')
+log.end()
+print(log.read())
 
-print('Log: ' + str(log.content) + 'Log1 :' + str(log1.content))
+
+
