@@ -317,7 +317,7 @@ def process_followed_shows():
 log = logging(caller='Shows', filename='Process')
 log.open()
 log.close()   # Closing so that the log.writes are saved individually to the log file for monitoring
-log.write('Shows Started >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>')
+log.start()
 options = docopt(__doc__, version='Shows Release 1.0')
 vli = int(options['--vl'])
 if vli > 5 or vli < 1:
@@ -346,13 +346,14 @@ if options['-u']:
     log.write(f'Starting to process recently updated shows for insert and sync')
     process_update_all_shows(mdb=db, mcur=cur)
     ended = timer()
-    log.write(f'The process (including calling the TVMaze APIs) took: {ended - started} seconds')
+    log.write(f'The process (including calling the TVMaze APIs) took: {round(ended - started, 3)} seconds')
     started = timer()
     log.write(f'Starting to process to validate followed shows and update')
     process_followed_shows()
     ended = timer()
-    log.write(f'The process (including calling the TVMaze APIs) took: {ended - started} seconds')
+    log.write(f'The process (including calling the TVMaze APIs) took: {round(ended - started, 3)} seconds')
 
 db.commit()
 close_mdb(mdb=db)
-log.write(f'Shows Ended >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>')
+log.end()
+quit()

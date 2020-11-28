@@ -277,8 +277,9 @@ def shorten_showname(info):
 Main Program start
 '''
 log = logging(caller='Plex TVM Update', filename='Process')
-
-log.write(f'Started Plex TVM Update >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>')
+log.open()
+log.close()
+log.start()
 
 options = docopt(__doc__, version='Plex TVM Update Release 1.0')
 vli = int(options['--vl'])
@@ -297,7 +298,7 @@ else:
 
 if len(download) == 0:
     log.write(f'Nothing to Process in the transmission log')
-    log.write(f'Ended Plex TVM Update >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>')
+    log.end()
     quit()
 
 if vli > 4:
@@ -464,5 +465,5 @@ for dl in download:
                     log.write(f'Starting the process to Update TVMaze download statuses for show {d}', 3)
                 update_tvmaze(ds, de)
 
-log.write(f'Ended Plex TVM Update >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>')
+log.end()
 quit()

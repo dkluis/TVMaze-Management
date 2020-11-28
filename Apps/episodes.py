@@ -31,7 +31,8 @@ from datetime import datetime, date
 log = logging(caller='Episodes', filename='Process')
 log.open()
 log.close()
-log.write(f'Episodes Started >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>')
+log.start()
+
 options = docopt(__doc__, version='Episodes Release 1.0')
 vli = int(options['--vl'])
 if vli > 5 or vli < 1:
@@ -108,7 +109,7 @@ for show in shows:
             updated += 1
         else:
             log.write(f"Found more than 1 record for {epi['id']} episode which should not happen", 0)
-            log.write(f'Episodes Ended >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>')
+            log.end()
             quit()
         if (updated + inserted) % 250 == 0:
             if vli > 2:
@@ -203,4 +204,5 @@ if len(eps_to_update) != 0:
         response = execute_tvm_request(baseurl, data=data, req_type='put', code=True)
         log.write(f'Updating Epi {epi[0]} as Skipped since the Show download is set to Skip')
 
-log.write(f'Episodes Ended >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>')
+log.end()
+quit()

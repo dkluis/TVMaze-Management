@@ -188,6 +188,7 @@ def func_write_the_log_file(episodes):
 log = logging(caller='Plex Extract', filename='Process')
 log.open()
 log.close()
+log.start()
 
 options = docopt(__doc__, version='Plex Extract Release 0.1')
 vli = int(options['--vl'])
@@ -226,3 +227,6 @@ if update_plex or process_all:
 '''End of Program'''
 if vli > 1:
     log.write(f'Updated Plex Episodes {updated} and written {written} to the log', 2)
+    
+log.end()
+quit()

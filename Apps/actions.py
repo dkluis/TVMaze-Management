@@ -452,7 +452,7 @@ log = logging(caller='Actions', filename='Process')
 log.open()
 log.close()
 
-log.write(f'Started >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>')
+log.start()
 options = docopt(__doc__, version='Statistics Release 1.0')
 vli = int(options['--vl'])
 if vli > 5 or vli < 1:
@@ -464,10 +464,11 @@ elif vli > 1:
 download_apis = get_download_apis()
 if not download_apis:
     log.write(f"Error getting Download Options: {download_apis}", 0)
-    log.write(f'Ended >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>')
+    log.end()
     quit()
 
 if options['-d']:
     process_the_episodes_to_download()
 
-log.write(f'Ended >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>')
+log.end()
+quit()

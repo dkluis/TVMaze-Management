@@ -61,8 +61,7 @@ def get_file_names(path, suffix):
 log = logging(caller='Cleanup', filename='Process')
 log.open()
 log.close()
-
-log.write('Starting Cleanup >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>')
+log.start()
 
 options = get_the_args()
 vli = options[0]
@@ -159,4 +158,5 @@ for d in listofdirs:
         if str(err)[:10] != '[Errno 66]' and str(err)[:9] != '[Errno 2]':
             log.write(err)
 
-log.write('Ending Cleanup >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>')
+log.end()
+quit()

@@ -120,12 +120,13 @@ Main Program
 log = logging(caller='Statistics', filename='Process')
 log.open()
 log.close()
+log.start()
 
-log.write(f'Starting Statistics >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>')
 options = docopt(__doc__, version='Statistics Release 1.0')
 vli = int(options['--vl'])
 if vli > 5 or vli < 1:
     log.write(f"Unknown Verbosity level of {vli}, try statistics.py -h", 0)
+    log.end()
     quit()
 elif vli > 1:
     log.write(f'Verbosity level is set to: {options["--vl"]}')
@@ -155,4 +156,5 @@ if options['-s']:
 else:
     log.write(f'No option like -d, -s, or -v was supplied', 0)
     
-log.write(f'Statistics Ended >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>')
+log.end()
+quit()

@@ -4,6 +4,7 @@
 
 import os
 import time
+from timeit import default_timer as timer
 
 from Libraries.tvm_db import get_tvmaze_info
 
@@ -45,6 +46,9 @@ class logging:
         self.filename = filename
         self.file_status = False
         self.content = []
+        self.started = 0
+        self.ended = 0
+        self.elapsed = 0
     
     def open(self, mode='a+', read=False):
         """
@@ -103,4 +107,18 @@ class logging:
         self.content = self.logfile.read()
         self.close()
         
-
+    def start(self):
+        """
+            Record Start time
+        """
+        self.started = timer()
+        self.write('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>')
+        
+    def end(self):
+        """
+            Record End time
+        """
+        self.ended = timer()
+        self.elapsed = self.ended - self.started
+        self.write(f'{self.caller} Elapsed Time is: {round(self.elapsed, 3)} seconds')
+        self.write('<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<')
