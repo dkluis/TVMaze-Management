@@ -22,12 +22,10 @@ Options:
 """
 
 import os
-import time
 
 from docopt import docopt
 
-from Libraries.tvm_db import execute_sqlite
-from Libraries.tvm_db import execute_sql
+from Libraries.tvm_db import execute_sqlite, execute_sql
 from Libraries.tvm_functions import fix_showname
 from Libraries.tvm_apis import update_tvmaze_episode_status
 from Libraries.tvm_logging import logging

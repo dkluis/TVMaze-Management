@@ -54,12 +54,13 @@ def episode_processing():
     started = timer()
     if vli > 1:
         log.write(f'Starting to process recently updated episodes for insert and re-sync')
-    shows_sql = "SELECT * FROM shows where status = 'Followed' and  (record_updated = current_date or eps_updated is None)"
+    shows_sql = "SELECT * FROM shows " \
+                "where status = 'Followed' and (record_updated = current_date or eps_updated is Null)"
     shows_sql = shows_sql.replace('None', 'Null')
     shows = execute_sql(sqltype='Fetch', sql=shows_sql)
     
     # shows = [(32, "Fargo")]
-    show_num = (len(shows))
+    # show_num = (len(shows))
     total_episodes = 0
     updated = 0
     inserted = 0
@@ -166,7 +167,7 @@ def episode_processing():
                                       where=f"epiid={epi['episode_id']}",
                                       table='episodes')
         sql = sql.replace('None', 'NULL')
-        result = execute_sql(sqltype='Commit', sql=sql)
+        execute_sql(sqltype='Commit', sql=sql)
         updated += 1
         if updated % 5000 == 0:
             if vli > 2:
@@ -212,7 +213,10 @@ def episode_processing():
             epoch_date = int(date.today().strftime("%s"))
             data = {"marked_at": epoch_date, "type": 2}
             response = execute_tvm_request(baseurl, data=data, req_type='put', code=True)
-            log.write(f'Updating Epi {epi[0]} as Skipped since the Show download is set to Skip')
+            if not response:
+                log.write(f'TVMaze update did not work: {baseurl}, {data} {response}')
+            else:
+                log.write(f'Updating Epi {epi[0]} as Skipped since the Show download is set to Skip')
 
 
 '''Main Program'''
@@ -230,7 +234,7 @@ elif vli > 1:
     log.write(f'Verbosity level is set to: {options["--vl"]}')
 
 if options['-s']:
-    log.write(f'Processing Episodes where Shows are not set for "Followed" and/or "Skipped"')
+    log.write(f'Processing Episodes where Shows are not set for "Followed"')
     find_shows_not_followed_or_skipped()
 else:
     episode_processing()
