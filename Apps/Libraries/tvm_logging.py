@@ -54,12 +54,18 @@ class logging:
         """
                     Open the log file
         :param mode:    The open mode for the file, default = a+
-        :param read:    Also read file into log file .content
+        :param read:    Also put contents into: log file .content
         """
-        self.logfile = open(f'{self.log_path}{self.filename}.log', mode)
+        try:
+            self.logfile = open(f'{self.log_path}{self.filename}.log', mode)
+        except IOError as error:
+            self.logfile = open(f'{self.log_path}{self.filename}.log', 'w+')
+            self.write(f'Created the log file {self.filename} due to open error: {error}', 0)
+            self.logfile.close()
+            self.logfile = open(f'{self.log_path}{self.filename}.log', mode)
         self.file_status = True
         if read:
-            self.logfile.read()
+            self.read()
         
     def close(self):
         """
@@ -93,7 +99,7 @@ class logging:
         """
         if self.file_status:
             self.close()
-        self.open(mode='w+')
+        self.logfile = open(f'{self.log_path}{self.filename}.log', 'w+')
         self.close()
         self.file_status = False
         
@@ -105,7 +111,7 @@ class logging:
         """
         self.close()
         self.open(mode='r+')
-        self.content = self.logfile.read()
+        self.content = self.logfile.readlines()
         self.close()
         return self.content
         

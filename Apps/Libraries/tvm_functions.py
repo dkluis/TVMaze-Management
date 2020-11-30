@@ -218,14 +218,8 @@ class paths:
         self.log_path = lp
         self.app_path = ap
         self.scr_path = sp
-        self.console = lp + 'TVMaze.log'
-        self.errors = lp + 'Errors.log'
         self.process = lp + 'Process.log'
-        self.cleanup = lp + 'Cleanup.log'
-        self.watched = lp + 'Watched.log'
         self.transmission = lp + "Transmission.log"
-        self.shows_update = lp + "Shows_Update.log"
-        self.async_process = lp + 'Process_Async.log'
         
         
 class def_downloader:

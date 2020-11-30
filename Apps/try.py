@@ -59,11 +59,15 @@ log = logging(caller='Try out', filename='Try Out')
 log.open()
 log.close()
 log.start()
-print(type(log.content))
+print(type(log.content), len(log.content))
 log.read()
 log.write('Hello There')
 log.end()
-print(log.read())
+print(log.read()[0], len(log.content))
+for line in log.content:
+    print(str(line).replace('\n', ''))
+log.empty()
+print('Empty:', log.read(), len(log.content))
 
 
 

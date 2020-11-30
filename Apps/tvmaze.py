@@ -33,6 +33,7 @@ from Libraries.tvm_apis import *
 from Libraries.tvm_db import *
 from Libraries.tvm_functions import paths, date_delta
 from Libraries.tvm_dpg import *
+from Libraries.tvm_logging import logging
 
 
 class lists:
@@ -84,7 +85,13 @@ def func_async(sender, process):
 def func_async_return(sender, data):
     log_info(f'Async Callback s {sender} with d {data}')
     configure_item('Processes', enabled=True)
-    window_logs_refresh(f'Refresh##Async Processing Log', '')
+    refresh = ''
+    if (data == 'Update Statistics' or data == 'Get Episodes' or data == 'Update Episodes' or data == 'Update Shows'
+                or 'Plex - TVM'):
+        refresh = 'asyncreturn##Processing Log'
+    elif 'Refresh' in data:
+        refresh = 'asyncreturn##Show Updates Log'
+    window_logs_refresh(f'{refresh}', '')
 
 
 def func_db_opposite():
@@ -129,11 +136,25 @@ def func_buttons(win='', fc='Show', buttons=None):
                 configure_item(f'{button}##{win}', enabled=True)
     else:
         log_error(f'None existing function code {fc}')
+        
+        
+def func_empty_logfile_sub(filename):
+    """
+    Emptying the logfile
+    
+    :param filename:  The filename of the log file
+    :return:
+    """
+    logfile = logging(env=get_value('mode'), caller='TVMaze', filename=filename)
+    logfile.open()
+    logfile.close()
+    logfile.empty()
+    log_info(f'Emptied Run Log: {filename}')
 
 
 def func_empty_logfile(sender='', data=''):
     """
-    Function to empty a log file
+    Function to empty a log file after determining which one
     
     :param sender:  The name of the button and the window
     :param data:    Not Used
@@ -141,25 +162,14 @@ def func_empty_logfile(sender='', data=''):
     """
     win = func_sender_breakup(sender, 1)
     log_info(f'Start the empty logfile process with {sender}, {data}')
-    paths_info = paths(get_value('mode'))
-    if win == 'Cleanup Log':
-        logfile = paths_info.cleanup
-        func_remove_logfile(logfile)
-        log_info(f'Removing Cleanup Log {logfile}')
-    elif win == 'Processing Log':
-        logfile = paths_info.process
-        func_remove_logfile(logfile)
-        log_info(f'Removing Run Log: {logfile}')
-    elif win == 'Async Processing Log':
-        logfile = paths_info.async_process
-        func_remove_logfile(logfile)
-        log_info(f'Removing Run Log: {logfile}')
+    if win == 'Processing Log':
+        func_empty_logfile_sub(filename='Process')
+    elif win == 'Show Updates Log':
+        func_empty_logfile_sub(filename='ShowsUpdate')
     elif win == 'Python Errors':
-        logfile = paths_info.errors
-        func_remove_logfile(logfile)
+        func_empty_logfile_sub(filename='Errors')
     elif win == 'TVMaze Log':
-        logfile = paths_info.console
-        func_remove_logfile(logfile)
+        func_empty_logfile_sub(filename='TVMaze')
     else:
         log_warning(f'Did not process the emptying, could not find {sender}')
     delete_item(f'{win}##window')
@@ -311,8 +321,8 @@ def func_key_main(sender, data):
         if data == mvKey_Return:
             func_login(sender, data)
             log_info(f'{win} Key detected for Function {function}')
-    elif win == 'Cleanup Log' or win == 'Processing Log' or win == 'Python Errors' \
-            or win == 'Transmission Log' or win == 'TVMaze Log' or win == 'Async Processing Log':
+    elif win == 'Processing Log' or win == 'Python Errors' \
+            or win == 'Transmission Log' or win == 'TVMaze Log' or win == 'Show Updates Log':
         if data == mvKey_Return:
             func_log_filter(f'Refresh##{win}', get_value(f'{win}ft'))
             log_info(f'{win} Key detected for Function {function}')
@@ -365,17 +375,6 @@ def func_recursively_show_main(container):
             if 'SEP' in item:
                 continue
             show_item(item)
-
-
-def func_remove_logfile(logfile):
-    log_info(f'Removing logfile {logfile}')
-    try:
-        os.remove(logfile)
-    except IOError as err:
-        log_warning(f'Could not remove logfile {logfile} due to {err}')
-    else:
-        log_info(f'Removed the plex {logfile}')
-        open(logfile, 'a').close()
 
 
 def func_sender_breakup(sender, pos):
@@ -761,9 +760,8 @@ def program_mainwindow():
                 add_spacing(count=1)
                 add_menu_item('Run full Process', callback=tvmaze_processes, enabled=False)
             with menu('Logs'):
-                add_menu_item('Cleanup Log', callback=window_logs)
                 add_menu_item('Processing Log', callback=window_logs)
-                add_menu_item('Async Processing Log', callback=window_logs)
+                add_menu_item('Show Updates Log', callback=window_logs)
                 add_menu_item('Python Errors', callback=window_logs)
                 add_menu_item('Transmission Log', callback=window_logs)
                 add_menu_item('TVMaze Log', callback=window_logs)
@@ -964,12 +962,12 @@ def tvmaze_processes(sender, data):
     else:
         print(f'TVMaze Processes: Not Found "{action}"')
         quit()
-    async_action = ((action + f' >>{paths_info.async_process} 2>>{paths_info.async_process}'), sender)
+    async_action = ((action + f' >>{paths_info.process} 2>>{paths_info.process}'), sender)
     log_info(f'TVMaze processes starting with: {async_action}')
     configure_item('Processes', enabled=False)
     run_async_function(func_async, async_action, return_handler=func_async_return)
     log_info(f'TVMaze processes ASYNC Finished s {async_action}')
-    window_logs('Async Processing Log', '')
+    window_logs('Processing Log', '')
 
 
 def tvmaze_update(sender, data):
@@ -1025,7 +1023,7 @@ def window_close_all(sender, data):
     log_info(f'Close Open Windows {sender}, {data}')
     all_windows = get_windows()
     for win in all_windows:
-        log(f'Processing to close: {win}')
+        log_info(f'Processing to close: {win}')
         if 'Main Window' in win:
             continue
         elif '##standard' in win:
@@ -1111,7 +1109,7 @@ def window_logs(sender, data):
     if does_item_exist(f'{sender}##window'):
         log_info(f'{sender}##window already running')
     else:
-        if sender == 'Processing Log' or sender == 'Async Processing Log':
+        if sender == 'Processing Log':
             width = 1955
             height = 600
             sx = 135
@@ -1173,37 +1171,27 @@ def window_logs_refresh(sender, data):
     win = func_sender_breakup(sender, 1)
     function = func_sender_breakup(sender, 0)
     log_info(f'Log Refresh s {sender}, d {data}, f {function}, w {win}')
-    paths_info = paths(get_value('mode'))
-    logfile = ''
+    
+    filename = ''
     if win == 'Processing Log':
-        logfile = paths_info.process
-    elif win == 'Async Processing Log':
-        logfile = paths_info.async_process
-    elif win == 'TVMaze Log':
-        logfile = paths_info.console
+        filename = 'Process'
+    elif win == 'Show Updates Log':
+        filename = 'ShowsUpdate'
     elif win == 'Python Errors':
-        logfile = paths_info.errors
-    elif win == 'Cleanup Log':
-        logfile = paths_info.cleanup
-    elif win == 'Transmission Log':
-        logfile = paths_info.transmission
-    elif win == 'Refresh Followed Shows Info':
-        logfile = paths_info.shows_update
+        filename = 'Errors'
+    elif win == 'TVMaze Log':
+        filename = 'TVMaze'
     else:
-        log_error(f'Refresh for {sender} not defined')
-    try:
-        file = open(logfile, 'r')
-    except IOError as err:
-        log_warning(f'Console log file IOError: {err}, {win}, {function}, {logfile}')
-        open(logfile, 'a').close()
-        return
-    log_info(f'Refreshing console file: {logfile} for s{sender}, d {data}')
-    consolelines = file.readlines()
+        log_warning(f'Refresh for {sender} not defined')
+
+    logfile = logging(env=get_value('mode'), caller='TVMaze', filename=filename)
+    log_info(f'Refreshing log file: {logfile.filename} for s{sender}, d {data}')
+    consolelines = logfile.read()
     table = []
     for line in consolelines:
         table.append([line.replace("\n", "")])
     set_table_data(f'log_table##{win}', table)
-    file.close()
+    logfile.close()
     set_value(f'##{win}ft', '')
 
 
@@ -1418,23 +1406,28 @@ def window_top_10(sender, data):
 
 
 # Program
-
-print(f'{time.strftime("%D %T")} TVMaze UI Started')
 options = docopt(__doc__, version='TVMaze V1')
 if options['-p']:
     add_value('mode', 'Prod')
     add_value('db_opposite', "Test DB")
-    print('Starting in Production Mode')
+    mode = 'Prod'
 else:
     add_value('mode', 'Test')
     add_value('db_opposite', "Production DB")
-    print('Starting in Test Mode')
+    mode = 'Test'
+
+log = logging(env=get_value('mode'), caller='TVMaze', filename='TVMaze')
+log.open()
+log.close()
+log.start()
+log.write(f'Mode is: {get_value("mode")}')
+
 if options['-d']:
-    print('Starting in Debug Mode')
+    log.write('Starting in Debug Mode')
 if options['-e']:
-    print('Starting with all the Episode Graphs')
+    log.write('Starting with all the Episode Graphs')
 if options['-s']:
-    print('Starting with all the Show Graphs')
+    log.write('Starting with all the Show Graphs')
 
 program_data()
 program_mainwindow()
