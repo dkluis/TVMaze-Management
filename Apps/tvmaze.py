@@ -963,10 +963,10 @@ def tvmaze_processes(sender, data):
         print(f'TVMaze Processes: Not Found "{action}"')
         quit()
     async_action = ((action + f' >>{paths_info.process} 2>>{paths_info.process}'), sender)
-    log_info(f'TVMaze processes starting with: {async_action}')
+    log_info(f'TVMaze async process starting with: {async_action}')
     configure_item('Processes', enabled=False)
     run_async_function(func_async, async_action, return_handler=func_async_return)
-    log_info(f'TVMaze processes ASYNC Finished s {async_action}')
+    log_info(f'TVMaze async process Finished s {async_action}')
     window_logs('Processing Log', '')
 
 
