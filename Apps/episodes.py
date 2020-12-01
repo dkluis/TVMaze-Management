@@ -24,9 +24,11 @@ from Libraries.tvm_apis import *
 from Libraries.tvm_db import *
 from Libraries.tvm_logging import logging
 
+from time import sleep
 from docopt import docopt
 from timeit import default_timer as timer
 from datetime import datetime, date
+from bs4 import BeautifulSoup as Soup
 
 
 def find_shows_not_followed_or_skipped():
@@ -35,32 +37,61 @@ def find_shows_not_followed_or_skipped():
     eps_to_process = episodes_found.json()
     logfile.write(f'Number of Episodes to Process {len(eps_to_process)}')
     log.write(f'Number of Episodes to Process {len(eps_to_process)}')
+    base_url = 'https://www.tvmaze.com/episodes/'
+    base_show = ''
+    base_epi = -1
     for epi in eps_to_process:
+        print(f'Processing {epi["episode_id"]}')
         if vli > 2:
-            logfile.write(f'Processing: {epi}', 2)
+            logfile.write(f'Processing: {epi["episode_id"]}', 2)
         sql = f'select e.showid, s.status ' \
               f'from episodes e join shows s on e.showid = s.showid ' \
               f'where e.epiid = {epi["episode_id"]}'
         show_info = execute_sql(sqltype='Fetch', sql=sql)
+        if epi['episode_id'] == base_epi + 1:
+            base_epi = epi['episode_id']
+            continue
         if not show_info:
-            logfile.write(f'Episode Info {epi} did not find {show_info}')
+            api = base_url + str(epi['episode_id'])
+            result = execute_tvm_request(api=api, req_type='get', sleep=2.25)
+            if not result:
+                logfile.write(f'Could not get info from TVMaze for {api}')
+                base_epi = epi['episode_id']
+                continue
+            page = Soup(result.content, 'html.parser')
+            show_page = page.findAll('div', {"id": "general-info-panel"})
+            link_page = show_page[0].findAll('a')
+            for link in link_page:
+                split_link = str(link).split('/')
+                if split_link[1] == 'shows':
+                    show_id = split_link[2]
+                    if base_show != show_id:
+                        base_show = show_id
+                        logfile.write(f'>>>>>>>>>>>>>>>>>>>>>> Found a showid: {show_id} to follow')
+                        episode_processing(show_id, logfile)
+                    break
+            base_epi = epi['episode_id']
             continue
         if len(show_info) != 1:
             logfile.write(f'Episode Info {epi} found multiple records >>>>>>>>>>>>>> {show_info}', 0)
+            base_epi = epi['episode_id']
             continue
 
 
-def episode_processing():
+def episode_processing(single='', logfile=''):
     started = timer()
-    if vli > 1:
-        log.write(f'Starting to process recently updated episodes for insert and re-sync')
-    shows_sql = "SELECT * FROM shows " \
-                "where status = 'Followed' and (record_updated = current_date or eps_updated is Null)"
-    shows_sql = shows_sql.replace('None', 'Null')
-    shows = execute_sql(sqltype='Fetch', sql=shows_sql)
-    
-    # shows = [(32, "Fargo")]
-    # show_num = (len(shows))
+    if single == '':
+        if vli > 1:
+            log.write(f'Starting to process recently updated episodes for insert and re-sync')
+        shows_sql = "SELECT * FROM shows " \
+                    "where status = 'Followed' and (record_updated = current_date or eps_updated is Null)"
+        shows_sql = shows_sql.replace('None', 'Null')
+        shows = execute_sql(sqltype='Fetch', sql=shows_sql)
+    else:
+        # shows = [(32, "Fargo")]
+        # show_num = (len(shows))
+        shows = [(single, 'A Show')]
+        logfile.write(f'Starting to process Single Show: {single}')
     total_episodes = 0
     updated = 0
     inserted = 0
@@ -174,6 +205,9 @@ def episode_processing():
                 log.write(f"Processed {updated} records", 3)
     
     log.write(f"Total Episodes updated: {updated}")
+    if single != '':
+        logfile.write(f'Finished Single')
+        return
     
     log.write(f'Starting to find episodes to reset')
     found = False
