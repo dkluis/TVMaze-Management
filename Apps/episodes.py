@@ -31,6 +31,26 @@ from datetime import datetime, date
 from bs4 import BeautifulSoup as Soup
 
 
+def update_tvm_show_status(showid, logfile):
+    logfile.write(f'TVMaze update {showid}')
+    api = f'{tvm_apis.update_followed_shows}/{showid}'
+    result = execute_tvm_request(api, req_type='put', code=True)
+    if not result:
+        logfile.write(f"Web error trying to follow show: {showid}")
+    sql = f'select showid, status from shows where showid = {showid}'
+    result = execute_sql(sqltype='Fetch', sql=sql)
+    if result:
+        if result[0][1] != 'Followed':
+            sql = f'update shows set status = "Followed", download = "Skip" where `showid` = {showid}'
+            result = execute_sql(sqltype='Commit', sql=sql)
+            if not result:
+                logfile.write(f'Update in the DB did not work: {sql}, {result}')
+        else:
+            logfile.write(f'Show {showid} was already followed')
+    else:
+        logfile.write(f'Show {showid} not found')
+        
+
 def find_shows_not_followed_or_skipped():
     logfile = logging(caller='Episodes - Shows Not Followed', filename='Episodes without Shows')
     episodes_found = execute_tvm_request(api=tvm_apis.get_episodes_status, code=True, sleep=0)
@@ -68,6 +88,7 @@ def find_shows_not_followed_or_skipped():
                     if base_show != show_id:
                         base_show = show_id
                         logfile.write(f'>>>>>>>>>>>>>>>>>>>>>> Found a showid: {show_id} to follow')
+                        update_tvm_show_status(show_id, logfile)
                         episode_processing(show_id, logfile)
                     break
             base_epi = epi['episode_id']
@@ -110,12 +131,20 @@ def episode_processing(single='', logfile=''):
                     airdate = None
                 else:
                     airdate = f"'{epi['airdate']}'"
+                if len(epi['name']) > 130:
+                    epiname = epi['name'][:130]
+                else:
+                    epiname = epi['name']
+                if len(epi['url']) > 150:
+                    epiurl = epi['url'][:150]
+                else:
+                    epiurl = epi['url']
                 sql = generate_insert_sql(
                     table='episodes',
                     primary=epi['id'],
                     f1=(1, show[0]),
-                    f2=(2, f'''"{str(epi['name']).replace('"', ' ')}"'''),
-                    f3=(3, f"'{epi['url']}'"),
+                    f2=(2, f'''"{str(epiname).replace('"', ' ')}"'''),
+                    f3=(3, f"'{epiurl}'"),
                     f4=(4, epi['season']),
                     f5=(5, epi['number']),
                     f6=(6, airdate),
@@ -129,17 +158,25 @@ def episode_processing(single='', logfile=''):
             elif len(result) == 1:
                 if vli > 3:
                     log.write(f'Working on EPI: {epi["id"]}', 4)
+                if len(epi['name']) > 130:
+                    epiname = epi['name'][:130]
+                else:
+                    epiname = epi['name']
+                if len(epi['url']) > 150:
+                    epiurl = epi['url'][:150]
+                else:
+                    epiurl = epi['url']
                 if epi['airdate'] is None or epi['airdate'] == '':
-                    sql = generate_update_sql(epiname=str(epi['name']).replace('"', ' '),
-                                              url=epi['url'],
+                    sql = generate_update_sql(epiname=str(epiname).replace('"', ' '),
+                                              url=epiurl,
                                               season=epi['season'],
                                               episode=epi['number'],
                                               rec_updated=f"'{str(datetime.now())[:10]}'",
                                               where=f"epiid={epi['id']}",
                                               table='episodes')
                 else:
-                    sql = generate_update_sql(epiname=str(epi['name']).replace('"', ' '),
-                                              url=epi['url'],
+                    sql = generate_update_sql(epiname=str(epiname).replace('"', ' '),
+                                              url=epiurl,
                                               season=epi['season'],
                                               episode=epi['number'],
                                               airdate=f"'{epi['airdate']}'",
