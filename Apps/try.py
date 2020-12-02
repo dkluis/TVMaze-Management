@@ -53,21 +53,22 @@ for eptu in eps_to_update:
 sys.stdout.close()
 """
 
+from Libraries.tvm_db import mariaDB
 from Libraries.tvm_logging import logging
 
-log = logging(caller='Try out', filename='Try Out')
-log.open()
-log.close()
-log.start()
-print(type(log.content), len(log.content))
-log.read()
-log.write('Hello There')
-log.end()
-print(log.read()[0], len(log.content))
-for line in log.content:
-    print(str(line).replace('\n', ''))
-log.empty()
-print('Empty:', log.read(), len(log.content))
+db = mariaDB(batch=True)
+print(db)
+print(db.host, db.db, db.connection, db.cursor)
 
+log = logging(caller='Try', filename='Process')
+log.write('Testing the logging now')
 
-
+sql = f'select * from key_values where `key` = "def_dl"'
+print(db.execute_sql(sql))
+print('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>')
+sql = f'update key_values set info = "Testing" where `key` = "def_dl"'
+print(db.execute_sql(sql, 'Commit'))
+print('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>')
+sql = f'select * from key_values where `key` = "def_dl"'
+print(db.execute_sql(sql))
+print('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>')

@@ -4,6 +4,7 @@ from sqlalchemy import create_engine
 import sys
 import os
 import ast
+from Libraries.tvm_logging import logging
 
 
 def read_secrets():
@@ -16,6 +17,120 @@ def read_secrets():
     secret.close()
     return secrets
 
+
+class config:
+    def __init__(self):
+        try:
+            secret = open('/Users/dick/.tvmaze/config', 'r')
+        except IOError as err:
+            print('TVMaze config is not found at /Users/dick/.tvmaze/config with error', err)
+            quit()
+        secrets = ast.literal_eval(secret.read())
+        self.host_network = secrets['host_network']
+        self.host_local = secrets['host_local']
+        self.db_admin = secrets['db_admin']
+        self.db_password = secrets['db_password']
+        self.db_prod = secrets['db_prod']
+        self.db_test = secrets['db_test']
+        self.user_admin = secrets['user_admin']
+        self.user_password = secrets['user_password']
+        self.host = ''
+        self.check_host()
+        self.db = ''
+        self.check_db()
+        secret.close()
+        
+    def check_host(self):
+        check = os.getcwd()
+        if 'SharedFolders' in check:
+            self.host = self.host_network
+        else:
+            self.host = self.host_local
+            
+    def check_db(self):
+        check = os.getcwd()
+        if 'Pycharm' in check:
+            self.db = self.db_test
+        else:
+            self.db = self.db_prod
+            
+
+class mariaDB:
+    def __init__(self, h='', d='', batch=False):
+        self.log = logging(caller='Lib mariaDB', filename='Process')
+        conf = config()
+        if h != '':
+            self.host = h
+        else:
+            self.host = conf.host
+        self.user = conf.db_admin
+        self.password = conf.db_password
+        self.user_admin = conf.user_admin
+        self.user_password = conf.user_password
+        if d != '':
+            self.db = d
+        else:
+            self.db = conf.db
+        self.batch = batch
+        
+        self.connection = ''
+        self.cursor = ''
+        self.active = False
+        self.open()
+        
+    def open(self):
+        if self.active:
+            return
+        try:
+            self.connection = mariadb.connect(
+                host=self.host,
+                user=self.user,
+                password=self.password,
+                database=self.db)
+        except mariadb.Error as err:
+            if err:
+                self.log.write(f"Connect {self.db}: Error connecting to MariaDB Platform: {err}", 0)
+                self.log.write('--------------------------------------------------------------------------')
+                sys.exit(1)
+        self.cursor = self.connection.cursor()
+        self.active = True
+        
+    def close(self):
+        if self.active:
+            if self.batch:
+                self.commit()
+            self.connection.close()
+            self.active = False
+            
+    def commit(self):
+        if self.active:
+            self.connection.commit()
+        
+    def execute_sql(self, sql='', sqltype='Fetch'):
+        if not self.active:
+            self.open()
+        if sqltype == 'Commit':
+            try:
+                self.cursor.execute(sql)
+                if not self.batch:
+                    self.connection.commit()
+            except mariadb.Error as er:
+                self.log.write(f'Execute SQL (Commit) Database Error: {self.db}, {er}, {sql}', 0)
+                self.log.write('----------------------------------------------------------------------')
+                return False, er
+            return True
+        elif sqltype == "Fetch":
+            try:
+                self.cursor.execute(sql)
+                result = self.cursor.fetchall()
+            except mariadb.Error as er:
+                self.log.write(f'Execute SQL (Fetch) Database Error: {self.db}, {er}, {sql}', 0)
+                self.log.write(f'----------------------------------------------------------------------')
+                return False, er
+            return result
+        else:
+            return False, 'Not implemented yet'
+        
 
 class mdbi:
     def __init__(self, h, d):

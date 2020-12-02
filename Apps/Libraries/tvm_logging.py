@@ -4,9 +4,8 @@
 
 import os
 import time
+import ast
 from timeit import default_timer as timer
-
-from Libraries.tvm_db import get_tvmaze_info
 
 
 class logging:
@@ -23,20 +22,21 @@ class logging:
                 env = 'Test'
             else:
                 env = 'Prod'
-        
-        sp = get_tvmaze_info('path_scripts')
+                
+        try:
+            secret = open('/Users/dick/.tvmaze/config', 'r')
+        except IOError as err:
+            print('TVMaze config is not found at /Users/dick/.tvmaze/config with error', err)
+            quit()
+        config = ast.literal_eval(secret.read())
         if env == 'Prod':
-            lp = get_tvmaze_info('path_prod_logs')
-            ap = get_tvmaze_info('path_prod_apps')
+            lp = config['prod_logs']
         else:
-            lp = get_tvmaze_info('path_tst_logs')
-            ap = get_tvmaze_info('path_tst_apps')
+            lp = config['tst_logs']
         if 'SharedFolders' in os.getcwd():
             lp = str(lp).replace('HD-Data-CA-Server', 'SharedFolders')
 
         self.log_path = lp
-        self.app_path = ap
-        self.scr_path = sp
         self.logfile = 'NotSet'
         if len(caller) < 15:
             spaces = '               '

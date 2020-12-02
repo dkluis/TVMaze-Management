@@ -26,7 +26,7 @@ Options:
 from docopt import docopt
 
 from Libraries.tvm_apis import *
-from Libraries.tvm_db import *
+from Libraries.tvm_db import mariaDB
 from Libraries.tvm_logging import logging
 
 
@@ -56,7 +56,7 @@ def func_get_cli():
 
 
 def func_get_the_shows():
-    shows = execute_sql(sqltype='Fetch', sql=sql)
+    shows = db.execute_sql(sqltype='Fetch', sql=sql)
     return shows
 
 
@@ -66,30 +66,29 @@ def func_get_tvmaze_show_info(showid):
         log.write(f'Error with API call {showinfo}', 0)
         return
     if 'Error Code:' in showinfo:
-        log.write(f'This show gives an error: {showid} {showinfo} ')
+        log.write(f'This show gives an error: {showid} {showinfo}')
         if "404" in showinfo:
             log.write(f'Now Deleting: {showid}')
-            sql = f'delete from shows where `showid` = {showid}'
-            result = execute_sql(sqltype='Commit', sql=sql)
-            log.write(f'Delete result:', result)
+            sql_tvm = f'delete from shows where `showid` = {showid}'
+            result = db.execute_sql(sqltype='Commit', sql=sql_tvm)
+            log.write(f'Delete result: {result}')
         return
     
     showinfo = showinfo.json()
-    sql = f"update shows " \
-          f"set showstatus = '{showinfo['status']}', " \
-          f"premiered = '{showinfo['premiered']}', " \
-          f"language = '{showinfo['language']}', " \
-          f"thetvdb = '{showinfo['externals']['thetvdb']}', " \
-          f"imdb = '{showinfo['externals']['imdb']}' " \
-          f"where `showid` = {showid}"
-    sql = sql.replace("'None'", 'NULL').replace('None', 'NULL')
-    result = execute_sql(sqltype='Commit', sql=sql)
+    sql_shows = f"update shows " \
+                f"set showstatus = '{showinfo['status']}', " \
+                f"premiered = '{showinfo['premiered']}', " \
+                f"language = '{showinfo['language']}', " \
+                f"thetvdb = '{showinfo['externals']['thetvdb']}', " \
+                f"imdb = '{showinfo['externals']['imdb']}' " \
+                f"where `showid` = {showid}"
+    sql_shows = sql_shows.replace("'None'", 'NULL').replace('None', 'NULL')
+    result = db.execute_sql(sqltype='Commit', sql=sql_shows)
     if not result:
         log.write(f'Error when updating show {showid} {result}', 0)
 
 
 def func_update_shows(shows):
-    global vli
     if not shows:
         if vli > 0:
             log.write(f'Something wrong with getting the shows to update {shows}', 0)
@@ -101,22 +100,25 @@ def func_update_shows(shows):
 
 
 def func_update_the_show(showid, showname):
-    global vli
     if vli > 2:
         log.write(f'Updating show {showid}, {showname}', 3)
     func_get_tvmaze_show_info(showid)
 
 
 def main():
-    global log
-    log = logging(caller='Shows Update', filename='ShowsUpdate')
-    log.start()
     func_get_cli()
     func_update_shows(func_get_the_shows())
-    log.end()
 
 
 if __name__ == '__main__':
     vli = 0
     shows_to_update = []
+    db = mariaDB()
+    sql = ''
+    log = logging(caller='Shows Update', filename='ShowsUpdate')
+    log.start()
+    
     main()
+    
+    db.close()
+    log.end()

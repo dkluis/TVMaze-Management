@@ -458,7 +458,7 @@ for dl in download:
                         shutil.move(d, f'{plex_trash_dir}/{d + t}')
                     except OSError as err:
                         log.write(f'Deleted directly instead {d}')
-                        shutil.rmtree(d)
+                        os.removedirs(d)
             if not movie:
                 if vli > 2:
                     log.write(f'Starting the process to Update TVMaze download statuses for show {d}', 3)
