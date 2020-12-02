@@ -8,10 +8,11 @@ from Libraries.tvm_logging import logging
 
 
 def read_secrets():
+    secret = ''
     try:
         secret = open('/Users/dick/.tvmaze/config', 'r')
     except IOError as err:
-        print('TVMaze config is not found at /Users/dick/.tvmaze/config with error', err)
+        print('TVMaze config is not found at .tvmaze/config with error', err)
         quit()
     secrets = ast.literal_eval(secret.read())
     secret.close()
@@ -19,11 +20,17 @@ def read_secrets():
 
 
 class config:
+    """
+    Config is the routine to read 'secrets' from the configuration file so that they are never visible
+    or hard-coded in the source files
+    """
+    
     def __init__(self):
+        secret = ''
         try:
             secret = open('/Users/dick/.tvmaze/config', 'r')
         except IOError as err:
-            print('TVMaze config is not found at /Users/dick/.tvmaze/config with error', err)
+            print(f'TVMaze config is not found at .tvmaze/config with error {err}')
             quit()
         secrets = ast.literal_eval(secret.read())
         self.host_network = secrets['host_network']
@@ -56,6 +63,9 @@ class config:
             
 
 class mariaDB:
+    """
+    mariaDB is the class that handles or the DB activities for the mariadb DB of TVM-Management
+    """
     def __init__(self, h='', d='', batch=False):
         self.log = logging(caller='Lib mariaDB', filename='Process')
         conf = config()
@@ -161,7 +171,9 @@ class mdbi:
 
 
 def connect_mdb(h='', d='', err=True):
+    log = logging(caller='Lib connect_mdb', filename='Process')
     mdb_info = mdbi(h, d)
+    mdb = ''
     try:
         mdb = mariadb.connect(
             host=mdb_info.host,
@@ -170,8 +182,8 @@ def connect_mdb(h='', d='', err=True):
             database=mdb_info.db)
     except mariadb.Error as e:
         if err:
-            print(f"Connect MDB: Error connecting to MariaDB Platform: {e}", flush=True)
-            print('--------------------------------------------------------------------------', flush=True)
+            log.write(f"Connect MDB: Error connecting to MariaDB Platform: {e}")
+            log.write('--------------------------------------------------------------------------')
             sys.exit(1)
     mcur = mdb.cursor()
     mdict = {'mdb': mdb,
@@ -191,6 +203,7 @@ def connect_pd():
 
 
 def execute_sql(con='', db='', cur='', batch='', h='', d='', sqltype='', sql=''):
+    log = logging(caller='Lib execute_sql', filename='Process')
     mdb_info = mdbi(h, d)
     if h == '':
         h = mdb_info.host
@@ -210,8 +223,8 @@ def execute_sql(con='', db='', cur='', batch='', h='', d='', sqltype='', sql='')
             if batch != "Y":
                 tvmdb.commit()
         except mariadb.Error as er:
-            print('Execute SQL (Commit) Database Error: ', d, er, sql, flush=True)
-            print('----------------------------------------------------------------------')
+            log.write(f'Execute SQL (Commit) Database Error: {d}, {er}, {sql}')
+            log.write('----------------------------------------------------------------------')
             if con != 'Y':
                 close_mdb(tvmdb)
             return False, er
@@ -223,8 +236,8 @@ def execute_sql(con='', db='', cur='', batch='', h='', d='', sqltype='', sql='')
             tvmcur.execute(sql)
             result = tvmcur.fetchall()
         except mariadb.Error as er:
-            print('Execute SQL (Fetch) Database Error: ', d, er, sql, flush=True)
-            print('----------------------------------------------------------------------', flush=True)
+            log.write(f'Execute SQL (Fetch) Database Error: {d}, {er}, {sql}')
+            log.write('----------------------------------------------------------------------')
             if con != 'Y':
                 close_mdb(tvmdb)
             return False, er
@@ -257,6 +270,7 @@ def close_sdb(sdb):
 
 
 def execute_sqlite(sqltype='', sql=''):
+    log = logging(caller='Lib execute_sqlite', filename='Process')
     sdb = connect_sdb()
     sdbcur = sdb['scursor']
     sdbdb = sdb['sdb']
@@ -265,8 +279,8 @@ def execute_sqlite(sqltype='', sql=''):
             sdbcur.execute(sql)
             sdbdb.commit()
         except sqlite3.Error as er:
-            print('Commit Database Error: ', er, sql)
-            print('----------------------------------------------------------------------')
+            log.write(f'Commit Database Error: {er}, {sql}')
+            log.write('----------------------------------------------------------------------')
             close_sdb(sdbdb)
             return False, er
         close_sdb(sdbdb)
@@ -276,8 +290,8 @@ def execute_sqlite(sqltype='', sql=''):
             sdbcur.execute(sql)
             result = sdbcur.fetchall()
         except sqlite3.Error as er:
-            print('Execute SQL Database Error: ', er, sql)
-            print('----------------------------------------------------------------------')
+            log.write(f'Fetch Database Error: {er}, {sql}')
+            log.write('----------------------------------------------------------------------')
             close_sdb(sdbdb)
             return False, er
         close_sdb(sdbdb)
@@ -464,10 +478,10 @@ class tvm_views:
                              "(status = 'Undecided' and download <= CURRENT_DATE) " \
                              "ORDER by download, showid;"
     shows_to_review_count = "SELECT count(*) " \
-                             "FROM shows " \
-                             "WHERE (status = 'New' AND record_updated <= CURRENT_DATE) OR " \
-                             "(status = 'Undecided' and download <= CURRENT_DATE) " \
-                             "ORDER by download, showid;"
+                            "FROM shows " \
+                            "WHERE (status = 'New' AND record_updated <= CURRENT_DATE) OR " \
+                            "(status = 'Undecided' and download <= CURRENT_DATE) " \
+                            "ORDER by download, showid;"
     eps_to_download = "SELECT e.*, s.download, s.alt_showname, s.imdb FROM episodes e " \
                       "JOIN shows s on e.showid = s.showid " \
                       "WHERE mystatus is NULL and airdate is not NULL and airdate <= subdate(current_date, 1) " \
