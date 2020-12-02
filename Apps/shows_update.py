@@ -27,7 +27,6 @@ from docopt import docopt
 
 from Libraries.tvm_apis import *
 from Libraries.tvm_db import *
-from Libraries.tvm_functions import paths
 from Libraries.tvm_logging import logging
 
 
@@ -54,9 +53,6 @@ def func_get_cli():
     else:
         log.write(f"{time.strftime('%D %T')} Shows: No known - parameter given, try plex_extract.py -h", 0)
         quit()
-    paths_info = paths('Prod')
-    if vli > 2:
-        print(f'Using {paths_info.shows_update}', 3)
 
 
 def func_get_the_shows():

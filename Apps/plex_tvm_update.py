@@ -222,9 +222,8 @@ def check_destination(sn, m):
 
 def check_file_ignore(fi):
     if vli > 3:
-        log.write(f''
-              f'Starting to check {fi} type {type(fi)}with all of {plex_do_not_move}, type {type(plex_do_not_move)}',
-              flush=True)
+        log.write(f'Starting to check {fi} type {type(fi)}with all of {plex_do_not_move}, '
+                  f'type {type(plex_do_not_move)}')
     for ign in plex_do_not_move:
         if vli > 3:
             log.write(f'Checking for {ign}, type {type(ign)}')
@@ -246,16 +245,16 @@ def update_tvmaze(showinfo, found_showid):
         found_epiid = find_epiid(found_showid, season, episode, is_episode)
         if not found_epiid:
             log.write(f"{time.strftime('%D %T')} Plex TVM Update: "
-                  f"Did not find '{str(showname).title()}' with episode {showepisode} in TVMaze")
+                      f"Did not find '{str(showname).title()}' with episode {showepisode} in TVMaze")
         elif is_episode and len(found_epiid) == 1:
             update_tvmaze_episode_status(found_epiid[0][0])
-            log.write(f"{time.strftime('%D %T')} Plex TVM Update: "
-                  f"Updated Show '{str(showname).title()}', episode {showepisode} as downloaded in TVMaze")
+            log.write(f"{time.strftime('%D %T')} Plex TVM Update: Updated Show {str(showname).title()}, "
+                      f"episode {showepisode} as downloaded in TVMaze")
         else:
             for epi in found_epiid:
                 update_tvmaze_episode_status(epi[0])
                 log.write(f"{time.strftime('%D %T')} Plex TVM Update: "
-                      f"Updated TVMaze as downloaded for {epi[2]}, Season {epi[4]}, Episode {epi[5]}")
+                          f"Updated TVMaze as downloaded for {epi[2]}, Season {epi[4]}, Episode {epi[5]}")
 
 
 def shorten_showname(info):
@@ -371,7 +370,7 @@ for dl in download:
                     shutil.move(dl, f'{plex_trash_dir}/{dl + t}')
                 except OSError as err:
                     log.write(f'Deleted directly instead {dl}')
-                    shutil.rm(d)
+                    shutil.rmtree(d)
             continue
         else:
             d = str(dl).replace(' ', '.')
