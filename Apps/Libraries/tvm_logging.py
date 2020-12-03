@@ -9,20 +9,22 @@ from timeit import default_timer as timer
 
 
 class logging:
-    def __init__(self, env=False, caller='', filename='Unknown'):
+    def __init__(self, env=False, caller='Unknown', filename='Unknown'):
         """
-                        Initialization
-        :param env:     Anything but 'Prod' (is default) will put the log file in the test environment mode
+        :param env      Anything but 'Prod' (is default) will put the log file in the test environment mode
                           All paths come from the key_values in the DB
         :param caller   The program opening the log file
         :param filename The filename to use
+        
+        :function open
         """
         if not env:
             if 'Pycharm' in os.getcwd():
                 env = 'Test'
             else:
                 env = 'Prod'
-                
+        
+        secret = ''
         try:
             secret = open('/Users/dick/.tvmaze/config', 'r')
         except IOError as err:

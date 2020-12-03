@@ -20,12 +20,12 @@ def read_secrets():
 
 
 class config:
-    """
-    Config is the routine to read 'secrets' from the configuration file so that they are never visible
-    or hard-coded in the source files
-    """
-    
     def __init__(self):
+        """
+            Config is the routine to read 'secrets' from the configuration file so that they are never visible
+            or hard-coded in the source files
+            
+        """
         secret = ''
         try:
             secret = open('/Users/dick/.tvmaze/config', 'r')
@@ -48,6 +48,9 @@ class config:
         secret.close()
         
     def check_host(self):
+        """
+            Set the db host to Network access or localhost access
+        """
         check = os.getcwd()
         if 'SharedFolders' in check:
             self.host = self.host_network
@@ -55,6 +58,9 @@ class config:
             self.host = self.host_local
             
     def check_db(self):
+        """
+            Set the DB to Production or Test
+        """
         check = os.getcwd()
         if 'Pycharm' in check:
             self.db = self.db_test
@@ -63,85 +69,168 @@ class config:
             
 
 class mariaDB:
-    """
-    mariaDB is the class that handles or the DB activities for the mariadb DB of TVM-Management
-    """
     def __init__(self, h='', d='', batch=False):
-        self.log = logging(caller='Lib mariaDB', filename='Process')
+        """
+            mariaDB handles the DB activities for the mariadb DB of TVM-Management
+    
+        :param h:       manually assign a host
+        :param d:       manually assign Production or Testing DB
+        :param batch:   Default False, which mean a commit after all executes of sql with require a commit
+                        True, mean that commits are postpone until a commit is trigger or when the DB is closed
+        """
+        self.__log = logging(caller='Lib mariaDB', filename='Process')
         conf = config()
         if h != '':
-            self.host = h
+            self.__host = h
         else:
-            self.host = conf.host
-        self.user = conf.db_admin
-        self.password = conf.db_password
-        self.user_admin = conf.user_admin
-        self.user_password = conf.user_password
+            self.__host = conf.host
+        self.__user = conf.db_admin
+        self.__password = conf.db_password
+        self.__user_admin = conf.user_admin
+        self.__user_password = conf.user_password
         if d != '':
-            self.db = d
+            self.__db = d
         else:
-            self.db = conf.db
-        self.batch = batch
+            self.__db = conf.db
+        self.__batch = batch
         
-        self.connection = ''
-        self.cursor = ''
-        self.active = False
+        self.__connection = ''
+        self.__cursor = ''
+        self.__active = False
         self.open()
         
+        self.fields = []
+        self.data_dict = []
+        
     def open(self):
-        if self.active:
+        if self.__active:
             return
         try:
-            self.connection = mariadb.connect(
-                host=self.host,
-                user=self.user,
-                password=self.password,
-                database=self.db)
+            self.__connection = mariadb.connect(
+                host=self.__host,
+                user=self.__user,
+                password=self.__password,
+                database=self.__db)
         except mariadb.Error as err:
             if err:
-                self.log.write(f"Connect {self.db}: Error connecting to MariaDB Platform: {err}", 0)
-                self.log.write('--------------------------------------------------------------------------')
+                self.__log.write(f"Connect {self.__db}: Error connecting to MariaDB Platform: {err}", 0)
+                self.__log.write('--------------------------------------------------------------------------')
                 sys.exit(1)
-        self.cursor = self.connection.cursor()
-        self.active = True
+        self.__cursor = self.__connection.cursor()
+        self.__active = True
         
     def close(self):
-        if self.active:
-            if self.batch:
+        if self.__active:
+            if self.__batch:
                 self.commit()
-            self.connection.close()
-            self.active = False
+            self.__connection.close()
+            self.__active = False
             
     def commit(self):
-        if self.active:
-            self.connection.commit()
+        """
+            Execute a commit for outstanding transactions
+        """
+        if self.__active:
+            self.__connection.commit()
         
-    def execute_sql(self, sql='', sqltype='Fetch'):
-        if not self.active:
+    def execute_sql(self, sql='', sqltype='Fetch', data_dict=False, dd_id=False, field_list=[]):
+        """
+                Execute SQL
+        :param sql:         The SQL to execute
+        :param sqltype:     Default if 'Fetch' other option is 'Commit'
+        :param data_dict:   Default False, True create a dictionary out of the result of a fetch
+        :param field_list:  The list of fields to be returned in the dict.  The lib will try to figure out the
+                                field array itself but for joins you need the list to be passed in.
+        :param dd_id        Default False, True adds and id number for every row of data returned in the data_dict
+        :return:            True, False or the result or data_dict set from a fetch
+        """
+        if not self.__active:
             self.open()
         if sqltype == 'Commit':
             try:
-                self.cursor.execute(sql)
-                if not self.batch:
-                    self.connection.commit()
+                self.__cursor.execute(sql)
+                if not self.__batch:
+                    self.__connection.commit()
             except mariadb.Error as er:
-                self.log.write(f'Execute SQL (Commit) Database Error: {self.db}, {er}, {sql}', 0)
-                self.log.write('----------------------------------------------------------------------')
+                self.__log.write(f'Execute SQL (Commit) Database Error: {self.db}, {er}, {sql}', 0)
+                self.__log.write('----------------------------------------------------------------------')
                 return False, er
             return True
         elif sqltype == "Fetch":
             try:
-                self.cursor.execute(sql)
-                result = self.cursor.fetchall()
+                self.__cursor.execute(sql)
+                result = self.__cursor.fetchall()
             except mariadb.Error as er:
-                self.log.write(f'Execute SQL (Fetch) Database Error: {self.db}, {er}, {sql}', 0)
-                self.log.write(f'----------------------------------------------------------------------')
+                self.__log.write(f'Execute SQL (Fetch) Database Error: {self.db}, {er}, {sql}', 0)
+                self.__log.write(f'----------------------------------------------------------------------')
                 return False, er
-            return result
+            if data_dict and len(result) > 0:
+                if field_list:
+                    self.fields = field_list
+                else:
+                    self.__extract_fields(sql)
+                self.__data_as_dict(result, dd_id)
+                return self.data_dict
+            else:
+                return result
         else:
             return False, 'Not implemented yet'
         
-
+    def __extract_fields(self, sql):
+        """
+            Extract the fields from the sql
+        :param sql:     The sql
+        :return:        List of Fields (also self.fields)
+        """
+        sr = sql.lower().replace('select ', '').replace("`", "")
+        sp = sr.lower().split(' from')[0]
+        if sp == '*':
+            sf = sql.lower().split('from ')
+            if len(sf) == 2:
+                st = str(sf[1]).lower()
+            fields_sql = f"SHOW COLUMNS FROM {st}"
+            self.__cursor.execute(fields_sql)
+            columns = self.__cursor.fetchall()
+            self.fields = []
+            for column in columns:
+                self.fields.append(column[0])
+            return self.fields
+        else:
+            fields = sp.split(", ")
+            for field in fields:
+                self.fields.append(field)
+            return self.fields
+    
+    def __data_as_dict(self, result, idx_id=False):
+        """
+            Returns the data as a dictionary (with or without and index in front of every row
+        :param  result:     The Data to be processed
+        :param  idx_id:     Default False, otherwise it adds and numbered ID to the dict
+        :return:
+        """
+        if len(self.fields) != len(result[0]):
+            self.__log.write(f'The length {len(self.fields)} of the data array does not match '
+                           f'the length {len(result)} of the field array', 0)
+            self.data_dict = []
+            return
+        response = ''
+        id_idx = 1
+        for rec in result:
+            if idx_id:
+                row = "{" + f'''"id": "{id_idx}", '''
+                id_idx += 1
+            else:
+                row = "{"
+            f_idx = 0
+            for field in self.fields:
+                row += f'''"{field}": "{str(rec[f_idx]).replace('"', '~~')}", '''
+                f_idx += 1
+            response = response + row[:-2] + "},"
+        response = "[" + response[:-1] + "]"
+        self.data_dict = ast.literal_eval(response)
+        return
+    
+        
 class mdbi:
     def __init__(self, h, d):
         s = read_secrets()

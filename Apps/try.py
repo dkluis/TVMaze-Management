@@ -24,6 +24,7 @@ Options:
 """
 
 from docopt import docopt
+from Libraries.tvm_db import mariaDB
 
 args = docopt(__doc__, version='Try Release 1.0')
 print(args)
@@ -35,40 +36,17 @@ print(f'Option -s was selected {args["-s"]} list of show = {args["<sshow>"]}')
 print(f'Option -b was selected {args["-b"]} DB schema to use = {args["--db"]}')
 print(f'Option -v was selected {args["-v"]}')
 
-"""
-sys.stdout = open(f'try.log', 'a')
+db = mariaDB()
+sql = f'select * from key_values'
+result = db.execute_sql(sql, data_dict=True, dd_id=True)
 
-etu_sql = "select epiid, airdate from episodes where mystatus = 'Watched' and mystatus_date is None"
-eps_to_update = execute_sql(sqltype='Fetch', sql=etu_sql.replace('None', 'NULL'))
-# print_tvm(mode=ops, app='try.py', line=f'Number of Episodes to update: {len(eps_to_update)}')
-print(f'Number of Episodes to update: {len(eps_to_update)}')
-for eptu in eps_to_update:
-    # print_tvm(mode=ops, app='try.py', line=f'Working on {eptu[0]} with date {eptu[1]}')
-    print(f'Working on {eptu[0]} with date {eptu[1]}')
-    baseurl = 'https://api.tvmaze.com/v1/user/episodes/' + str(eptu[0])
-    epoch_date = eptu[1].strftime('%s')
-    data = {"marked_at": epoch_date, "type": 0}
-    response = execute_tvm_request(baseurl, data=data, req_type='put', code=True)
+print(result, type(result))
+for rec in result:
+    print(rec['info'], rec['id'])
 
-sys.stdout.close()
-"""
+quit()
 
-from Libraries.tvm_db import mariaDB
-from Libraries.tvm_logging import logging
 
-db = mariaDB(batch=True)
-print(db)
-print(db.host, db.db, db.connection, db.cursor)
 
-log = logging(caller='Try', filename='Process')
-log.write('Testing the logging now')
 
-sql = f'select * from key_values where `key` = "def_dl"'
-print(db.execute_sql(sql))
-print('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>')
-sql = f'update key_values set info = "Testing" where `key` = "def_dl"'
-print(db.execute_sql(sql, 'Commit'))
-print('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>')
-sql = f'select * from key_values where `key` = "def_dl"'
-print(db.execute_sql(sql))
-print('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>')
+
