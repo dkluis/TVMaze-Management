@@ -8,6 +8,7 @@ import re
 
 
 from Libraries.tvm_db import execute_sql, get_tvmaze_info
+from Libraries.tvm_logging import logging
 
 
 class release:
@@ -168,13 +169,14 @@ def process_download_name(download_name):
 
 
 def get_showid(clean_showname):
+    logfile = logging(caller='Get Show Id', filename='Process')
     sql = f'select showid, showname from shows where alt_showname = "{clean_showname}" and status = "Followed"'
     result = execute_sql(sqltype='Fetch', sql=sql)
     if len(result) > 1:
-        print(f'Something is up, too many shows found', result)
+        logfile.write(f'Something is up, too many shows found {result}', 0)
         return {'showid': 99999999, 'real_showname': 'Too Many Shows Found'}
     elif len(result) == 0:
-        print(f'Something is up, no show found', result)
+        logfile.write(f'Something is up, no show found {result}', 0)
         return {'showid': 0, 'real_showname': 'No ShowFound'}
     else:
         showid = result[0][0]
@@ -183,10 +185,11 @@ def get_showid(clean_showname):
 
 
 def get_episodeid(showid, season, episode):
+    logfile = logging(caller='Get Episode Id', filename='Process')
     sql = f'select epiid from episodes where showid = {showid} and season = {season} and episode = {episode}'
     result = execute_sql(sqltype='Fetch', sql=sql)
     if len(result) != 1:
-        print(f'Something is up, either too many episodes found or no episode found', result)
+        logfile.write(f'Something is up, either too many episodes found or no episode found {result}', 0)
         episodeid = 0
     else:
         episodeid = result[0][0]
@@ -261,6 +264,5 @@ def convert_to_dict_within_list(data, data_type='DB', field_list=None):
             response = response + row[:-2] + "},"
         response = "[" + response[:-1] + "]"
     else:
-        print(f'No result was found')
         return {}
     return response

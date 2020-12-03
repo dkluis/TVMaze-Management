@@ -553,6 +553,13 @@ def tables(db, tbl=''):
     else:
         return f"select column_name, ordinal_position from information_schema.columns " \
                f"where table_schema = '{db}' and table_name = '{tbl}';"
+    
+    
+class db_schema:
+    def __init__(self, database='', table=''):
+        self.databases = f"show databases"
+        self.tables = f"show tables from {database}"
+        self.columns = f"show columns from {table}"
 
 
 class tvm_views:

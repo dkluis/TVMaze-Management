@@ -3,7 +3,7 @@ import requests
 from datetime import date
 
 from Libraries.tvm_db import get_tvmaze_info
-
+from Libraries.tvm_logging import logging
 
 
 class tvm_apis:
@@ -42,6 +42,7 @@ def execute_tvm_request(api, req_type='get', data='', err=True, return_err=False
     session = requests.Session()
     session.max_redirects = redirect
     header_info = ''
+    logfile = logging(caller='TVM Request', filename='Process')
     if code:
         tvm_auth = get_tvmaze_info('tvm_api_auth')
         header_info = {'Authorization': tvm_auth}
@@ -74,18 +75,18 @@ def execute_tvm_request(api, req_type='get', data='', err=True, return_err=False
             else:
                 response = session.delete(api, timeout=timeout)
         else:
-            print("Unknown Request type", flush=True)
+            logfile.write("Unknown Request type", 0)
             return False
     except requests.exceptions.Timeout:
-        print(f'Request timed out for: {api}', flush=True)
+        logfile.write(f'Request timed out for: {api}', 0)
         return False
     except requests.exceptions.RequestException as er:
-        print(f'Request exception: {er} for: {api}, header {header_info}, code {code}, data {data}', flush=True)
+        logfile.write(f'Request exception: {er} for: {api}, header {header_info}, code {code}, data {data}', 0)
         return False
     if response.status_code != 200:
         if err:
-            print(f"Error response: {response} for api call: {api}, header {header_info}, code {code}, data {data}",
-                  flush=True)
+            logfile.write(f"Error response: {response} for api call: {api}, header {header_info}, code {code}, "
+                          f"data {data}", 0)
             if return_err:
                 return f'Error Code: {response.status_code}'
             else:
