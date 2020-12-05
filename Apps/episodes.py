@@ -24,7 +24,6 @@ from Libraries.tvm_apis import *
 from Libraries.tvm_db import *
 from Libraries.tvm_logging import logging
 
-from time import sleep
 from docopt import docopt
 from timeit import default_timer as timer
 from datetime import datetime, date
@@ -33,7 +32,7 @@ from bs4 import BeautifulSoup as Soup
 
 def update_tvm_show_status(showid, logfile):
     logfile.write(f'TVMaze update {showid}')
-    api = f'{tvm_apis.update_followed_shows}/{showid}'
+    api = f'{tvmaze_apis.update_followed_shows}/{showid}'
     result = execute_tvm_request(api, req_type='put', code=True)
     if not result:
         logfile.write(f"Web error trying to follow show: {showid}")
@@ -53,7 +52,7 @@ def update_tvm_show_status(showid, logfile):
 
 def find_shows_not_followed_or_skipped():
     logfile = logging(caller='Episodes - Shows Not Followed', filename='Episodes without Shows')
-    episodes_found = execute_tvm_request(api=tvm_apis.get_episodes_status, code=True, sleep=0)
+    episodes_found = execute_tvm_request(api=tvmaze_apis.get_episodes_status, code=True, sleep=0)
     eps_to_process = episodes_found.json()
     logfile.write(f'Number of Episodes to Process {len(eps_to_process)}')
     log.write(f'Number of Episodes to Process {len(eps_to_process)}')
@@ -89,7 +88,7 @@ def find_shows_not_followed_or_skipped():
                         base_show = show_id
                         logfile.write(f'>>>>>>>>>>>>>>>>>>>>>> Found a showid: {show_id} to follow')
                         update_tvm_show_status(show_id, logfile)
-                        episode_processing(show_id, logfile)
+                        episode_processing(show_id)
                     break
             base_epi = epi['episode_id']
             continue
@@ -99,7 +98,7 @@ def find_shows_not_followed_or_skipped():
             continue
 
 
-def episode_processing(single='', logfile=''):
+def episode_processing(single=''):
     started = timer()
     if single == '':
         if vli > 1:
@@ -107,17 +106,17 @@ def episode_processing(single='', logfile=''):
         shows_sql = "SELECT * FROM shows " \
                     "where status = 'Followed' and (record_updated = current_date or eps_updated is Null)"
         shows_sql = shows_sql.replace('None', 'Null')
-        shows = execute_sql(sqltype='Fetch', sql=shows_sql)
+        result = execute_sql(sqltype='Fetch', sql=shows_sql)
     else:
         # shows = [(32, "Fargo")]
         # show_num = (len(shows))
-        shows = [(single, 'A Show')]
-        logfile.write(f'Starting to process Single Show: {single}')
+        result = [(single, 'A Show')]
+        log.write(f'Starting to process Single Show: {single}')
     total_episodes = 0
     updated = 0
     inserted = 0
-    for show in shows:
-        api = f"{tvm_apis.get_episodes_by_show_pre}{show[0]}{tvm_apis.get_episodes_by_show_suf}"
+    for show in result:
+        api = f"{tvmaze_apis.get_episodes_by_show_pre}{show[0]}{tvmaze_apis.get_episodes_by_show_suf}"
         episodes = execute_tvm_request(api=api, sleep=0.5)
         if not episodes:
             continue
@@ -126,19 +125,22 @@ def episode_processing(single='', logfile=''):
         total_episodes = total_episodes + num_eps
         for epi in episodes:
             result = execute_sql(sql="SELECT * from episodes WHERE epiid = {0}".format(epi['id']), sqltype="Fetch")
+            # Section move to avoid duplicate code
+            if len(epi['name']) > 130:
+                epiname = epi['name'][:130]
+            else:
+                epiname = epi['name']
+            if len(epi['url']) > 150:
+                epiurl = epi['url'][:150]
+            else:
+                epiurl = epi['url']
+            # end section
             if len(result) == 0:
                 if epi['airdate'] == '':
                     airdate = None
                 else:
                     airdate = f"'{epi['airdate']}'"
-                if len(epi['name']) > 130:
-                    epiname = epi['name'][:130]
-                else:
-                    epiname = epi['name']
-                if len(epi['url']) > 150:
-                    epiurl = epi['url'][:150]
-                else:
-                    epiurl = epi['url']
+                # Had Section
                 sql = generate_insert_sql(
                     table='episodes',
                     primary=epi['id'],
@@ -158,14 +160,7 @@ def episode_processing(single='', logfile=''):
             elif len(result) == 1:
                 if vli > 3:
                     log.write(f'Working on EPI: {epi["id"]}', 4)
-                if len(epi['name']) > 130:
-                    epiname = epi['name'][:130]
-                else:
-                    epiname = epi['name']
-                if len(epi['url']) > 150:
-                    epiurl = epi['url'][:150]
-                else:
-                    epiurl = epi['url']
+                # Had Section
                 if epi['airdate'] is None or epi['airdate'] == '':
                     sql = generate_update_sql(epiname=str(epiname).replace('"', ' '),
                                               url=epiurl,
@@ -200,13 +195,13 @@ def episode_processing(single='', logfile=''):
                                           f'WHERE showid = {show[0]}')
     
     log.write(f"Updated existing episodes: {updated} and Inserted new episodes: {inserted}")
-    log.write(f"Total number of shows: {len(shows)}")
+    log.write(f"Total number of shows: {len(result)}")
     log.write(f"Total number of episodes: {total_episodes}")
     ended = timer()
     log.write(f'The process (including calling the TVMaze APIs) took: {ended - started} seconds')
     
     log.write(f"Starting update of episode statuses and date")
-    episodes = execute_tvm_request(api=tvm_apis.get_episodes_status, code=True, sleep=0)
+    episodes = execute_tvm_request(api=tvmaze_apis.get_episodes_status, code=True, sleep=0)
     eps_updated = episodes.json()
     updated = 0
     if vli > 2:
@@ -243,7 +238,7 @@ def episode_processing(single='', logfile=''):
     
     log.write(f"Total Episodes updated: {updated}")
     if single != '':
-        logfile.write(f'Finished Single')
+        log.write(f'Finished Single')
         return
     
     log.write(f'Starting to find episodes to reset')

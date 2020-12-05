@@ -30,10 +30,9 @@ from time import sleep
 from docopt import docopt
 
 from Libraries.tvm_apis import *
-from Libraries.tvm_db import *
 from Libraries.tvm_functions import paths, date_delta
 from Libraries.tvm_dpg import *
-from Libraries.tvm_logging import logging
+from Libraries.tvm_db import *
 
 
 class lists:
@@ -455,7 +454,7 @@ def func_test_tab_bar(sender, data):
 
 def func_tvm_update(fl, si):
     log_info(f'TVMaze update {fl}, {si}')
-    api = f'{tvm_apis.update_followed_shows}/{si}'
+    api = f'{tvmaze_apis.update_followed_shows}/{si}'
     sql = []
     if fl == "F":
         result = execute_tvm_request(api, req_type='put', code=True)
@@ -795,13 +794,12 @@ def program_mainwindow():
             with menu('Windows'):
                 add_menu_item('Close Open Windows', callback=window_close_all, shortcut='ctrl+C')
     
-    # add_additional_font("/System/Library/Fonts/Menlo.ttc", 14)
     add_additional_font("/Users/dick/Library/Fonts/KlokanTechNotoSans-Bold.ttf", 16,
                         custom_glyph_ranges=[[0x370, 0x377], [0x400, 0x4ff], [0x530, 0x58f], [0x10a0, 0x10ff],
                                              [0x30a0, 0x30ff], [0x0590, 0x05ff]])
     # add_additional_font("/Users/dick/Library/Fonts/ProggyClean.ttf", 14,
     # add_additional_font("/Users/dick/Library/Fonts/unifont-13.0.03.ttf", 14,
-    #                    custom_glyph_ranges=[[0x370, 0x377], [0x400, 0x4ff], [0x530, 0x58f], [0x10a0, 0x10ff]])
+    #                   custom_glyph_ranges=[[0x370, 0x377], [0x400, 0x4ff], [0x530, 0x58f], [0x10a0, 0x10ff]])
     set_key_release_callback(func_key_main)
     set_accelerator_callback(func_accelerator_callback)
     if options['-s'] and not options['-l']:

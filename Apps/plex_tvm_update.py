@@ -126,12 +126,12 @@ def find_showid(asn):
             if len(result) < 1:
                 if vli > 3:
                     log.write(f"{time.strftime('%D %T')} Plex TVM Update: "
-                          f"Show without last 4 characters not found: ---> ", "'" + asn[:-5] + "'")
+                              f"Show without last 4 characters not found: ---> ", "'" + asn[:-5] + "'")
                 pass
             else:
                 if vli > 3:
                     log.write(f"{time.strftime('%D %T')} Plex TVM Update: "
-                          f"Show without last 4 characters found: ---> ", "'" + asn[:-5] + "'")
+                              f"Show without last 4 characters found: ---> ", "'" + asn[:-5] + "'")
                 return result[0][0]
         return False
     return result[0][0]
@@ -154,11 +154,11 @@ def find_epiid(si, s, e, is_epi):
             if is_epi:
                 if vli > 3:
                     log.write(f''
-                          f'Episodes of {si} for season {s} were watched before')
+                              f'Episodes of {si} for season {s} were watched before')
             else:
                 if vli > 3:
                     log.write(f''
-                          f'Episode of {si} for season {s} and episode {2} was watched before')
+                              f'Episode of {si} for season {s} and episode {2} was watched before')
             return False
     return result
 
@@ -235,7 +235,7 @@ def check_file_ignore(fi):
 def update_tvmaze(showinfo, found_showid):
     if vli > 1:
         log.write(f''
-              f'Starting to update TVMaze episodes for {showinfo} with Show ID {found_showid}')
+                  f'Starting to update TVMaze episodes for {showinfo} with Show ID {found_showid}')
     showname = showinfo[0]
     showepisode = showinfo[1]
     season = showinfo[2]
@@ -328,6 +328,7 @@ for dl in download:
         log.write(f'Processing download {dl}', 3)
     dl_check = check_exist(dl)
     dl_exist = dl_check[0]
+    dl_dir = ''
     if dl_exist:
         dl_dir = dl_check[1]
     if not dl_exist:

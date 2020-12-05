@@ -6,7 +6,7 @@ from Libraries.tvm_db import get_tvmaze_info
 from Libraries.tvm_logging import logging
 
 
-class tvm_apis:
+class tvmaze_apis:
     """
     Predefined TVMaze APIs used
     """
@@ -29,7 +29,7 @@ def execute_tvm_request(api, req_type='get', data='', err=True, return_err=False
     :param api:         The TVMaze API to call
     :param data:        Some APIs (the put) can requirement data
     :param err:         If True: generates an error on any none 200 response code for the request
-    :param return_err:  if True: return 'Error Code {http: responce.status_code}, instead of False
+    :param return_err:  if True: return 'Error Code {http: response.status_code}, instead of False
     :param sleep:       Wait time between API calls [Default: 1.25 seconds]
     :param code:        Some API require a token because they are premium API
     :param req_type:    get, put, delete [Default: get]
@@ -108,9 +108,6 @@ def update_tvmaze_episode_status(epiid, status=1, upd_date=None):
         epoch_date = int(date.today().strftime("%s"))
     else:
         epoch_date = int(upd_date.strftime('%s'))
-    data = {"marked_at": epoch_date, "type": status}
+    data = str({"marked_at": epoch_date, "type": status})
     response = execute_tvm_request(baseurl, data=data, req_type='put', code=True)
     return response
-
-
-

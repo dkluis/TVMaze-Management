@@ -104,7 +104,7 @@ def process_all_shows(start, end, sync):
     while ind <= end:  # Paging is going up to 250  # Remember last page processed here: 197
         if vli > 3:
             log.write(f'Processing TVMaze Page: {ind}', 4)
-        req = tvm_apis.get_shows_by_page + str(ind)
+        req = tvmaze_apis.get_shows_by_page + str(ind)
         response = execute_tvm_request(api=req, err=False)
         if vli > 3:
             log.write(f'Response to page request {ind} is {response}', 4)
@@ -129,11 +129,11 @@ def process_all_shows(start, end, sync):
 
 
 def process_update_all_shows(mdb, mcur):
-    response = execute_tvm_request(api=tvm_apis.get_updated_shows, err=True)
+    response = execute_tvm_request(api=tvmaze_apis.get_updated_shows, err=True)
     if response:
         response = response.json()
     else:
-        log.write(f"Response did not contain a json for API {tvm_apis.get_updated_shows}", 0)
+        log.write(f"Response did not contain a json for API {tvmaze_apis.get_updated_shows}", 0)
         return
     if vli > 1:
         log.write(f'Number of Shows to potentially update {len(response)}', 2)
@@ -249,17 +249,17 @@ def process_update_all_shows(mdb, mcur):
 
 
 def process_followed_shows():
-    result = execute_tvm_request(api=tvm_apis.get_followed_shows, code=True)
+    result = execute_tvm_request(api=tvmaze_apis.get_followed_shows, code=True)
     if not result:
         result = ''
-        log.write(f"Some error with the call to TVMaze occurred {tvm_apis.get_followed_shows}, {result}", 0)
+        log.write(f"Some error with the call to TVMaze occurred {tvmaze_apis.get_followed_shows}, {result}", 0)
         return
     result = result.json()
     found = False
-    shows = execute_sql(sqltype='Fetch', sql=std_sql.followed_shows)
+    records = execute_sql(sqltype='Fetch', sql=std_sql.followed_shows)
     count = 0
     nf_list = []
-    for show in shows:
+    for show in records:
         count += 1
         for res in result:
             if res['show_id'] == show[0]:

@@ -1,5 +1,5 @@
 from flask import Flask
-from flask_cors import CORS, cross_origin
+from flask_cors import CORS
 from Libraries.tvm_functions import execute_sql, convert_to_dict_within_list
 from Libraries.tvm_db import connect_pd, shows
 import pandas as pd
@@ -28,7 +28,8 @@ def get_shows_page_followed(page):
     else:
         start = int(page) * 1000
         end = int(page) * 1000 + 999
-        result = execute_sql(sqltype='Fetch', sql=f'select * from shows where status = "Followed" and showid between {start} and {end}')
+        result = execute_sql(sqltype='Fetch', sql=f'select * from shows '
+                                                  f'where status = "Followed" and showid between {start} and {end}')
     result = convert_to_dict_within_list(result, data_type='DB', field_list=shows.field_list)
     return result
 
@@ -83,7 +84,7 @@ def get_show_by_name_followed(showname):
 @app.route('/apis/v1/stats')
 def get_stat_records():
     con = connect_pd()
-    df = pd.read_sql_query('select * from statistics where statrecind = "TVMaze" order by statepoch asc', con)
+    df = pd.read_sql_query('select * from statistics where statrecind = "TVMaze" order by statepoch', con)
     return f'{df}'
 
 

@@ -34,7 +34,7 @@ def go_store_statistics(f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12):
     today_epoch = int(get_today('system'))
     today_human = f"'{str(get_today('human'))[:-7]}'"
     last_rec = view_history(True)
-    if last_rec:
+    if len(last_rec) != 0:
         if (str(f1) == str(last_rec[2]) and
                 str(f2) == str(last_rec[3]) and
                 str(f3) == str(last_rec[4]) and
@@ -52,7 +52,7 @@ def go_store_statistics(f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12):
             return False
     sql = f"INSERT INTO statistics VALUES ({today_epoch}, {today_human}, {f1}, {f2}, {f3}, {f4}, {f5}, {f6}, {f7}, " \
           f"{f8}, {f9}, {f10}, {f11}, {f12}, " \
-          f"'TVMaze', None, None, None, None, None, None, None, None, None, None, None, None);"
+          f"'TVMaze', Null, Null, Null, Null, Null, Null, Null, Null, Null, Null, Null, Null);"
     sql = sql.replace('None', 'NULL')
     execute_sql(sqltype='Commit', sql=sql)
     if vli > 1:
@@ -60,23 +60,23 @@ def go_store_statistics(f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12):
     return True
 
 
-def go_store_download_options(dls):
+def go_store_download_options(dls_in):
     stats = execute_sql(sql='SELECT * from statistics where statrecind = "Downloaders" order by statdate desc ',
                         sqltype='Fetch')
     if len(stats) != 0:
         stats = stats[0]
-        if (str(dls[0]) == str(stats[15]) and
-                str(dls[1]) == str(stats[16]) and
-                str(dls[2]) == str(stats[17]) and
-                str(dls[3]) == str(stats[18]) and
-                str(dls[4]) == str(stats[19]) and
-                str(dls[5]) == str(stats[20]) and
-                str(dls[6]) == str(stats[21]) and
-                str(dls[7]) == str(stats[22]) and
-                str(dls[8]) == str(stats[23]) and
-                str(dls[9]) == str(stats[24]) and
-                str(dls[10]) == str(stats[25]) and
-                str(dls[11]) == str(stats[26])):
+        if (str(dls_in[0]) == str(stats[15]) and
+                str(dls_in[1]) == str(stats[16]) and
+                str(dls_in[2]) == str(stats[17]) and
+                str(dls_in[3]) == str(stats[18]) and
+                str(dls_in[4]) == str(stats[19]) and
+                str(dls_in[5]) == str(stats[20]) and
+                str(dls_in[6]) == str(stats[21]) and
+                str(dls_in[7]) == str(stats[22]) and
+                str(dls_in[8]) == str(stats[23]) and
+                str(dls_in[9]) == str(stats[24]) and
+                str(dls_in[10]) == str(stats[25]) and
+                str(dls_in[11]) == str(stats[26])):
             if vli > 1:
                 log.write(f"No Update for Download Options", 2)
         else:
@@ -84,9 +84,9 @@ def go_store_download_options(dls):
             today_epoch = int(get_today('system'))
             today_human = f"'{str(get_today('human'))[:-7]}'"
             sql = f"INSERT INTO statistics VALUES ({today_epoch}, {today_human}, " \
-                  f"None, None, None, None, None, None, None, None, None, None, None, None, 'Downloaders', " \
-                  f"{dls[0]}, {dls[1]}, {dls[2]}, {dls[3]}, {dls[4]}, {dls[5]}, " \
-                  f"{dls[6]}, {dls[7]}, {dls[8]}, {dls[9]}, {dls[10]}, {dls[11]});"
+                  f"Null,Null,Null,Null,Null,Null,Null,Null,Null,Null,Null,Null,'Downloaders', " \
+                  f"{dls_in[0]}, {dls_in[1]}, {dls_in[2]}, {dls_in[3]}, {dls_in[4]}, {dls_in[5]}, " \
+                  f"{dls_in[6]}, {dls_in[7]}, {dls_in[8]}, {dls_in[9]}, {dls_in[10]}, {dls_in[11]});"
             sql = sql.replace('None', 'NULL')
             execute_sql(sql=sql, sqltype='Commit')
             if vli > 1:
@@ -109,7 +109,7 @@ def view_history(last: False):
                                'myshowstbd, myshowsrunning, myshowsindevelopment,'
                                'myepisodes, myepisodeswatched, myepisodestowatch, myepisodesskipped, '
                                'myepisodestodownloaded, myepisodesannounced '
-                               'from statistics where statrecind = "TVMaze" order by statepoch asc', mdbe)
+                               'from statistics where statrecind = "TVMaze" order by statepoch', mdbe)
         print(df)
     return
 

@@ -50,13 +50,13 @@ def update_show_status(showid, status):
 
 
 def update_tvmaze_followed_shows(showid):
-    api = tvm_apis.update_followed_shows = str(showid)
+    api = tvmaze_apis.update_followed_shows = str(showid)
     response = execute_tvm_request(api=api, code=True, req_type='put')
     return response
 
 
 def update_tvmaze_episode_status(epiid):
-    api = tvm_apis.update_episode_status + str(epiid)
+    api = tvmaze_apis.update_episode_status + str(epiid)
     epoch_date = int(date.today().strftime("%s"))
     data = {"marked_at": epoch_date, "type": 1}
     response = execute_tvm_request(api=api, req_type='put', code=True, data=data, err=True)
@@ -449,9 +449,6 @@ def process_the_episodes_to_download():
     First get all the supporting lists we use
 '''
 log = logging(caller='Actions', filename='Process')
-log.open()
-log.close()
-
 log.start()
 options = docopt(__doc__, version='Statistics Release 1.0')
 vli = int(options['--vl'])
