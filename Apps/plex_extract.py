@@ -68,7 +68,7 @@ def func_get_plex_watched_episodes():
             log.write(f'Getting all Plex Watched Episodes', 2)
         sqlw = f"select grandparent_title, parent_index, `index`, viewed_at " \
                f"from metadata_item_views " \
-               f"where parent_index > 0 and metadata_type = 4 " \
+               f"where parent_index > 0 and metadata_type = 4 and account_id = 1 " \
                f"order by grandparent_title, parent_index, `index`"
     else:
         if vli > 1:
@@ -107,7 +107,6 @@ def func_narrow_down_showids(showids, season, episode):
                 found_shows_with_epis.append(show[0][0])
     else:
         found_shows_with_epis.append(valid_shows[0][0])
-    # print('Found Epis', found_shows_with_epis)
     return found_shows_with_epis
 
 
@@ -120,12 +119,13 @@ def func_update_episode_and_tvm(epi_showid, epi_season, epi_episode, epi_watched
             log.write(f'Episode Already Watched before "{fixed_showname}"'
                       f' {epi_season}, {epi_episode} with name {epi_to_update[0][1]}', 4)
         return False
-    result = update_tvmaze_episode_status(epiid=epi_to_update[0][5], status=0, upd_date=epi_to_update[0][3])
+    result = update_tvmaze_episode_status(epiid=epi_to_update[0][5], status=0, upd_date=epi_to_update[0][3],
+                                          log_it=True)
     if not result:
         log.write(f'Update did not work on TVM with {epi_showid}, {epi_season}, {epi_episode}, {epi_watched_date}, '
                   f'{fixed_showname}', 0)
         return False
-    log.write(f'Updated TVM with {epi_showid}, {epi_season}, {epi_episode}, {epi_watched_date}, {fixed_showname}', 0)
+    log.write(f'Updated TVM with {epi_showid}, {epi_season}, {epi_episode}, {epi_watched_date}, {fixed_showname}')
     return True
 
 

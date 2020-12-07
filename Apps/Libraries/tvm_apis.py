@@ -22,7 +22,7 @@ class tvmaze_apis:
 
 
 def execute_tvm_request(api, req_type='get', data='', err=True, return_err=False, sleep=1.25, code=False, redirect=5,
-                        timeout=(10, 5)):
+                        timeout=(10, 5), log=False):
     """
     Call TVMaze APIs
     
@@ -35,6 +35,7 @@ def execute_tvm_request(api, req_type='get', data='', err=True, return_err=False
     :param req_type:    get, put, delete [Default: get]
     :param redirect:    Number of redirects allowed
     :param timeout:     Initial time-out limit and call time-out limit [Default: 10 and 5 seconds]
+    :param log:      Write to the log_file
     :return:            Resulting json if successful for get or HTTPS result or False if unsuccessful
     """
     
@@ -91,16 +92,19 @@ def execute_tvm_request(api, req_type='get', data='', err=True, return_err=False
                 return f'Error Code: {response.status_code}'
             else:
                 return False
+    if log:
+        logfile.write(f'API {api} with {data} Response is: {response.status_code}: {response.content}', 9)
     return response
 
 
-def update_tvmaze_episode_status(epiid, status=1, upd_date=None):
+def update_tvmaze_episode_status(epiid, status=1, upd_date=None, log_it=False):
     """
                      Go Update TVMaze that the show is
                      
     :param epiid:    Episode ID
     :param status:   Type of update: 0 = Watched, 1 = Acquired, 2 = Skipped
     :param upd_date: The date (human readable) to update the episode with
+    :param log_it:   Tell the API to log the response
     :return:         HTML response
     """
     baseurl = 'https://api.tvmaze.com/v1/user/episodes/' + str(epiid)
@@ -109,5 +113,5 @@ def update_tvmaze_episode_status(epiid, status=1, upd_date=None):
     else:
         epoch_date = int(upd_date.strftime('%s'))
     data = str({"marked_at": epoch_date, "type": status})
-    response = execute_tvm_request(baseurl, data=data, req_type='put', code=True)
+    response = execute_tvm_request(baseurl, data=data, req_type='put', code=True, log=log_it)
     return response
