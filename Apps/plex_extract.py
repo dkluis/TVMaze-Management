@@ -24,11 +24,13 @@ Options:
 import os
 
 from docopt import docopt
+import time
+from datetime import date
 
 from Libraries.tvm_db import execute_sqlite, execute_sql
 from Libraries.tvm_functions import fix_showname
-from Libraries.tvm_apis import update_tvmaze_episode_status
 from Libraries.tvm_logging import logging
+from Libraries.tvm_apis import execute_tvm_request
 
 
 class sdb_info:
@@ -119,14 +121,23 @@ def func_update_episode_and_tvm(epi_showid, epi_season, epi_episode, epi_watched
             log.write(f'Episode Already Watched before "{fixed_showname}"'
                       f' {epi_season}, {epi_episode} with name {epi_to_update[0][1]}', 4)
         return False
-    result = update_tvmaze_episode_status(epiid=epi_to_update[0][5], status=0, upd_date=epi_to_update[0][3],
-                                          log_it=True)
+    result = update_tvmaze_episode_status(epiid=epi_to_update[0][5], upd_date=epi_to_update[0][3])
     if not result:
         log.write(f'Update did not work on TVM with {epi_showid}, {epi_season}, {epi_episode}, {epi_watched_date}, '
                   f'{fixed_showname}', 0)
         return False
     log.write(f'Updated TVM with {epi_showid}, {epi_season}, {epi_episode}, {epi_watched_date}, {fixed_showname}')
     return True
+
+
+def update_tvmaze_episode_status(epiid, upd_date):
+    if vli > 2:
+        log.write(f"{time.strftime('%D %T')} Plex TVM Update: Updating", epiid)
+    baseurl = 'https://api.tvmaze.com/v1/user/episodes/' + str(epiid)
+    epoch_date = int(upd_date.strftime("%s"))
+    data = {"marked_at": epoch_date, "type": 0}
+    response = execute_tvm_request(baseurl, data=data, req_type='put', code=True, log=True)
+    return response
 
 
 def func_update_plex(episodes):
