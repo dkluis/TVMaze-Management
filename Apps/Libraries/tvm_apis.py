@@ -97,6 +97,8 @@ def execute_tvm_request(api, req_type='get', data='', err=True, return_err=False
     return response
 
 
+# ToDo Figure out if this is now obsolete
+'''
 def update_tvmaze_episode_status(epiid, status=1, upd_date=None, log_it=False):
     """
                      Go Update TVMaze that the show is
@@ -115,3 +117,4 @@ def update_tvmaze_episode_status(epiid, status=1, upd_date=None, log_it=False):
     data = str({"marked_at": epoch_date, "type": status})
     response = execute_tvm_request(baseurl, data=data, req_type='put', code=True, log=log_it)
     return response
+'''

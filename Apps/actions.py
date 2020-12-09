@@ -362,12 +362,8 @@ def do_api_process(epi_tdl, req):
 
 def display_status(processed, epi_to_download, do_text, season):
     if processed[2] not in ('eztvAPI', 'rarbgAPI', 'piratebay', 'Multi'):
-        do_text = f' ---> Show managed by {processed[2]}'
-    else:
-        do_text = do_text + f" ---> {processed[2]}"
-    tvmaze = "https://www.tvmaze.com/shows/" + str(epi_to_download[1]).ljust(5) + do_text
-    log.write(f'{str(epi_to_download[11][0:48]).ljust(51)} {season.ljust(10)} {str(epi_to_download[6]).ljust(14)} '
-              f'{str(processed[1]).ljust(119)} {tvmaze}')
+        return
+    log.write(f'Showname: {epi_to_download[11][0:50]} > Episode: {season} > Status: {do_text}')
     
 
 def process_the_episodes_to_download():
@@ -376,10 +372,7 @@ def process_the_episodes_to_download():
         log.write(f"Episodes to Download: {len(episodes_to_download)}", 2)
     if len(episodes_to_download) == 0:
         return
-    log.write(f'{"Shows To Download".rjust(120)}')
-    log.write(f'{"Show Name:".ljust(51)} {"Season:".ljust(10)} {"Air Date:".ljust(14)} {"Link:".ljust(119)} '
-              f'{"Acquisition Info:"}')
-    # message_txt = "TVM "
+
     downloaded_show = ''
     season_dled = False
     for epi_to_download in episodes_to_download:
@@ -450,7 +443,7 @@ log.start()
 options = docopt(__doc__, version='Statistics Release 1.0')
 vli = int(options['--vl'])
 if vli > 5 or vli < 1:
-    log.write(f"Unknown Verbosity level of {vli}, try statistics.py -h", 0)
+    log.write(f"Unknown Verbosity level of {vli}, try actions.py -h", 0)
     quit()
 elif vli > 1:
     log.write(f'Verbosity level is set to: {options["--vl"]}', 2)

@@ -259,11 +259,11 @@ def update_tvmaze(showinfo, found_showid):
 
 def shorten_showname(info):
     """
-    ShowNames can include suffixs with years and country codes, they should not be used when creating
+    ShowNames can include suffix with years and country codes, they should not be used when creating
     directories for plex.
 
     :param info:   contains tuple:  Showname, season-episode, etc, etc) only the Showname is needed
-    :return:       same tuple:      With the Shawname shortened
+    :return:       same tuple:      With the Showname shortened
     """
     shortened_showname = fix_showname(info[0])
     if not shortened_showname:

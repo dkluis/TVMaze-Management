@@ -1279,7 +1279,7 @@ def window_shows(sender, data):
                 add_button(f'Shows Due##{sender}', callback=shows_fill_table)
                 add_separator(name=f'Maintenance##SEP1')
                 add_input_text(f'##show_showname{sender}', readonly=True, default_value='', width=450)
-                # add_same_line(spacing=10)
+                add_same_line(spacing=10)
                 add_button(f'View on TVMaze##{sender}', enabled=False, callback=tvmaze_view_show)
                 add_same_line(spacing=10)
                 add_button(f'Find on the Web##{sender}', enabled=False, callback=shows_find_on_web,
