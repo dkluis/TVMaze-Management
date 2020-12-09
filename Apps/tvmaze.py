@@ -49,7 +49,7 @@ class lists:
 
 
 def func_accelerator_callback(sender, data):
-    log_info(f'{sender}, {data}')
+    # log_info(f'{sender}, {data}')
     mapping = {
         "Q": mvKey_Q,
         'S': mvKey_S,
@@ -1218,7 +1218,7 @@ def window_graphs(sender, data):
             add_plot(f'{sender}##plot', xaxis_time=True, crosshairs=True)
         set_style_window_title_align(0.5, 0.5)
         graph_refresh(sender, 'Last 7 days')
-        graph_refresh(sender, 'All Days')
+        # graph_refresh(sender, 'All Days')
         log_info(f'Create item (window): "{win}", {data}')
 
 
