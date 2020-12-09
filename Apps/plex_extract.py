@@ -23,7 +23,7 @@ Options:
 
 from docopt import docopt
 
-from Libraries import execute_sqlite, execute_sql, os, time
+from Libraries import execute_sqlite, execute_sql, os
 from Libraries import execute_tvm_request
 from Libraries import fix_showname
 from Libraries import logging
@@ -128,11 +128,11 @@ def func_update_episode_and_tvm(epi_showid, epi_season, epi_episode, epi_watched
 
 def update_tvmaze_episode_status(epiid, upd_date):
     if vli > 2:
-        log.write(f"{time.strftime('%D %T')} Plex TVM Update: Updating", epiid)
+        log.write(f" Updating {epiid}", 1)
     baseurl = 'https://api.tvmaze.com/v1/user/episodes/' + str(epiid)
     epoch_date = int(upd_date.strftime("%s"))
     data = {"marked_at": epoch_date, "type": 0}
-    response = execute_tvm_request(baseurl, data=data, req_type='put', code=True, log=True)
+    response = execute_tvm_request(baseurl, data=data, req_type='put', code=True, log=do_log)
     return response
 
 
@@ -197,14 +197,21 @@ log.start()
 
 options = docopt(__doc__, version='Plex Extract Release 0.1')
 vli = int(options['--vl'])
+if vli > 2:
+    do_log = True
+else:
+    do_log = False
+    
 if vli > 5 or vli < 1:
     log.write(f'Unknown Verbosity level of {vli}, try plex_extract.py -h', 0)
     quit()
 elif vli > 1:
     log.write(f'Verbosity level is set to: {options["--vl"]}', 2)
+    
 process_all = False
 write_watched = True
 update_plex = False
+
 if options['-a']:
     process_all = True
     write_watched = True
