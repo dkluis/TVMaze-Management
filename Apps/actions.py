@@ -18,16 +18,14 @@ Options:
 
 """
 
-from datetime import datetime, timedelta
+
 from bs4 import BeautifulSoup as Soup
-import re
-
-from Libraries.tvm_db import *
-from Libraries.tvm_functions import def_downloader, date_delta
-from Libraries.tvm_apis import *
-from Libraries.tvm_logging import logging
-
 from docopt import docopt
+
+from Libraries import execute_sql, tvm_views, os, datetime, timedelta
+from Libraries import def_downloader, date_delta, re
+from Libraries import execute_tvm_request, tvmaze_apis, date
+from Libraries import logging
 
 
 def update_show_status(showid, status):
@@ -116,7 +114,6 @@ def get_eztv_api_options(imdb_id, seas, showname):
     eztv_url = execute_sql(sqltype='Fetch',
                            sql='SELECT link_prefix FROM download_options '
                                'where `providername` = "eztvAPI"')[0][0] + eztv_show[2:]
-    # eztv_data = requests.get(eztv_url).json()
     eztv_req_result = execute_tvm_request(api=eztv_url, timeout=(20, 20), err=False)
     if not eztv_req_result:
         return download_options

@@ -21,16 +21,12 @@ Options:
 
 """
 
-import os
-
 from docopt import docopt
-import time
-from datetime import date
 
-from Libraries.tvm_db import execute_sqlite, execute_sql
-from Libraries.tvm_functions import fix_showname
-from Libraries.tvm_logging import logging
-from Libraries.tvm_apis import execute_tvm_request
+from Libraries import execute_sqlite, execute_sql, os, time
+from Libraries import execute_tvm_request
+from Libraries import fix_showname
+from Libraries import logging
 
 
 class sdb_info:
@@ -236,6 +232,6 @@ if update_plex or process_all:
 '''End of Program'''
 if vli > 1:
     log.write(f'Updated Plex Episodes {updated} and written {written} to the log', 2)
-    
+
 log.end()
 quit()

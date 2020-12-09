@@ -29,14 +29,12 @@ Options:
 
 """
 
-from Libraries.tvm_apis import *
-from Libraries.tvm_db import *
-from Libraries.tvm_functions import def_downloader
-from Libraries.tvm_logging import logging
-
-from timeit import default_timer as timer
-from datetime import datetime, date
 from docopt import docopt
+
+from Libraries import execute_tvm_request, tvmaze_apis, datetime, date
+from Libraries import execute_sql, generate_update_sql, generate_insert_sql, std_sql, mdbi, connect_mdb, close_mdb
+from Libraries import def_downloader
+from Libraries import logging, timer
 
 
 def transform_showname(name):

@@ -20,14 +20,12 @@ Options:
 
 """
 
-from Libraries.tvm_apis import *
-from Libraries.tvm_db import *
-from Libraries.tvm_logging import logging
-
 from docopt import docopt
-from timeit import default_timer as timer
-from datetime import datetime, date
 from bs4 import BeautifulSoup as Soup
+
+from Libraries import execute_tvm_request, tvmaze_apis, date
+from Libraries import execute_sql, tvm_views, generate_insert_sql, generate_update_sql, std_sql
+from Libraries import logging, timer, datetime
 
 
 def update_tvm_show_status(showid, logfile):
@@ -60,7 +58,6 @@ def find_shows_not_followed_or_skipped():
     base_show = ''
     base_epi = -1
     for epi in eps_to_process:
-        print(f'Processing {epi["episode_id"]}')
         if vli > 2:
             logfile.write(f'Processing: {epi["episode_id"]}', 2)
         sql = f'select e.showid, s.status ' \

@@ -22,15 +22,14 @@ Options:
 import os
 import shutil
 import time
-from datetime import date
-from time import strftime
 
+from time import strftime
 from docopt import docopt
 
-from Libraries.tvm_apis import execute_tvm_request
-from Libraries.tvm_db import execute_sql
-from Libraries.tvm_functions import fix_showname
-from Libraries.tvm_logging import logging
+from Libraries import execute_tvm_request
+from Libraries import execute_sql
+from Libraries import fix_showname
+from Libraries import logging, date
 
 
 def gather_all_key_info():
@@ -50,7 +49,8 @@ def gather_all_key_info():
     px_processed_dir = str(px_processed_dir[0][0]).split(',')[0]
     px_trash_dir = execute_sql(sqltype='Fetch', sql='SELECT info FROM key_values where `key` = "plextrash"')
     px_trash_dir = str(px_trash_dir[0][0]).split(',')[0]
-    return px_extensions, px_prefs, px_source_dir, px_movie_dir, px_show_dir, px_kids_show_dir, px_kids_shows, px_do_not_move, px_processed_dir, px_trash_dir
+    return px_extensions, px_source_dir, px_movie_dir, px_show_dir, px_kids_show_dir, px_kids_shows, \
+        px_do_not_move, px_processed_dir, px_trash_dir
 
 
 def get_all_episodes_to_update():

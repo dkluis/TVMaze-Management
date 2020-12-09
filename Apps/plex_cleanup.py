@@ -16,11 +16,9 @@ Options:
 
 """
 
-
-import os
 from docopt import docopt
 
-from Libraries.tvm_logging import logging
+from Libraries import logging, os
 
 
 def get_the_args():

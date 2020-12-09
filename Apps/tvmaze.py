@@ -29,10 +29,11 @@ from time import sleep
 
 from docopt import docopt
 
-from Libraries.tvm_apis import *
-from Libraries.tvm_functions import paths, date_delta
+from Libraries.tvm_apis import tvmaze_apis, execute_tvm_request
+from Libraries import paths, date_delta
 from Libraries.tvm_dpg import *
-from Libraries.tvm_db import *
+from Libraries import execute_sql, tvm_views, mdbi
+from Libraries import logging, os
 
 
 class lists:

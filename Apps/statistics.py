@@ -21,13 +21,12 @@ Options:
 
 """
 
-
-from Libraries.tvm_functions import get_today
-from Libraries.tvm_db import stat_views, execute_sql, count_by_download_options, connect_pd
-from Libraries.tvm_logging import logging
-import pandas as pd
-import time
 from docopt import docopt
+import pandas as pd
+
+from Libraries import get_today, time
+from Libraries import stat_views, execute_sql, count_by_download_options, connect_pd
+from Libraries import logging
 
 
 def go_store_statistics(f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12):
