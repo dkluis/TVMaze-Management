@@ -49,7 +49,7 @@ def gather_all_key_info():
     px_processed_dir = str(px_processed_dir[0][0]).split(',')[0]
     px_trash_dir = execute_sql(sqltype='Fetch', sql='SELECT info FROM key_values where `key` = "plextrash"')
     px_trash_dir = str(px_trash_dir[0][0]).split(',')[0]
-    return px_extensions, px_source_dir, px_movie_dir, px_show_dir, px_kids_show_dir, px_kids_shows, \
+    return px_extensions, px_prefs, px_source_dir, px_movie_dir, px_show_dir, px_kids_show_dir, px_kids_shows, \
         px_do_not_move, px_processed_dir, px_trash_dir
 
 
