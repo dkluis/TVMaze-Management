@@ -42,6 +42,10 @@ class config:
         self.db_test = secrets['db_test']
         self.user_admin = secrets['user_admin']
         self.user_password = secrets['user_password']
+        if secrets['remote'] == 'Yes':
+            self.remote = True
+        else:
+            self.remote = False
         self.host = ''
         self.check_host()
         self.db = ''
@@ -53,10 +57,11 @@ class config:
             Set the db host to Network access or localhost access
         """
         check = os.getcwd()
-        if 'SharedFolders' in check:
+        if 'SharedFolders' in check or self.remote:
             self.host = self.host_network
         else:
             self.host = self.host_local
+        print(f'Host is setup as {self.host}')
             
     def check_db(self):
         """
@@ -85,6 +90,7 @@ class mariaDB:
             self.__host = h
         else:
             self.__host = conf.host
+        self.__log.write(f'Host is setup as {self.host}')
         self.__user = conf.db_admin
         self.__password = conf.db_password
         self.__user_admin = conf.user_admin
@@ -114,7 +120,8 @@ class mariaDB:
                 database=self.__db)
         except mariadb.Error as err:
             if err:
-                self.__log.write(f"Connect {self.__db}: Error connecting to MariaDB Platform: {err}", 0)
+                self.__log.write(f"Connect {self.__db}: Error connecting to MariaDB Platform: {err} "
+                                 f"for host {self.__host}", 0)
                 self.__log.write('--------------------------------------------------------------------------')
                 sys.exit(1)
         self.__cursor = self.__connection.cursor()
@@ -241,7 +248,7 @@ class mdbi:
         else:
             prod = True
         if h == '':
-            if 'SharedFolders' in check:
+            if 'SharedFolders' in check or s['remote'] == 'Yes':
                 self.host = s['host_network']
             else:
                 self.host = s['host_local']
