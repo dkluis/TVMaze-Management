@@ -61,7 +61,6 @@ class config:
             self.host = self.host_network
         else:
             self.host = self.host_local
-        print(f'Host is setup as {self.host}')
             
     def check_db(self):
         """
@@ -90,7 +89,7 @@ class mariaDB:
             self.__host = h
         else:
             self.__host = conf.host
-        self.__log.write(f'Host is setup as {self.host}')
+        self.__log.write(f'Host is setup as {self.__host}')
         self.__user = conf.db_admin
         self.__password = conf.db_password
         self.__user_admin = conf.user_admin
