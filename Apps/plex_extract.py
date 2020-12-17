@@ -45,7 +45,7 @@ class log_file:
             wetxt = '/Volumes/HD-Data-CA-Server/Development/' \
                     'PycharmProjects/TVM-Management/Data/Plex_Watched_Episodes.log'
         else:
-            wetxt = '/Volumes/SharedFolders/PlexMedia/PlexProcessing/' \
+            wetxt = '/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/' \
                     'TVMaze/Data/Plex_Watched_Episodes.log'
         try:
             self.we = open(wetxt, "w")
