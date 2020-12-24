@@ -26,7 +26,7 @@ import time
 from time import strftime
 from docopt import docopt
 
-from Libraries import execute_tvm_request
+from Libraries import execute_tvm_request, read_secrets
 from Libraries import execute_sql
 from Libraries import fix_showname
 from Libraries import logging, date
@@ -56,18 +56,33 @@ def gather_all_key_info():
 def get_all_episodes_to_update():
     ttps = []
     try:
-        transmissions = open('/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Logs/Transmission.log')
+        transmissions_in = open(transmission_log, 'r')
     except IOError as er:
-        if vli > 2:
-            log.write(f'Transmission file did not exist: {er}')
+        log.write(f'Transmission file did not exist: {er}')
         return ttps
     
-    for ttp in transmissions:
+    try:
+        transmissions_archive = open(transmission_archive_log, 'a+')
+    except IOError as er:
+        log.write(f'Transmission archive would not open')
+        exit(1)
+    
+    for ttp in transmissions_in:
         if 'Transmission Started' in ttp:
             continue
         if len(ttp) < 5:
             continue
+        transmissions_archive.write(f'{time.strftime("%D %T")} > {ttp}')
         ttps.append(ttp[:-1])
+    
+    transmissions_in.close()
+    try:
+        transmissions_in = open(transmission_log, 'w')
+    except IOError as er:
+        log.write(f'Transmission file did not exist: {er}')
+        return ttps
+    transmissions_in.close()
+    transmissions_archive.close()
     return ttps
 
 
@@ -249,12 +264,12 @@ def update_tvmaze(showinfo, found_showid):
         elif is_episode and len(found_epiid) == 1:
             update_tvmaze_episode_status(found_epiid[0][0])
             log.write(f"{time.strftime('%D %T')} Plex TVM Update: Updated Show {str(showname).title()}, "
-                      f"episode {showepisode} as downloaded in TVMaze")
+                      f"episode {showepisode} as download in TVMaze")
         else:
             for epi in found_epiid:
                 update_tvmaze_episode_status(epi[0])
                 log.write(f"{time.strftime('%D %T')} Plex TVM Update: "
-                          f"Updated TVMaze as downloaded for {epi[2]}, Season {epi[4]}, Episode {epi[5]}")
+                          f"Updated TVMaze as download for {epi[2]}, Season {epi[4]}, Episode {epi[5]}")
 
 
 def shorten_showname(info):
@@ -287,6 +302,10 @@ if vli > 5 or vli < 1:
     quit()
 elif vli >= 1:
     log.write(f'Verbosity level is set to: {options["--vl"]}', 2)
+    
+secrets = read_secrets()
+transmission_log = secrets['prod_logs'] + 'Transmission.log'
+transmission_archive_log = secrets['prod_logs'] + 'Transmissions_Processed.log'
 
 if options['<to_process>']:
     download = [options['<to_process>']]
@@ -304,9 +323,8 @@ if vli > 4:
     log.write(f'Download = {download}', 5)
 
 if not cli:
-    t = strftime("%Y-%m-%d-%I-%M-%S ")
-    os.replace(r'/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Logs/Transmission.log',
-               rf'/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Logs/Archived/{t}Transmission.log')
+    reset = open(transmission_log, 'w')
+    reset.close()
 
 key_info = gather_all_key_info()
 plex_extensions = key_info[0]
