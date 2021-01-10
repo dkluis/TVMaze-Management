@@ -1,6 +1,6 @@
 """
 
-shows_update.py    The App that update all followed shows with the latest tvmaze information
+shows_update.py    The App that update all shows with the latest tvmaze information
 
 Usage:
   shows_update.py -f [--vl=<vlevel>]
