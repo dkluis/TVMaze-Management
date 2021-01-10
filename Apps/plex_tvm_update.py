@@ -116,6 +116,8 @@ def find_showname(download):
     if not seasonfound:
         return False, showinfo
     showname = str(showname[1:]).replace('..', '.')
+    showname = showname.replace('.', ' ')
+    showname = showname.replace('  ', ' ')
     season = seasonstr.lower().split('e')
     seasonnum = int(season[0].lower().replace("s", ""))
     if "e" in seasonstr.lower():
