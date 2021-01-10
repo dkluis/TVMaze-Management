@@ -22,6 +22,7 @@ Options:
 """
 
 from docopt import docopt
+from datetime import date
 
 from Libraries import execute_sqlite, execute_sql, os
 from Libraries import execute_tvm_request
@@ -31,11 +32,8 @@ from Libraries import logging
 
 class sdb_info:
     check = os.getcwd()
-    if 'Pycharm' in check:
-        data = '/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/Plex DB/com.plexapp.plugins.library.db'
-    else:
-        data = '/Users/dick/Library/Application Support/Plex Media Server/Plug-in Support/Databases' \
-               '/com.plexapp.plugins.library.db'
+    data = '/Users/dick/Library/Application Support/Plex Media Server/Plug-in Support/Databases' \
+           '/com.plexapp.plugins.library.db'
 
 
 class log_file:
@@ -127,10 +125,14 @@ def func_update_episode_and_tvm(epi_showid, epi_season, epi_episode, epi_watched
 
 
 def update_tvmaze_episode_status(epiid, upd_date):
+    print(f'Update TVM Episode Status: {epiid}, {upd_date}')
     if vli > 2:
         log.write(f" Updating {epiid}", 1)
     baseurl = 'https://api.tvmaze.com/v1/user/episodes/' + str(epiid)
-    epoch_date = int(upd_date.strftime("%s"))
+    if upd_date:
+        epoch_date = int(upd_date.strftime("%s"))
+    else:
+        epoch_date = int(date.today().strftime("%s"))
     data = {"marked_at": epoch_date, "type": 0}
     response = execute_tvm_request(baseurl, data=data, req_type='put', code=True, log=do_log)
     return response
