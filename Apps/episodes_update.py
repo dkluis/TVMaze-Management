@@ -24,7 +24,7 @@ Options:
 from docopt import docopt
 
 from Libraries.tvm_apis import *
-from Libraries.tvm_db import mariaDB
+from Libraries.tvm_db import execute_sql
 from Libraries.tvm_logging import logging
 
 
@@ -50,7 +50,7 @@ def func_get_cli():
 
 
 def func_get_the_episodes():
-    episodes = db.execute_sql(sqltype='Fetch', sql=sql)
+    episodes = execute_sql(sqltype='Fetch', sql=sql)
     return episodes
 
 
@@ -64,20 +64,20 @@ def func_get_tvmaze_episode_info(epiid):
         if "404" in epiinfo:
             log.write(f'Now Deleting: {epiid}')
             sql_tvm = f'delete from episodes where `epiid` = {epiid}'
-            result = db.execute_sql(sqltype='Commit', sql=sql_tvm)
+            result = execute_sql(sqltype='Commit', sql=sql_tvm)
             log.write(f'Delete result: {result}')
         return
     
     epiinfo = epiinfo.json()
     sql_episodes = f"update episodes " \
-                   f"set epiname = '{epiinfo['name']}', " \
+                   f'set epiname = {epiinfo["name"]}, ' \
                    f"airdate = '{epiinfo['airdate']}', " \
                    f"url = '{epiinfo['url']}', " \
                    f"season = '{epiinfo['season']}', " \
                    f"episode = '{epiinfo['number']}' " \
                    f"where `epiid` = {epiid}"
     sql_episodes = sql_episodes.replace("'None'", 'NULL').replace('None', 'NULL')
-    result = db.execute_sql(sqltype='Commit', sql=sql_episodes)
+    result = execute_sql(sqltype='Commit', sql=sql_episodes)
     if not result:
         log.write(f'Error when updating episode {epiid} {result}', 0)
 
@@ -107,12 +107,10 @@ def main():
 if __name__ == '__main__':
     vli = 0
     episodes_to_update = []
-    db = mariaDB()
     sql = ''
-    log = logging(caller='episodes Update', filename='episodesUpdate')
+    log = logging(caller='Episodes Update', filename='Episodes_Update')
     log.start()
     
     main()
     
-    db.close()
     log.end()
