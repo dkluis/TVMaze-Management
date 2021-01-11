@@ -20,12 +20,16 @@ from Libraries import logging
 log = logging(caller='Episodes Watched Update', filename='Episodes_Watched_Update')
 log.start()
 
-etu_sql = "select epiid, airdate from episodes where mystatus = 'Watched' and mystatus_date is None"
+etu_sql = "select epiid, airdate from episodes where mystatus = 'Watched' and mystatus_date is NULL"
 eps_to_update = execute_sql(sqltype='Fetch', sql=etu_sql.replace('None', 'NULL'))
 print(f'Number of Episodes to update: {len(eps_to_update)}')
 for eptu in eps_to_update:
     baseurl = 'https://api.tvmaze.com/v1/user/episodes/' + str(eptu[0])
+    if not eptu[1]:
+        continue
     epoch_date = eptu[1].strftime('%s')
+    if epoch_date <= 0:
+        continue
     data = {"marked_at": epoch_date, "type": 0}
     response = execute_tvm_request(baseurl, data=data, req_type='put', code=True)
     if response:
@@ -34,4 +38,3 @@ for eptu in eps_to_update:
         log.write(f'Failed to update --------> epi {eptu[0]} as watched on {eptu[1]}')
         
 log.end()
-
