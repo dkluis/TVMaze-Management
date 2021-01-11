@@ -12,7 +12,7 @@ Usage:
   episodes_update.py --version
 
 Options:
-  -h --help             Show this screen
+  -h --help             episode this screen
   --vl=<vlevel>         Level of verbosity
                           1 = Warnings & Errors Only, 2 = High Level Info,
                           3 = Medium Level Info, 4 = Low Level Info, 5 = all [default: 5]
@@ -39,11 +39,11 @@ def func_get_cli():
     elif vli > 1:
         log.write(f'Verbosity level is set to: {options["--vl"]}', 2)
     if options['-a']:
-        sql = 'select epiid, showid from episodes'
+        sql = 'select epiid from episodes'
     elif options['-t']:
-        sql = f'select epiid, showid from episodes where showid = {options["<epiid>"]}'
+        sql = f'select epiid from episodes where epiid = {options["<epiid>"]}'
     elif options['-r']:
-        sql = f'select showid, showname from episodes where showid >= {options["<epiid>"]}'
+        sql = f'select epiid from episodes where epiid >= {options["<epiid>"]}'
     else:
         log.write(f"{time.strftime('%D %T')} episodes: No known - parameter given, try episodes_update.py -h", 0)
         quit()
@@ -54,32 +54,32 @@ def func_get_the_episodes():
     return episodes
 
 
-def func_get_tvmaze_show_info(epiid):
+def func_get_tvmaze_episode_info(epiid):
     epiinfo = execute_tvm_request(f'http://api.tvmaze.com/episodes/{epiid}', timeout=(20, 10), return_err=True)
     if not epiinfo:
         log.write(f'Error with API call {epiinfo}', 0)
         return
     if 'Error Code:' in epiinfo:
-        log.write(f'This episode gives an error: {epiid} {showid}')
+        log.write(f'This episode gives an error: {epiid}')
         if "404" in epiinfo:
-            log.write(f'Now Deleting: {showid}')
-            sql_tvm = f'delete from episodes where `showid` = {showid}'
+            log.write(f'Now Deleting: {epiid}')
+            sql_tvm = f'delete from episodes where `epiid` = {epiid}'
             result = db.execute_sql(sqltype='Commit', sql=sql_tvm)
             log.write(f'Delete result: {result}')
         return
     
-    showinfo = showinfo.json()
+    epiinfo = epiinfo.json()
     sql_episodes = f"update episodes " \
-                f"set episodestatus = '{showinfo['status']}', " \
-                f"premiered = '{showinfo['premiered']}', " \
-                f"language = '{showinfo['language']}', " \
-                f"thetvdb = '{showinfo['externals']['thetvdb']}', " \
-                f"imdb = '{showinfo['externals']['imdb']}' " \
-                f"where `showid` = {showid}"
+                   f"set epiname = '{epiinfo['name']}', " \
+                   f"airdate = '{epiinfo['airdate']}', " \
+                   f"url = '{epiinfo['url']}', " \
+                   f"season = '{epiinfo['season']}', " \
+                   f"episode = '{epiinfo['number']}' " \
+                   f"where `epiid` = {epiid}"
     sql_episodes = sql_episodes.replace("'None'", 'NULL').replace('None', 'NULL')
     result = db.execute_sql(sqltype='Commit', sql=sql_episodes)
     if not result:
-        log.write(f'Error when updating show {showid} {result}', 0)
+        log.write(f'Error when updating episode {epiid} {result}', 0)
 
 
 def func_update_episodes(episodes):
@@ -89,14 +89,14 @@ def func_update_episodes(episodes):
     elif len(episodes) == 0 and vli > 1:
         log.write(f'No episodes found in the DB', 2)
     else:
-        for show in episodes:
-            func_update_the_show(show[0], show[1])
+        for episode in episodes:
+            func_update_the_episode(episode[0])
 
 
-def func_update_the_show(showid, showname):
+def func_update_the_episode(epiid):
     if vli > 2:
-        log.write(f'Updating show {showid}, {showname}', 3)
-    func_get_tvmaze_show_info(showid)
+        log.write(f'Updating episode {epiid}', 3)
+    func_get_tvmaze_episode_info(epiid)
 
 
 def main():
