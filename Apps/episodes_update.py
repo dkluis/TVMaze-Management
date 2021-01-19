@@ -70,7 +70,7 @@ def func_get_tvmaze_episode_info(epiid):
     
     epiinfo = epiinfo.json()
     sql_episodes = f"update episodes " \
-                   f'set epiname = {epiinfo["name"]}, ' \
+                   f'set epiname = "{epiinfo["name"]}", ' \
                    f"airdate = '{epiinfo['airdate']}', " \
                    f"url = '{epiinfo['url']}', " \
                    f"season = '{epiinfo['season']}', " \

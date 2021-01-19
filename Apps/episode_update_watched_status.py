@@ -28,7 +28,7 @@ for eptu in eps_to_update:
     if not eptu[1]:
         continue
     epoch_date = eptu[1].strftime('%s')
-    if epoch_date <= 0:
+    if int(epoch_date) <= 0:
         continue
     data = {"marked_at": epoch_date, "type": 0}
     response = execute_tvm_request(baseurl, data=data, req_type='put', code=True)

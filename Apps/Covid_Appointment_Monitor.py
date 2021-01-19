@@ -54,6 +54,6 @@ def text_message(message):
 '''Main Program'''
 log = logging(caller='Covid Vaccine Availability', filename='Covid_Availability_Monitor')
 log.start()
-counties = ['Citrus', 'Hernando', 'Marion']
+counties = ['Citrus', 'Hernando', 'Marion', 'Pinellas', 'Manatee', 'Hillsborough', 'Polk', 'Hardee', 'Sarasota']
 read_publix_availability()
 log.end()
