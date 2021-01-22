@@ -1,4 +1,3 @@
-from bs4 import BeautifulSoup as Soup
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -8,27 +7,26 @@ from Libraries import get_tvmaze_info
 
 
 def read_publix_availability():
-    availability_link = "https://www.publix.com/covid-vaccine/florida"
+    availability_link = "https://www.publix.com/covid-vaccine/florida/florida-county-status.txt"
     availability_request = execute_tvm_request(api=availability_link, req_type='get')
     if availability_request:
-        availability_html = Soup(availability_request.content, 'html.parser')
+        availability_counties = str(availability_request.content).split('\\r\\n')
     else:
         log.write(f'Web Request Failed ###############################################################################')
         exit(99)
-
-    availability_first_tbody = availability_html.find('tbody')
-    availability_counties = availability_first_tbody.findAll('td')
-    idx = 0
-    while idx < len(availability_counties):
-        for county in counties:
-            if county in availability_counties[idx]:
-                availability = str(availability_counties[idx + 1]).replace('<td>', '').replace('</td>', '')
+        
+    for county_info in availability_counties:
+        county_info = county_info.replace("b'", "")
+        split_county_info = county_info.split('|')
+        county = split_county_info[0]
+        availability = split_county_info[1]
+        for check_county in counties:
+            if county == check_county:
                 message = f'Publix Tracker: County {county} availability is {availability}'
                 log.write(message)
-                if availability != 'Fully Booked':
+                if availability != 'Fully Booked' and availability != 'Coming Soon':
                     log.write(f'Not Fully Booked >>>>>>>>>>>>>{county}>>>>>>>>>>>>>>>>>>>>>{availability}>>>>>>>>>>>>>')
                     text_message(message)
-        idx += 1
         
 
 def text_message(message):
