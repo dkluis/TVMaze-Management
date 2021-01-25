@@ -41,7 +41,10 @@ def get_file_names(path, suffix):
         name = "Empty"
     else:
         if suffix == "srt":
-            name = str(path).split(".en.srt")[0]
+            if '.en.srt' in path:
+                name = str(path).split(".en.srt")[0]
+            else:
+                name = str(path).split('.srt')[0]
         elif suffix == "mkv":
             name = str(path).split(".mkv")[0]
         elif suffix == "mp4":
