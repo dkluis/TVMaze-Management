@@ -215,11 +215,17 @@ def cleanup_name(dl):
     sf = str(dl).split('/')
     fn = sf[len(sf) - 1]
     for plex_pref in plex_prefs:
-        plex_pref = plex_pref.lower()
+        plex_pref = plex_pref.lower().replace(' ', '.')
         fn = fn.lower()
+        if vli > 4:
+            log.write(f'Working with prefix: {plex_pref}, with fn: {fn}')
         if plex_pref in fn:
             fn = str(fn).replace(plex_pref, "").replace(' ', '.')
+            if vli > 4:
+                log.write(f'Cleanup Name: {dl} with {plex_pref} ---> Cleaned Name: {fn}')
             return fn
+    if vli > 4:
+        log.write(f'Cleanup Name: {dl}, Cleaned Name: {fn}')
     return fn
 
 
