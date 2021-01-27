@@ -63,7 +63,7 @@ def update_tvmaze_episode_status(epiid):
     return True
 
 
-def validate_requirements(filename, extension, epi_no, showname):
+def validate_requirements(filename, extension, epi_no, showname, base):
     if vli > 2:
         log.write(f'Starting to validate for {filename}, --> {showname}, --> {epi_no}, and {extension}', 3)
     res1 = '1080p'
@@ -74,7 +74,7 @@ def validate_requirements(filename, extension, epi_no, showname):
     cont1 = "mkv"
     cont2 = "mp4"
     cont3 = 'avi'
-    priority = 1
+    priority = base
     if res1 in filename.lower():
         priority = priority + 40
     elif res2 in filename.lower():
@@ -136,7 +136,7 @@ def get_eztv_api_options(imdb_id, seas, showname):
         size = float(eztv_epi['size_bytes']) / 1000000
         size = int(size)
         size = str(size).zfill(6)
-        prio = validate_requirements(filename, True, seas, showname)
+        prio = validate_requirements(filename, True, seas, showname, 10)
         if vli > 2:
             log.write(f'Checking filename eztvAPI {filename} with {seas} got prio {prio}', 3)
         if prio > 100:
@@ -183,7 +183,7 @@ def get_eztv_options(show, seas):
         size = str(size).zfill(6)
         if vli > 2:
             log.write(f"{dlo} \n Validating {showname}, True, {seas}, {show} ", 3)
-        prio = validate_requirements(showname, True, seas, show)
+        prio = validate_requirements(showname, True, seas, show, 10)
         if vli > 2:
             log.write(f'Prio returned {prio} for {showname}', 3)
         if prio > 100:
@@ -210,7 +210,7 @@ def get_rarbg_api_options(show, seas):
         name = record['title']
         magnet = record['download']
         size = str(int(record['size'] / 1000000)).zfill(6)
-        prio = validate_requirements(name, True, seas, show)
+        prio = validate_requirements(name, True, seas, show, 20)
         if prio > 100:
             dl_options.append((prio, name, magnet, size, 'rarbgAPI'))
     return dl_options
@@ -264,7 +264,7 @@ def get_piratebay_api_options(show, seas):
                     sizem = int(sizem)
                     size = str(sizem).zfill(6)
         showname = showname.replace('Details for ', '')
-        prio = validate_requirements(showname, False, seas, show)
+        prio = validate_requirements(showname, False, seas, show, 15)
         if prio > 100:
             piratebay_titles.append((prio, showname, magnet_link, size, 'piratebay'))
     return piratebay_titles

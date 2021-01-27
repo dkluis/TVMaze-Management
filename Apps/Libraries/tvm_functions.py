@@ -182,7 +182,7 @@ def get_showid(clean_showname):
         showid = result[0][0]
         showname = result[0][1]
         return {'showid': showid, 'real_showname': showname}
-
+    
 
 def get_episodeid(showid, season, episode):
     logfile = logging(caller='Get Episode Id', filename='Process')
