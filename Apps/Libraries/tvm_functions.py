@@ -81,22 +81,35 @@ def send_txt_message(message):
 '''
 
 
-def eliminate_prefixes(sn):
+def eliminate_prefixes(name):
     """
                 Function to eliminate show and movie prefixes from the name.
                 Prefixes are retrieved from the key-values table
-    :param sn:  Full name to be cleaned up
+    :param name:  Full name to be cleaned up
     :return:    cleaned name without any prefixes
     """
     plexprefs = execute_sql(sqltype='Fetch', sql="SELECT info FROM key_values WHERE `key` = 'plexprefs'")[0]
-    plexprefs = str(plexprefs).replace('(', '').replace(')', '').replace("'", "")
-    plexprefs = str(plexprefs).split(',')
-    for pp in plexprefs:
-        pp = pp + '.'
-        if pp in sn:
-            csn = sn.replace(pp, '')
-            return csn
-            
+    plexprefs = str(plexprefs).replace('(', '').replace(')', '').replace("'", "").split(',')
+    for plexpref in plexprefs:
+        if plexpref in name:
+            name_no_pref = name.replace(plexpref, '')
+            return name_no_pref
+    return name
+
+
+def determine_directory(name):
+    """
+                Function to determine if a name indicate a directory or an individual file
+    :param name:    Full name of the directory or file
+    :return:        Bool True is directory, File is False
+    """
+    plexexts = execute_sql(sqltype='Fetch', sql="SELECT info FROM key_values WHERE `key` = 'plexexts'")[0]
+    plexexts = str(plexexts).replace('(', '').replace(')', '').replace("'", "").split(',')
+    for plexext in plexexts:
+        if plexext in name:
+            return False
+        return True
+
 
 def fix_showname(sn):
     """
@@ -140,7 +153,8 @@ def process_download_name(download_name):
                 'real_showname': '',
                 'season': 0,
                 'episode': 0,
-                'episodeid': 0}
+                'episodeid': 0,
+                'whole_season': False}
     else:
         end_of_showname = result['span'][0]
         raw_showname = without_prefix[:end_of_showname]
@@ -153,18 +167,33 @@ def process_download_name(download_name):
                     'real_showname': '',
                     'season': 0,
                     'episode': 0,
-                    'episodeid': 0}
+                    'episodeid': 0,
+                    'whole_season': result['whole_season']}
         else:
-            split = raw_season_episode.lower().split('e')
-            season = int(split[0].lower().replace('s', ''))
-            episode = int(split[1])
-            episodeid = get_episodeid(showinfo['showid'], season, episode)
-            data = {'is_tvshow': True,
-                    'showid': showinfo['showid'],
-                    'real_showname': showinfo['real_showname'],
-                    'season': season,
-                    'episode': episode,
-                    'episodeid': episodeid}
+            if not result['whole_season']:
+                split = raw_season_episode.lower().split('e')
+                season = int(split[0].lower().replace('s', ''))
+                episode = int(split[1])
+                episodeid = get_episodeid(showinfo['showid'], season, episode)
+                data = {'is_tvshow': True,
+                        'showid': showinfo['showid'],
+                        'real_showname': showinfo['real_showname'],
+                        'season': season,
+                        'episode': episode,
+                        'episodeid': episodeid,
+                        'whole_season': result['whole_season']}
+            else:
+                season = raw_season_episode.lower()
+                episode = ''
+                episodeid = ''
+                data = {'is_tvshow': True,
+                        'showid': showinfo['showid'],
+                        'real_showname': showinfo['real_showname'],
+                        'season': season,
+                        'episode': episode,
+                        'episodeid': episodeid,
+                        'whole_season': result['whole_season']}
+                
     return data
 
 
@@ -197,16 +226,22 @@ def get_episodeid(showid, season, episode):
 
 
 def is_download_name_tvshow(download_name):
-    reg_exs = ['.[Ss][0-9][Ee][0-9].',
-               '.[Ss][0-9][0-9][Ee][0-9][0-9].',
-               '.[Ss][0-9][0-9][0-9][Ee][0-9][0-9][0-9].']
+    reg_exs = ['s[0-9][0-9]e[0-9][0-9]',
+               's[0-9][0-9]',
+               'season[ .][0-9]',
+               's[0-9]e[0-9]',
+               'season[ .][0-9][0-9]']
     for reg_ex in reg_exs:
-        result = re.search(reg_ex, download_name)
+        result = re.search(reg_ex, download_name.lower())
         if result:
             span = result.span()
             match = str(result.group()).replace('.', '')
-            return {'is_tvshow': True, 'match': match, 'span': span}
-    return {'is_tvshow': False, 'match': '', 'span': (0, 0)}
+            if len(match) < 4 or 'season' in match:
+                whole_season = True
+            else:
+                whole_season = False
+            return {'is_tvshow': True, 'match': match, 'span': span, 'whole_season': whole_season}
+    return {'is_tvshow': False, 'match': '', 'span': (0, 0), 'whole_season': False}
 
 
 class paths:

@@ -30,6 +30,7 @@ from Libraries import execute_tvm_request, read_secrets
 from Libraries import execute_sql
 from Libraries import fix_showname
 from Libraries import logging, date
+from Libraries import determine_directory, process_download_name
 
 
 def gather_all_key_info():
@@ -53,13 +54,13 @@ def gather_all_key_info():
         px_do_not_move, px_processed_dir, px_trash_dir
 
 
-def get_all_episodes_to_update():
-    ttps = []
+def get_all_tors_to_update():
+    tors = []
     try:
         transmissions_in = open(transmission_log, 'r')
     except IOError as er:
         log.write(f'Transmission file did not exist: {er}')
-        return ttps
+        return tors
     
     try:
         transmissions_archive = open(transmission_archive_log, 'a+')
@@ -67,127 +68,37 @@ def get_all_episodes_to_update():
         log.write(f'Transmission archive would not open')
         exit(1)
     
-    for ttp in transmissions_in:
-        if 'Transmission Started' in ttp:
+    for tor in transmissions_in:
+        if 'Transmission Started' in tor:
             continue
-        if len(ttp) < 5:
+        if len(tor) < 5:
             continue
-        transmissions_archive.write(f'{time.strftime("%D %T")} > {ttp}')
-        ttps.append(ttp[:-1])
-    
+        transmissions_archive.write(f'{time.strftime("%D %T")} > {tor}')
+        tors.append(tor[:-1])
     transmissions_in.close()
     try:
         transmissions_in = open(transmission_log, 'w')
     except IOError as er:
         log.write(f'Transmission file did not exist: {er}')
-        return ttps
+        return tors
     transmissions_in.close()
     transmissions_archive.close()
-    return ttps
-
-
-def find_showname(download):
-    showinfo = str(download).split(".")
-    showname = ""
-    seasonfound = False
-    seasonstr = ""
-    dots = "first"
-    for info in showinfo:
-        # log.write(info[0], info[1], type(info[1]))
-        if len(info) < 2:
-            if dots == "first":
-                # log.write('First', info)
-                showname = showname + " " + info
-                dots = "second"
-            else:
-                showname = showname + "." + info
-        else:
-            if dots == "second":
-                showname = showname + "."
-                dots = "done"
-            if "s" in info[0].lower() and info[1].isdigit():
-                seasonfound = True
-                seasonstr = info
-            if seasonfound:
-                break
-            else:
-                showname = showname + " " + info
-    
-    if not seasonfound:
-        return False, showinfo
-    showname = str(showname[1:]).replace('..', '.')
-    showname = showname.replace('.', ' ')
-    showname = showname.replace('  ', ' ')
-    season = seasonstr.lower().split('e')
-    seasonnum = int(season[0].lower().replace("s", ""))
-    if "e" in seasonstr.lower():
-        episodestr = True
-        episodenum = int(str(season[1]).lower().replace('e', ''))
-    else:
-        episodenum = None
-        episodestr = False
-    return showname, seasonstr, seasonnum, episodestr, episodenum
-
-
-def find_showid(asn):
-    if vli > 3:
-        log.write(f'Find Show ID via alt_showname: {asn}')
-    result = execute_sql(sqltype='Fetch', sql=f"SELECT showid FROM shows "
-                                              f"WHERE alt_showname like '{asn}' AND status = 'Followed'")
-    if len(result) < 1:
-        if vli > 3:
-            log.write(f"{time.strftime('%D %T')} Plex TVM Update: Show not found: ---> ", "'" + asn + "'")
-        if str(asn[len(asn) - 4:]).isnumeric():
-            result = execute_sql(sqltype='Fetch', sql=f"SELECT showid FROM shows "
-                                                      f"WHERE alt_showname like '{asn[:-5]}' AND status = 'Followed'")
-            if len(result) < 1:
-                if vli > 3:
-                    log.write(f"{time.strftime('%D %T')} Plex TVM Update: "
-                              f"Show without last 4 characters not found: ---> ", "'" + asn[:-5] + "'")
-                pass
-            else:
-                if vli > 3:
-                    log.write(f"{time.strftime('%D %T')} Plex TVM Update: "
-                              f"Show without last 4 characters found: ---> ", "'" + asn[:-5] + "'")
-                return result[0][0]
-        return False
-    return result[0][0]
-
-
-def find_epiid(si, s, e, is_epi):
-    if is_epi and e == 0:
-        result = execute_sql(sqltype='Fetch', sql=f'SELECT * FROM episodes '
-                                                  f'WHERE showid = {si} AND season = {s} AND episode is NULL')
-    elif is_epi:
-        result = execute_sql(sqltype='Fetch', sql=f'SELECT * FROM episodes '
-                                                  f'WHERE showid = {si} AND season = {s} AND episode = {e}')
-    else:
-        result = execute_sql(sqltype='Fetch', sql=f'SELECT * FROM  episodes '
-                                                  f'WHERE showid = {si} AND season = {s}')
-    if len(result) < 1:
-        return False
-    else:
-        if result[0][7] == 'Watched':
-            if is_epi:
-                if vli > 3:
-                    log.write(f''
-                              f'Episodes of {si} for season {s} were watched before')
-            else:
-                if vli > 3:
-                    log.write(f''
-                              f'Episode of {si} for season {s} and episode {2} was watched before')
-            return False
-    return result
+    return tors
 
 
 def update_tvmaze_episode_status(epiid):
+    status_sql = f'select epiid, mystatus from episodes where epiid = {epiid}'
+    result = execute_sql(sql=status_sql, sqltype='Fetch')[0]
+    if result[1] == 'Downloaded' or result[1] == 'Watched':
+        log.write(f'This episode {epiid} has already been update with "{result[1]}"')
+        return
     if vli > 2:
-        log.write(f"{time.strftime('%D %T')} Plex TVM Update: Updating", epiid)
+        log.write(f"Updating TVMaze for: {epiid}", 3)
     baseurl = 'https://api.tvmaze.com/v1/user/episodes/' + str(epiid)
     epoch_date = int(date.today().strftime("%s"))
     data = {"marked_at": epoch_date, "type": 1}
-    response = execute_tvm_request(baseurl, data=data, req_type='put', code=True, log=True)
-    return response
+    execute_tvm_request(baseurl, data=data, req_type='put', code=True, log=True)
+    return
 
 
 def check_exist(file_dir):
@@ -196,7 +107,6 @@ def check_exist(file_dir):
         log.write(f'Check File Dir with {check}')
     ch_path = os.path.exists(check)
     ch_isdir = os.path.isdir(check)
-    # log.write(f'Check Exist: {ch_path}, {ch_isdir}')
     return ch_path, ch_isdir
 
 
@@ -209,24 +119,6 @@ def check_file_ext(file):
         if file[-3:] == ext:
             return True
     return False
-
-
-def cleanup_name(dl):
-    sf = str(dl).split('/')
-    fn = sf[len(sf) - 1]
-    for plex_pref in plex_prefs:
-        plex_pref = plex_pref.lower().replace(' ', '.')
-        fn = fn.lower()
-        if vli > 4:
-            log.write(f'Working with prefix: {plex_pref}, with fn: {fn}')
-        if plex_pref in fn:
-            fn = str(fn).replace(plex_pref, "").replace(' ', '.')
-            if vli > 4:
-                log.write(f'Cleanup Name: {dl} with {plex_pref} ---> Cleaned Name: {fn}')
-            return fn
-    if vli > 4:
-        log.write(f'Cleanup Name: {dl}, Cleaned Name: {fn}')
-    return fn
 
 
 def check_destination(sn, m):
@@ -255,52 +147,50 @@ def check_file_ignore(fi):
     return False
 
 
-def update_tvmaze(showinfo, found_showid):
-    if vli > 1:
-        log.write(f''
-                  f'Starting to update TVMaze episodes for {showinfo} with Show ID {found_showid}')
-    showname = showinfo[0]
-    showepisode = showinfo[1]
-    season = showinfo[2]
-    is_episode = showinfo[3]
-    episode = showinfo[4]
-    if found_showid:
-        found_epiid = find_epiid(found_showid, season, episode, is_episode)
-        if not found_epiid:
-            log.write(f"{time.strftime('%D %T')} Plex TVM Update: "
-                      f"Did not find '{str(showname).title()}' with episode {showepisode} in TVMaze")
-        elif is_episode and len(found_epiid) == 1:
-            update_tvmaze_episode_status(found_epiid[0][0])
-            log.write(f"{time.strftime('%D %T')} Plex TVM Update: Updated Show {str(showname).title()}, "
-                      f"episode {showepisode} as download in TVMaze")
-        else:
-            for epi in found_epiid:
-                update_tvmaze_episode_status(epi[0])
-                log.write(f"{time.strftime('%D %T')} Plex TVM Update: "
-                          f"Updated TVMaze as download for {epi[2]}, Season {epi[4]}, Episode {epi[5]}")
+def transform_season_string(season_in):
+    if isinstance(season_in, int):
+        return season_in
+    if 'season' in str(season_in).lower():
+        return int(str(season_in).lower().split('season')[1].replace(' ', ''))
+    if 's' in str(season_in).lower():
+        return int(str(season_in).lower().split('s')[1].replace(' ', ''))
+    log.write(f'Should not happen {season_in}', 99)
 
 
-def shorten_showname(info):
-    """
-    ShowNames can include suffix with years and country codes, they should not be used when creating
-    directories for plex.
+def update_tvmaze_with_downloaded_episodes(epis):
+    for epi in epis:
+        update_tvmaze_episode_status(epi)
+    return
 
-    :param info:   contains tuple:  Showname, season-episode, etc, etc) only the Showname is needed
-    :return:       same tuple:      With the Showname shortened
-    """
-    shortened_showname = fix_showname(info[0])
-    if not shortened_showname:
-        shortened_showname = info[0]
-    result = (shortened_showname, info[1], info[2], info[3], info[4])
-    return result
+
+def check_for_kids(showname):
+    for kids_show in plex_kids_shows:
+        if kids_show in showname:
+            return plex_kids_show_dir
+    return plex_show_dir
+
+
+def move_to_plex(tv_show, file_name, direct, name, season):
+    if vli > 3:
+        log.write(f'Moving to plex {file_name} and it is a directory: {direct} and it is tv-show: {tv_show}', 4)
+    if tv_show:
+        to_directory = f'{check_for_kids(name)}{name}/season {season}/'
+    else:
+        to_directory = plex_movie_dir
+
+    if not direct:
+        shutil.move(f'{plex_source_dir}{file_name}', f'{to_directory}{file_name}')
+    # else:
+    #    loop through the file in directory and check for media extensions
+    #    delete the directory after all media files have moved
+    
+    return
 
 
 '''
 Main Program start
 '''
 log = logging(caller='Plex TVM Update', filename='Process')
-log.open()
-log.close()
 log.start()
 
 options = docopt(__doc__, version='Plex TVM Update Release 1.0')
@@ -316,19 +206,19 @@ transmission_log = secrets['prod_logs'] + 'Transmission.log'
 transmission_archive_log = secrets['prod_logs'] + 'Transmissions_Processed.log'
 
 if options['<to_process>']:
-    download = [options['<to_process>']]
+    downloads = [options['<to_process>']]
     cli = True
 else:
     cli = False
-    download = get_all_episodes_to_update()
+    downloads = get_all_tors_to_update()
 
-if len(download) == 0:
+if len(downloads) == 0:
     log.write(f'Nothing to Process in the transmission log')
     log.end()
     quit()
 
-if vli > 4:
-    log.write(f'Download = {download}', 5)
+if vli > 1:
+    log.write(f'Number of Downloads: {len(downloads)}', 2)
 
 if not cli:
     reset = open(transmission_log, 'w')
@@ -346,7 +236,42 @@ plex_do_not_move = key_info[7]
 plex_processed_dir = key_info[8]
 plex_trash_dir = key_info[9]
 
-for dl in download:
+for download in downloads:
+    seas = 0
+    full_tor_name = download
+    check_result = check_exist(full_tor_name)
+    if not check_result[0]:
+        log.write(f'Download does not exist: {full_tor_name}', 9)
+        log.end()
+        quit(1)
+        
+    directory = check_result[1]
+    processed_info = process_download_name(full_tor_name)
+    seas = processed_info['season']
+    if processed_info['is_tvshow']:
+        all_episodes = []
+        if not processed_info['whole_season']:
+            all_episodes.append(processed_info['episodeid'])
+        else:
+            sql = f'select epiid from episodes where showid = {processed_info["showid"]} and ' \
+                  f'season = {seas}'
+            episodes = execute_sql(sql=sql, sqltype='Fetch')
+            if len(episodes) != 0:
+                for episode in episodes:
+                    all_episodes.append(episode[0])
+        log.write(f'Processing TV Show {processed_info["real_showname"]} with {len(all_episodes)} episodes')
+        move_to_plex(True, full_tor_name, directory, processed_info['real_showname'], seas)
+        update_tvmaze_with_downloaded_episodes(all_episodes)
+    else:
+        log.write(f'Processing Movie {full_tor_name}')
+        move_to_plex(False, full_tor_name, directory, '', '')
+        log.write(f'Processing Movie {full_tor_name}')
+    
+log.end()
+quit()
+
+'''
+def old_for_loop():
     edl = []  # Shows / Movies
     fedl = []  # Files
     ndl = []  #
@@ -493,3 +418,4 @@ for dl in download:
 
 log.end()
 quit()
+'''
