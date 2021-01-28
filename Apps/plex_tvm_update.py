@@ -180,10 +180,19 @@ def move_to_plex(tv_show, file_name, direct, name, season):
 
     if not direct:
         shutil.move(f'{plex_source_dir}{file_name}', f'{to_directory}{file_name}')
-    # else:
-    #    loop through the file in directory and check for media extensions
-    #    delete the directory after all media files have moved
-    
+    else:
+        all_files = os.listdir(f'{plex_source_dir}/{file_name}')
+        for file in all_files:
+            for ext in plex_extensions:
+                if ext == file[-3:]:
+                    if not os.path.exists(to_directory):
+                        os.makedirs(to_directory)
+                    shutil.move(f'{plex_source_dir}/{file_name}/{file}', f'{to_directory}')
+                    if vli > 1:
+                        log.write(f'Moved {file} to {to_directory}', 2)
+                    break
+        if os.path.exists(f'{plex_source_dir}/{file_name}'):
+            shutil.move(f'{plex_source_dir}/{file_name}', f'{plex_trash_dir}')
     return
 
 
