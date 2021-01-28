@@ -23,14 +23,12 @@ import os
 import shutil
 import time
 
-from time import strftime
 from docopt import docopt
 
 from Libraries import execute_tvm_request, read_secrets
 from Libraries import execute_sql
-from Libraries import fix_showname
 from Libraries import logging, date
-from Libraries import determine_directory, process_download_name
+from Libraries import process_download_name
 
 
 def gather_all_key_info():
@@ -65,7 +63,7 @@ def get_all_tors_to_update():
     try:
         transmissions_archive = open(transmission_archive_log, 'a+')
     except IOError as er:
-        log.write(f'Transmission archive would not open')
+        log.write(f'Transmission archive would not open with error {er}')
         exit(1)
     
     for tor in transmissions_in:
@@ -108,43 +106,6 @@ def check_exist(file_dir):
     ch_path = os.path.exists(check)
     ch_isdir = os.path.isdir(check)
     return ch_path, ch_isdir
-
-
-def check_file_ext(file):
-    if vli > 3:
-        log.write(f'Check File Ext {file}')
-    for ext in plex_extensions:
-        if vli > 3:
-            log.write(f'Check File Ext: {ext} with {file[-3:]}')
-        if file[-3:] == ext:
-            return True
-    return False
-
-
-def check_destination(sn, m):
-    if m:
-        dd = plex_movie_dir
-    else:
-        dd = plex_show_dir
-        for ps in plex_kids_shows:
-            if vli > 3:
-                log.write(f'ps = {ps} and sn = {sn}')
-            if ps.lower() in sn[0].lower():
-                dd = plex_kids_show_dir
-                break
-    return dd
-
-
-def check_file_ignore(fi):
-    if vli > 3:
-        log.write(f'Starting to check {fi} type {type(fi)}with all of {plex_do_not_move}, '
-                  f'type {type(plex_do_not_move)}')
-    for ign in plex_do_not_move:
-        if vli > 3:
-            log.write(f'Checking for {ign}, type {type(ign)}')
-        if ign in str(fi.lower()):
-            return True
-    return False
 
 
 def transform_season_string(season_in):
@@ -278,153 +239,3 @@ for download in downloads:
     
 log.end()
 quit()
-
-'''
-def old_for_loop():
-    edl = []  # Shows / Movies
-    fedl = []  # Files
-    ndl = []  #
-    if vli > 2:
-        log.write(f'Processing download {dl}', 3)
-    dl_check = check_exist(dl)
-    dl_exist = dl_check[0]
-    dl_dir = ''
-    if dl_exist:
-        dl_dir = dl_check[1]
-    if not dl_exist:
-        log.write(f'Transmission input "{plex_source_dir + dl}" does not exist ')
-        continue
-    else:
-        if vli > 2:
-            log.write(f'Transmission input "{plex_source_dir + dl}" exist and directory is {dl_dir}', 3)
-        dl = plex_source_dir + dl
-        edl.append(dl)
-        if not dl_dir:
-            file_to_process = check_file_ext(dl)
-            if file_to_process:
-                fedl.append(dl)
-            else:
-                log.write(f'No File found with the right extension {dl}:  {plex_extensions}')
-        else:
-            if vli > 2:
-                log.write(f'Do the directory process and find all files', 3)
-            dirfiles = os.listdir(dl)
-            if vli > 2:
-                log.write(f'All files to process {dirfiles}', 3)
-            for df in dirfiles:
-                dfn = dl + '/' + df
-                dfe = check_file_ext(dfn)
-                if vli > 3:
-                    log.write(f'Checked {dfn} and result is {dfe}', 4)
-                if dfe:
-                    ignore = check_file_ignore(df)
-                    if not ignore:
-                        fedl.append(df)
-        if vli > 3:
-            log.write(f'Working on edl {edl}, with fedl {fedl}', 4)
-        if len(fedl) == 0:
-            log.write(f'Found no video files to move for {dl}')
-            if os.path.exists(dl):
-                t = strftime(" %Y-%m-%d-%I-%M-%S")
-                log.write(f'Moving to Trash {dl}')
-                try:
-                    shutil.move(dl, f'{plex_trash_dir}/{dl + t}')
-                except OSError as err:
-                    log.write(f'Deleted directly instead {dl}')
-                    shutil.rmtree(d)
-            continue
-        else:
-            d = str(dl).replace(' ', '.')
-            dc = cleanup_name(d)
-            if vli > 3:
-                log.write(f'Cleaned Name "{dc}"')
-            ds_tmp = find_showname(dc)
-            ds = shorten_showname(ds_tmp)
-            if vli > 3:
-                log.write(f'Find Showname output: {ds}', 4)
-            if not ds[0]:
-                movie = True
-                fn = str(d).split('/')
-                fn = fn[len(fn) - 1]
-                du = plex_movie_dir + fn
-            else:
-                movie = False
-                de = find_showid(ds[0])
-                if vli > 3:
-                    log.write(f'Showid is {de}', 4)
-                dest_dir = check_destination(ds, movie)
-                du = dest_dir + str(ds[0]).title() + '/Season ' + str(ds[2]) + '/'
-            for f in edl:
-                skip = False
-                if vli > 3:
-                    log.write(f'Processing F: {f}', 4)
-                for e in fedl:
-                    if vli > 4:
-                        log.write(f'Processing E: {e}', 4)
-                    if not dl_dir:
-                        sf = f
-                    else:
-                        sf = f + '/' + e
-                    if movie:
-                        if "season" in str(sf).lower():
-                            log.write(f'This might not be a movie it has the string "season" embedded --> {sf}')
-                            skip = True
-                        elif "part" in str(sf).lower():
-                            log.write(f'This might not be a movie it has the string "part" embedded --> {sf}')
-                            skip = True
-                        if dl_dir:
-                            if vli > 3:
-                                log.write(f'Movie with Directory working on du {du} and e {e} and f {f}')
-                            fn = str(e).split('/')
-                            fn = fn[len(fn) - 1]
-                            to = plex_movie_dir + fn
-                        else:
-                            fn = str(d).split('/')
-                            fn = fn[len(fn) - 1]
-                            to = plex_movie_dir + fn
-                        if not skip:
-                            if vli > 1:
-                                log.write(f'Move the movie to ------> {to}', 2)
-                            os.rename(rf'{f}', rf'{to}')
-                        if dl_dir:
-                            chd = dl
-                        else:
-                            chd = False
-                    else:
-                        fn = str(e).split('/')
-                        fn = fn[len(fn) - 1]
-                        if not os.path.exists(du):
-                            if vli > 2:
-                                log.write(f'Creating directory {du}', 3)
-                            os.makedirs(du)
-                        to = du + fn
-                        # ToDo - clean the suffixes of the filename via the key_values
-                        to = str(to).replace('[eztv.re]', '').replace('[eztv.io]', '')
-                        if vli > 1:
-                            log.write(f'Move the episode to ------> {to}', 2)
-                        os.rename(rf'{sf}', rf'{to}')
-                        chd = d
-            if not chd:
-                pass
-            elif os.path.exists(chd):
-                if skip:
-                    if vli > 2:
-                        log.write(f'Moved {d} to {plex_processed_dir}', 3)
-                    shutil.move(d, plex_processed_dir)
-                else:
-                    t = strftime(" %Y-%m-%d-%I-%M-%S")
-                    if vli > 2:
-                        log.write(f'Moved to Trash {d + t}', 3)
-                    try:
-                        shutil.move(d, f'{plex_trash_dir}/{d + t}')
-                    except OSError as err:
-                        log.write(f'Deleted directly instead {d}')
-                        os.removedirs(d)
-            if not movie:
-                if vli > 2:
-                    log.write(f'Starting the process to Update TVMaze download statuses for show {d}', 3)
-                update_tvmaze(ds, de)
-
-log.end()
-quit()
-'''
