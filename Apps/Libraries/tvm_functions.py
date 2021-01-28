@@ -209,7 +209,7 @@ def get_showid(clean_showname):
         return {'showid': 0, 'real_showname': 'No ShowFound'}
     else:
         showid = result[0][0]
-        showname = result[0][1]
+        showname = str(result[0][1]).replace(':', '')
         return {'showid': showid, 'real_showname': showname}
     
 

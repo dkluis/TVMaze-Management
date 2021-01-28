@@ -102,7 +102,7 @@ def update_tvmaze_episode_status(epiid):
 def check_exist(file_dir):
     check = str(plex_source_dir + file_dir).lower()
     if vli > 3:
-        log.write(f'Check File Dir with {check}')
+        log.write(f'Check File and Directory for: {check}', 4)
     ch_path = os.path.exists(check)
     ch_isdir = os.path.isdir(check)
     return ch_path, ch_isdir
@@ -139,15 +139,22 @@ def move_to_plex(tv_show, file_name, direct, name, season):
     else:
         to_directory = plex_movie_dir
 
+    if not os.path.exists(to_directory):
+        try:
+            os.makedirs(to_directory)
+        except IOError as er:
+            log.write(f'Creating Directory {to_directory} did not work {er}')
+            quit(1)
+
     if not direct:
         shutil.move(f'{plex_source_dir}{file_name}', f'{to_directory}{file_name}')
+        if vli > 1:
+            log.write(f'Moved {file_name} to {to_directory}', 2)
     else:
         all_files = os.listdir(f'{plex_source_dir}/{file_name}')
         for file in all_files:
             for ext in plex_extensions:
                 if ext == file[-3:]:
-                    if not os.path.exists(to_directory):
-                        os.makedirs(to_directory)
                     shutil.move(f'{plex_source_dir}/{file_name}/{file}', f'{to_directory}')
                     if vli > 1:
                         log.write(f'Moved {file} to {to_directory}', 2)
