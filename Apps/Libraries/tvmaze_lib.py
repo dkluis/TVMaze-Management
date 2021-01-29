@@ -143,7 +143,9 @@ class logging:
         self.write('<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<')
 
 
-'''  All TVM-APIs Library'''
+'''
+        All TVM-APIs Library
+'''
 
 
 class tvmaze_apis:
@@ -162,7 +164,7 @@ class tvmaze_apis:
 
 
 def execute_tvm_request(api, req_type='get', data='', err=True, return_err=False, sleep=1.25, code=False, redirect=5,
-                        timeout=(10, 5), log=False):
+                        timeout=(10, 5), log_ind=False):
     """
     Call TVMaze APIs
 
@@ -175,7 +177,7 @@ def execute_tvm_request(api, req_type='get', data='', err=True, return_err=False
     :param req_type:    get, put, delete [Default: get]
     :param redirect:    Number of redirects allowed
     :param timeout:     Initial time-out limit and call time-out limit [Default: 10 and 5 seconds]
-    :param log:      Write to the log_file
+    :param log_ind:     Write to the log_file
     :return:            Resulting json if successful for get or HTTPS result or False if unsuccessful
     """
     
@@ -232,33 +234,35 @@ def execute_tvm_request(api, req_type='get', data='', err=True, return_err=False
                 return f'Error Code: {response.status_code}'
             else:
                 return False
-    if log:
+    if log_ind:
         logfile.write(f'API {api} with {data} Response is: {response.status_code}: {response.content}', 9)
     return response
 
 
-def update_tvmaze_episode_status(epiid, log, vli):
+def update_tvmaze_episode_status(epiid, log_errors, vli):
     """
-                Function to update TVMaze
-    :param epiid:   The episode to update
-    :param log:     Where to report the actions
-    :param vli:     The verbose level
-    :return:        response from TVMaze or False if episode was updated before
+                           Function to update TVMaze
+    :param epiid:          The episode to update
+    :param log_errors:     Where to report the actions
+    :param vli:            The verbose level
+    :return:               Response from TVMaze or False if episode was updated before
     """
     status_sql = f'select epiid, mystatus from episodes where epiid = {epiid}'
     result = execute_sql(sql=status_sql, sqltype='Fetch')[0]
     if result[1] == 'Downloaded' or result[1] == 'Watched':
-        log.write(f'This episode {epiid} has already been update with "{result[1]}"')
+        log_errors.write(f'This episode {epiid} has already been update with "{result[1]}"')
         return False
     if vli > 2:
-        log.write(f"Updating TVMaze for: {epiid}", 3)
-    baseurl = 'https://api.tvmaze.com/v1/user/episodes/' + str(epiid)
+        log_errors.write(f"Updating TVMaze for: {epiid}", 3)
+    baseurl = tvmaze_apis.update_episode_status + str(epiid)
     epoch_date = int(date.today().strftime("%s"))
     data = {"marked_at": epoch_date, "type": 1}
     return execute_tvm_request(baseurl, data=data, req_type='put', code=True, log=True)
 
 
-'''  All TVM-DB Library  '''
+'''
+    All TVM-DB Library
+'''
 
 
 class config:
@@ -502,7 +506,7 @@ class mdbi:
 
 
 def connect_mdb(h='', d='', err=True):
-    log = logging(caller='Lib connect_mdb', filename='Process')
+    log_mdb = logging(caller='Lib connect_mdb', filename='Process')
     mdb_info = mdbi(h, d)
     mdb = ''
     try:
@@ -513,8 +517,8 @@ def connect_mdb(h='', d='', err=True):
             database=mdb_info.db)
     except mariadb.Error as e:
         if err:
-            log.write(f"Connect MDB: Error connecting to MariaDB Platform: {e}")
-            log.write('--------------------------------------------------------------------------')
+            log_mdb.write(f"Connect MDB: Error connecting to MariaDB Platform: {e}")
+            log_mdb.write('--------------------------------------------------------------------------')
             sys.exit(1)
     mcur = mdb.cursor()
     mdict = {'mdb': mdb,
@@ -534,7 +538,7 @@ def connect_pd():
 
 
 def execute_sql(con='', db='', cur='', batch='', h='', d='', sqltype='', sql=''):
-    log = logging(caller='Lib execute_sql', filename='Process')
+    log_exec = logging(caller='Lib execute_sql', filename='Process')
     mdb_info = mdbi(h, d)
     if h == '':
         h = mdb_info.host
@@ -554,8 +558,8 @@ def execute_sql(con='', db='', cur='', batch='', h='', d='', sqltype='', sql='')
             if batch != "Y":
                 tvmdb.commit()
         except mariadb.Error as er:
-            log.write(f'Execute SQL (Commit) Database Error: {d}, {er}, {sql}')
-            log.write('----------------------------------------------------------------------')
+            log_exec.write(f'Execute SQL (Commit) Database Error: {d}, {er}, {sql}')
+            log_exec.write('----------------------------------------------------------------------')
             if con != 'Y':
                 close_mdb(tvmdb)
             return False, er
@@ -567,8 +571,8 @@ def execute_sql(con='', db='', cur='', batch='', h='', d='', sqltype='', sql='')
             tvmcur.execute(sql)
             result = tvmcur.fetchall()
         except mariadb.Error as er:
-            log.write(f'Execute SQL (Fetch) Database Error: {d}, {er}, {sql}')
-            log.write('----------------------------------------------------------------------')
+            log_exec.write(f'Execute SQL (Fetch) Database Error: {d}, {er}, {sql}')
+            log_exec.write('----------------------------------------------------------------------')
             if con != 'Y':
                 close_mdb(tvmdb)
             return False, er
@@ -598,7 +602,7 @@ def close_sdb(sdb):
 
 
 def execute_sqlite(sqltype='', sql=''):
-    log = logging(caller='Lib execute_sqlite', filename='Process')
+    log_sqllite = logging(caller='Lib execute_sqlite', filename='Process')
     sdb = connect_sdb()
     sdbcur = sdb['scursor']
     sdbdb = sdb['sdb']
@@ -607,8 +611,8 @@ def execute_sqlite(sqltype='', sql=''):
             sdbcur.execute(sql)
             sdbdb.commit()
         except sqlite3.Error as er:
-            log.write(f'Commit Database Error: {er}, {sql}')
-            log.write('----------------------------------------------------------------------')
+            log_sqllite.write(f'Commit Database Error: {er}, {sql}')
+            log_sqllite.write('----------------------------------------------------------------------')
             close_sdb(sdbdb)
             return False, er
         close_sdb(sdbdb)
@@ -618,8 +622,8 @@ def execute_sqlite(sqltype='', sql=''):
             sdbcur.execute(sql)
             result = sdbcur.fetchall()
         except sqlite3.Error as er:
-            log.write(f'Fetch Database Error: {er}, {sql}')
-            log.write('----------------------------------------------------------------------')
+            log_sqllite.write(f'Fetch Database Error: {er}, {sql}')
+            log_sqllite.write('----------------------------------------------------------------------')
             close_sdb(sdbdb)
             return False, er
         close_sdb(sdbdb)
@@ -1091,12 +1095,6 @@ def func_fill_a_table(table_name, data):
 # from email.mime.text import MIMEText
 
 
-class release:
-    # Obsolete now - only used in the console app
-    console_version = 'Version: In Development - V2.0 - Oct 7 at 11:00:00 AM'
-    console_description = "TVMaze Management system"
-
-
 def get_today(tp='human', fmt='full'):
     """
     Function to get today in human or epoch form.
@@ -1381,5 +1379,3 @@ def convert_to_dict_within_list(data, data_type='DB', field_list=None):
     else:
         return {}
     return response
-
-
