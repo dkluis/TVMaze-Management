@@ -30,7 +30,7 @@ from docopt import docopt
 from dearpygui.core import *
 from dearpygui.simple import *
 from Libraries import date_delta, datetime, timedelta, tvmaze_apis, mdbi, execute_tvm_request, func_fill_a_table, \
-    window_crud_maintenance, os, paths, execute_sql, tvm_views, logging
+    window_crud_maintenance, os, paths, tvm_views, logging, mariaDB
 
 
 class lists:
@@ -219,29 +219,13 @@ def func_episode_statuses(sender, data):
         sql_date = date_delta('Now', -7)
         sql_time = f'and e.mystatus_date >= "{sql_date}" '
     sql = sql_start + sql_time + sql_end
-    result = func_exec_sql('Fetch', sql)
+    result = db.execute_sql(sqltype='Fetch', sql=sql)
     pie_data = []
     for res in result:
         rec = [res[0], res[1]]
         pie_data.append(rec)
     all_pie_data = graph_split_data(pie_data)
     add_pie_series('Episodes##Top 10 Charts', sender, all_pie_data[1], all_pie_data[0], 0.5, 0.5, 0.5)
-
-
-def func_exec_sql(f='', s=''):
-    """
-    Function to execute SQL which automatically figures out which DB to use
-    
-    :param f:  Type of SQL request:  'Fetch' or 'Commit'
-    :param s:  The full sql command
-    :return:   Result of the sql execution
-    """
-    if get_value('mode') == 'Prod':
-        res = execute_sql(sqltype=f, sql=s)
-    else:
-        res = execute_sql(sqltype=f, sql=s, d='Test-TVM-DB')
-    log_info(f'SQL {f} {s} executed {res}')
-    return res
 
 
 def func_every_frame(sender, data):
@@ -251,7 +235,7 @@ def func_every_frame(sender, data):
         log_info(f'Every Frame: Tools was clicked, {sender} {data}')
     elif is_item_clicked('Shows'):
         sql = tvm_views.shows_to_review_count
-        count = func_exec_sql('Fetch', sql)
+        count = db.execute_sql(sqltype='Fetch', sql=sql)
         set_value('##no_new_shows: ', str(count[0][0]))
         log_info(f'Every Frame: Shows was clicked, {sender} {data}')
 
@@ -259,8 +243,8 @@ def func_every_frame(sender, data):
 def func_fill_watched_errors(sender, data):
     win = func_sender_breakup(sender, 1)
     log_info(f'Fill Watched Errors table s {sender}, d {data}, w {win}')
-    sql = f'''select * from plex_episodes where tvM_update_status is null'''
-    we = execute_sql('Fetch', sql)[0]
+    sql = f'''select * from plex_episodes where tvm_update_status is null'''
+    we = db.execute_sql(sqltype='Fetch', sql=sql)[0]
     set_value(f'table##{sender}', we)
 
 
@@ -294,7 +278,7 @@ def func_find_shows(si, sn):
                   f'from shows where `showname` like "{sn}" order by showname, premiered desc'
         else:
             return []
-    fs = func_exec_sql('Fetch', sql)
+    fs = db.execute_sql(sqltype='Fetch', sql=sql)
     return fs
 
 
@@ -302,7 +286,7 @@ def func_get_getter(getters):
     log_info(f'Get Getters {getters}')
     links = []
     for getter in getters:
-        link = func_exec_sql('Fetch', f"SELECT * from download_options WHERE `providername` = '{getter}'")
+        link = db.execute_sql(sqltype='Fetch', sql=f"SELECT * from download_options WHERE `providername` = '{getter}'")
         links.append(link)
     return links
 
@@ -352,7 +336,7 @@ def func_plex_episode_table(sender, data):
     log_info(f'Fill Plex Episode {sender} {data}')
     table = []
     sql = 'select * from plex_episodes order by`date_watched`'
-    pe_recs = execute_sql(sqltype='Fetch', sql=sql)
+    pe_recs = db.execute_sql(sqltype='Fetch', sql=sql)
     for pe_rec in pe_recs:
         table_row = []
         for field in pe_rec:
@@ -436,7 +420,7 @@ def func_show_statuses(sender, data):
         sql_date = date_delta('Now', -7)
         sql_time = f'and tvmaze_upd_date >= "{sql_date}" '
     sql = sql_start + sql_time + sql_end
-    result = func_exec_sql('Fetch', sql)
+    result = db.execute_sql(sqltype='Fetch', sql=sql)
     pie_data = []
     for res in result:
         rec = [res[0], res[1]]
@@ -486,7 +470,7 @@ def func_tvm_update(fl, si):
     any_error = False
     for esql in sql:
         esql = esql.replace('"None"', 'NULL')
-        result = func_exec_sql('Commit', esql)
+        result = db.execute_sql(sqltype='Commit', sql=esql)
         if not result:
             any_error = True
             log_error(f'Update of the DB failed: {sql}, {result}')
@@ -558,7 +542,7 @@ def epis_view_clear(sender, data):
 
 def graph_execute_get_value(sql, sender, pi, g_filter):
     log_info(f'Filling the plot data for {sender} with {sql} and {g_filter}')
-    data = func_exec_sql('Fetch', sql)
+    data = db.execute_sql(sqltype='Fetch', sql=sql)
     all_data = graph_split_data(data)
     plot_index = sender
     if sender == 'Other Shows':
@@ -650,7 +634,7 @@ def program_callback(sender, data):
     log_info(f'Main Callback activated {sender}, {data}')
     if sender == 'Shows':
         sql = tvm_views.shows_to_review_count
-        count = func_exec_sql('Fetch', sql)
+        count = db.execute_sql(sqltype='Fetch', sql=sql)
         set_value('shows_ds_new_shows', f': {str(count[0][0])}')
 
 
@@ -846,7 +830,7 @@ def shows_find_on_web(sender, data):
         set_value(f'##show_showname{win}', 'No Show was selected yet, nothing to do yet')
     else:
         links = func_get_getter(getters=['rarbg', 'piratebay', 'eztv', 'magnetdl'])
-        showinfo = func_exec_sql('Fetch', f'select * from shows where `showid` = {showid}')[0]
+        showinfo = db.execute_sql(sqltype='Fetch', sql=f'select * from shows where `showid` = {showid}')[0]
         for link in links:
             li = link[0]
             if not li[2]:
@@ -926,7 +910,7 @@ def tvmaze_change_getter(sender, data):
         ind = get_value(f'Getters##RadioButtons')
         log_info(f'Getter Selected {lists.getters[ind]}')
         sql = f'update shows set download = "{lists.getters[ind]}" where `showid` = {si}'
-        func_exec_sql('Commit', sql)
+        db.execute_sql(sqltype='Commit', sql=sql)
     close_popup('Change Getter##getterpopup')
 
 
@@ -1413,8 +1397,6 @@ else:
     mode = 'Test'
 
 log = logging(env=get_value('mode'), caller='TVMaze', filename='TVMaze')
-log.open()
-log.close()
 log.start()
 log.write(f'Mode is: {get_value("mode")}')
 
@@ -1425,6 +1407,7 @@ if options['-e']:
 if options['-s']:
     log.write('Starting with all the Show Graphs')
 
+db = mariaDB()
 program_data()
 program_mainwindow()
 # if get_value('mode') == 'Prod':
