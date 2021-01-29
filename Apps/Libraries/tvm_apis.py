@@ -2,8 +2,8 @@ import time
 import requests
 from datetime import date
 
-from Libraries.tvm_db import get_tvmaze_info
-from Libraries.tvm_logging import logging
+from Libraries import get_tvmaze_info, execute_sql
+from Libraries import logging
 
 
 class tvmaze_apis:
@@ -97,24 +97,22 @@ def execute_tvm_request(api, req_type='get', data='', err=True, return_err=False
     return response
 
 
-# ToDo Figure out if this is now obsolete
-'''
-def update_tvmaze_episode_status(epiid, status=1, upd_date=None, log_it=False):
+def update_tvmaze_episode_status(epiid, log, vli):
     """
-                     Go Update TVMaze that the show is
-                     
-    :param epiid:    Episode ID
-    :param status:   Type of update: 0 = Watched, 1 = Acquired, 2 = Skipped
-    :param upd_date: The date (human readable) to update the episode with
-    :param log_it:   Tell the API to log the response
-    :return:         HTML response
+                Function to update TVMaze
+    :param epiid:   The episode to update
+    :param log:     Where to report the actions
+    :param vli:     The verbose level
+    :return:        response from TVMaze or False if episode was updated before
     """
+    status_sql = f'select epiid, mystatus from episodes where epiid = {epiid}'
+    result = execute_sql(sql=status_sql, sqltype='Fetch')[0]
+    if result[1] == 'Downloaded' or result[1] == 'Watched':
+        log.write(f'This episode {epiid} has already been update with "{result[1]}"')
+        return False
+    if vli > 2:
+        log.write(f"Updating TVMaze for: {epiid}", 3)
     baseurl = 'https://api.tvmaze.com/v1/user/episodes/' + str(epiid)
-    if not upd_date:
-        epoch_date = int(date.today().strftime("%s"))
-    else:
-        epoch_date = int(upd_date.strftime('%s'))
-    data = str({"marked_at": epoch_date, "type": status})
-    response = execute_tvm_request(baseurl, data=data, req_type='put', code=True, log=log_it)
-    return response
-'''
+    epoch_date = int(date.today().strftime("%s"))
+    data = {"marked_at": epoch_date, "type": 1}
+    return execute_tvm_request(baseurl, data=data, req_type='put', code=True, log=True)

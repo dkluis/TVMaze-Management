@@ -25,10 +25,10 @@ import time
 
 from docopt import docopt
 
-from Libraries import execute_tvm_request, read_secrets
+from Libraries import config
 from Libraries import execute_sql
-from Libraries import logging, date
-from Libraries import process_download_name
+from Libraries import logging
+from Libraries import process_download_name, update_tvmaze_episode_status
 
 
 def gather_all_key_info():
@@ -84,21 +84,6 @@ def get_all_tors_to_update():
     return tors
 
 
-def update_tvmaze_episode_status(epiid):
-    status_sql = f'select epiid, mystatus from episodes where epiid = {epiid}'
-    result = execute_sql(sql=status_sql, sqltype='Fetch')[0]
-    if result[1] == 'Downloaded' or result[1] == 'Watched':
-        log.write(f'This episode {epiid} has already been update with "{result[1]}"')
-        return
-    if vli > 2:
-        log.write(f"Updating TVMaze for: {epiid}", 3)
-    baseurl = 'https://api.tvmaze.com/v1/user/episodes/' + str(epiid)
-    epoch_date = int(date.today().strftime("%s"))
-    data = {"marked_at": epoch_date, "type": 1}
-    execute_tvm_request(baseurl, data=data, req_type='put', code=True, log=True)
-    return
-
-
 def check_exist(file_dir):
     check = str(plex_source_dir + file_dir).lower()
     if vli > 3:
@@ -120,7 +105,7 @@ def transform_season_string(season_in):
 
 def update_tvmaze_with_downloaded_episodes(epis):
     for epi in epis:
-        update_tvmaze_episode_status(epi)
+        update_tvmaze_episode_status(epi, log, vli)
     return
 
 
@@ -135,7 +120,7 @@ def move_to_plex(tv_show, file_name, direct, name, season):
     if vli > 3:
         log.write(f'Moving to plex {file_name} and it is a directory: {direct} and it is tv-show: {tv_show}', 4)
     if tv_show:
-        to_directory = f'{check_for_kids(name)}{name}/season {season}/'
+        to_directory = f'{check_for_kids(name)}{name}/Season {season}/'
     else:
         to_directory = plex_movie_dir
 
@@ -178,9 +163,9 @@ if vli > 5 or vli < 1:
 elif vli >= 1:
     log.write(f'Verbosity level is set to: {options["--vl"]}', 2)
     
-secrets = read_secrets()
-transmission_log = secrets['prod_logs'] + 'Transmission.log'
-transmission_archive_log = secrets['prod_logs'] + 'Transmissions_Processed.log'
+config_info = config()
+transmission_log = config_info.log + 'Transmission.log'
+transmission_archive_log = config_info.log + 'Transmissions_Processed.log'
 
 if options['<to_process>']:
     downloads = [options['<to_process>']]

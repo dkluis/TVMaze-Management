@@ -24,27 +24,21 @@ Options:
 from docopt import docopt
 from datetime import date
 
-from Libraries import execute_sqlite, execute_sql, os
+from Libraries import execute_sqlite, execute_sql, config
 from Libraries import execute_tvm_request
 from Libraries import fix_showname
 from Libraries import logging
 
 
 class sdb_info:
-    check = os.getcwd()
     data = '/Users/dick/Library/Application Support/Plex Media Server/Plug-in Support/Databases' \
            '/com.plexapp.plugins.library.db'
 
 
 class log_file:
     def __init__(self):
-        check = os.getcwd()
-        if 'Pycharm' in check:
-            wetxt = '/Volumes/HD-Data-CA-Server/Development/' \
-                    'PycharmProjects/TVM-Management/Data/Plex_Watched_Episodes.log'
-        else:
-            wetxt = '/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/' \
-                    'TVMaze/Data/Plex_Watched_Episodes.log'
+        config_info = config()
+        wetxt = f'{config_info.log}Plex_Watched_Episodes.log'
         try:
             self.we = open(wetxt, "w")
         except IOError as error:
@@ -125,9 +119,8 @@ def func_update_episode_and_tvm(epi_showid, epi_season, epi_episode, epi_watched
 
 
 def update_tvmaze_episode_status(epiid, upd_date):
-    print(f'Update TVM Episode Status: {epiid}, {upd_date}')
-    if vli > 2:
-        log.write(f" Updating {epiid}", 1)
+    if vli > 1:
+        log.write(f'Update TVM Episode Status: {epiid}, {upd_date}', 2)
     baseurl = 'https://api.tvmaze.com/v1/user/episodes/' + str(epiid)
     if upd_date:
         epoch_date = int(upd_date.strftime("%s"))

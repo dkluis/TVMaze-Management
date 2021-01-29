@@ -8,18 +8,6 @@ import ast
 from Libraries.tvm_logging import logging
 
 
-def read_secrets():
-    secret = ''
-    try:
-        secret = open('/Users/dick/.tvmaze/config', 'r')
-    except IOError as err:
-        print('TVMaze config is not found at .tvmaze/config with error', err)
-        quit()
-    secrets = ast.literal_eval(secret.read())
-    secret.close()
-    return secrets
-
-
 class config:
     def __init__(self):
         """
@@ -29,7 +17,7 @@ class config:
         """
         secret = ''
         try:
-            secret = open('/Users/dick/.tvmaze/config', 'r')
+            secret = open(f'{os.path.expanduser("~")}/.tvmaze/config', 'r')
         except IOError as err:
             print(f'TVMaze config is not found at .tvmaze/config with error {err}')
             quit()
@@ -42,6 +30,9 @@ class config:
         self.db_test = secrets['db_test']
         self.user_admin = secrets['user_admin']
         self.user_password = secrets['user_password']
+        self.log_prod = secrets['prod_logs']
+        self.log_test = secrets['tst_logs']
+        self.log = ''
         if secrets['remote'] == 'Yes':
             self.remote = True
         else:
@@ -69,8 +60,10 @@ class config:
         check = os.getcwd()
         if 'Pycharm' in check:
             self.db = self.db_test
+            self.log = self.log_test
         else:
             self.db = self.db_prod
+            self.log = self.log_prod
             
 
 class mariaDB:
@@ -240,30 +233,19 @@ class mariaDB:
         
 class mdbi:
     def __init__(self, h, d):
-        s = read_secrets()
-        check = os.getcwd()
-        if 'Pycharm' in check:
-            prod = False
-        else:
-            prod = True
+        config_info = config()
         if h == '':
-            if 'SharedFolders' in check or s['remote'] == 'Yes':
-                self.host = s['host_network']
-            else:
-                self.host = s['host_local']
+            self.host = config_info.host
         else:
             self.host = h
-        self.user = s['db_admin']
-        self.password = s['db_password']
+        self.user = config_info.db_admin
+        self.password = config_info.db_password
         if d == '':
-            if prod:
-                self.db = s['db_prod']
-            else:
-                self.db = s['db_test']
+            self.db = config_info.db
         else:
             self.db = d
-        self.admin = s['user_admin']
-        self.admin_password = s['user_password']
+        self.admin = config_info.user_admin
+        self.admin_password = config_info.user_password
 
 
 def connect_mdb(h='', d='', err=True):
