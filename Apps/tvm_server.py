@@ -1,7 +1,7 @@
 from flask import Flask
 from flask_cors import CORS
-from Libraries.tvm_functions import execute_sql, convert_to_dict_within_list
-from Libraries.tvm_db import connect_pd, shows
+from Libraries import execute_sql, convert_to_dict_within_list
+from Libraries import connect_pd, shows
 import pandas as pd
 
 app = Flask(__name__)

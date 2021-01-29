@@ -24,16 +24,13 @@ Options:
 """
 
 import subprocess
-from datetime import datetime, timedelta
 from time import sleep
-
 from docopt import docopt
 
-from Libraries.tvm_apis import tvmaze_apis, execute_tvm_request
-from Libraries import paths, date_delta
-from Libraries.tvm_dpg import *
-from Libraries import execute_sql, tvm_views, mdbi
-from Libraries import logging, os
+from dearpygui.core import *
+from dearpygui.simple import *
+from Libraries import date_delta, datetime, timedelta, tvmaze_apis, mdbi, execute_tvm_request, func_fill_a_table, \
+    window_crud_maintenance, os, paths, execute_sql, tvm_views, logging
 
 
 class lists:

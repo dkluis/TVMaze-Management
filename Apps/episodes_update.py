@@ -23,9 +23,9 @@ Options:
 
 from docopt import docopt
 
-from Libraries.tvm_apis import *
-from Libraries.tvm_db import execute_sql
-from Libraries.tvm_logging import logging
+from Libraries import execute_tvm_request
+from Libraries import execute_sql
+from Libraries import logging
 
 
 def func_get_cli():
@@ -45,7 +45,7 @@ def func_get_cli():
     elif options['-r']:
         sql = f'select epiid from episodes where epiid >= {options["<epiid>"]}'
     else:
-        log.write(f"{time.strftime('%D %T')} episodes: No known - parameter given, try episodes_update.py -h", 0)
+        log.write(f"No known - parameter given, try episodes_update.py -h", 0)
         quit()
 
 
