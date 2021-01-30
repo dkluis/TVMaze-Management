@@ -13,16 +13,17 @@ Options:
 
 """
 
-from Libraries import execute_sql
+from Libraries import mariaDB
 from Libraries import execute_tvm_request
 from Libraries import logging
 
 log = logging(caller='Episodes Watched Update', filename='Episodes_Watched_Update')
 log.start()
+db = mariaDB(caller=log.caller, filename=log.filename)
 
 etu_sql = "select epiid, airdate from episodes where mystatus = 'Watched' and mystatus_date is NULL"
-eps_to_update = execute_sql(sqltype='Fetch', sql=etu_sql.replace('None', 'NULL'))
-print(f'Number of Episodes to update: {len(eps_to_update)}')
+eps_to_update = db.execute_sql(sqltype='Fetch', sql=etu_sql)
+log.write(f'Number of Episodes to update: {len(eps_to_update)}')
 for eptu in eps_to_update:
     baseurl = 'https://api.tvmaze.com/v1/user/episodes/' + str(eptu[0])
     if not eptu[1]:
@@ -37,4 +38,6 @@ for eptu in eps_to_update:
     else:
         log.write(f'Failed to update --------> epi {eptu[0]} as watched on {eptu[1]}')
         
+db.close()
 log.end()
+quit()

@@ -115,7 +115,7 @@ if __name__ == '__main__':
     vli = 0
     shows_to_update = []
     
-    log = logging(caller='Shows Update', filename='ShowsUpdate')
+    log = logging(caller='Shows Update', filename='Shows_Update')
     log.start()
     
     db = mariaDB(caller=log.caller, filename=log.filename, vli=vli)
