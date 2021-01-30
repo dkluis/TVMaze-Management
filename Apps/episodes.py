@@ -23,9 +23,8 @@ Options:
 from docopt import docopt
 from bs4 import BeautifulSoup as Soup
 
-from Libraries import execute_tvm_request, tvmaze_apis, date
-from Libraries import execute_sql, tvm_views, generate_insert_sql, generate_update_sql, std_sql
-from Libraries import logging, timer, datetime
+from Libraries import execute_tvm_request, tvmaze_apis, date, mariaDB, tvm_views, generate_insert_sql, \
+     generate_update_sql, std_sql, logging, timer, datetime
 
 
 def update_tvm_show_status(showid, logfile):
@@ -35,11 +34,11 @@ def update_tvm_show_status(showid, logfile):
     if not result:
         logfile.write(f"Web error trying to follow show: {showid}")
     sql = f'select showid, status from shows where showid = {showid}'
-    result = execute_sql(sqltype='Fetch', sql=sql)
+    result = db.execute_sql(sqltype='Fetch', sql=sql)
     if result:
         if result[0][1] != 'Followed':
             sql = f'update shows set status = "Followed", download = "Skip" where `showid` = {showid}'
-            result = execute_sql(sqltype='Commit', sql=sql)
+            result = db.execute_sql(sqltype='Commit', sql=sql)
             if not result:
                 logfile.write(f'Update in the DB did not work: {sql}, {result}')
         else:
@@ -63,7 +62,7 @@ def find_shows_not_followed_or_skipped():
         sql = f'select e.showid, s.status ' \
               f'from episodes e join shows s on e.showid = s.showid ' \
               f'where e.epiid = {epi["episode_id"]}'
-        show_info = execute_sql(sqltype='Fetch', sql=sql)
+        show_info = db.execute_sql(sqltype='Fetch', sql=sql)
         if epi['episode_id'] == base_epi + 1:
             base_epi = epi['episode_id']
             continue
@@ -97,13 +96,14 @@ def find_shows_not_followed_or_skipped():
 
 def episode_processing(single=''):
     started = timer()
+    api = ''
     if single == '':
         if vli > 1:
             log.write(f'Starting to process recently updated episodes for insert and re-sync')
         shows_sql = "SELECT * FROM shows " \
                     "where status = 'Followed' and (record_updated = current_date or eps_updated is Null)"
         shows_sql = shows_sql.replace('None', 'Null')
-        result = execute_sql(sqltype='Fetch', sql=shows_sql)
+        result = db.execute_sql(sqltype='Fetch', sql=shows_sql)
     else:
         # shows = [(32, "Fargo")]
         # show_num = (len(shows))
@@ -121,7 +121,7 @@ def episode_processing(single=''):
         num_eps = len(episodes)
         total_episodes = total_episodes + num_eps
         for epi in episodes:
-            result = execute_sql(sql="SELECT * from episodes WHERE epiid = {0}".format(epi['id']), sqltype="Fetch")
+            result = db.execute_sql(sql="SELECT * from episodes WHERE epiid = {0}".format(epi['id']), sqltype="Fetch")
             # Section move to avoid duplicate code
             if len(epi['name']) > 130:
                 epiname = epi['name'][:130]
@@ -152,7 +152,7 @@ def episode_processing(single=''):
                     f9=(9, f"'{str(datetime.now())[:10]}'")
                 )
                 sql = sql.replace("'None'", 'NULL').replace('None', 'NULL')
-                execute_sql(sql=sql, sqltype='Commit')
+                db.execute_sql(sql=sql, sqltype='Commit')
                 inserted += 1
             elif len(result) == 1:
                 if vli > 3:
@@ -176,10 +176,11 @@ def episode_processing(single=''):
                                               where=f"epiid={epi['id']}",
                                               table='episodes')
                 sql = sql.replace('None', 'NULL')
-                execute_sql(sql=sql, sqltype='Commit')
+                db.execute_sql(sql=sql, sqltype='Commit')
                 updated += 1
             else:
                 log.write(f"Found more than 1 record for {epi['id']} episode which should not happen", 0)
+                db.close()
                 log.end()
                 quit()
             if (updated + inserted) % 250 == 0:
@@ -187,9 +188,9 @@ def episode_processing(single=''):
                     log.write(f'Processed {updated + inserted} records', 3)
         if vli > 2:
             log.write(f'Do Show update for {show[0]}', 3)
-        execute_sql(sqltype='Commit', sql=f'UPDATE shows '
-                                          f'set eps_updated = current_date, eps_count = {num_eps} '
-                                          f'WHERE showid = {show[0]}')
+        db.execute_sql(sqltype='Commit', sql=f'UPDATE shows '
+                                             f'set eps_updated = current_date, eps_count = {num_eps} '
+                                             f'WHERE showid = {show[0]}')
     
     log.write(f"Updated existing episodes: {updated} and Inserted new episodes: {inserted}")
     log.write(f"Total number of shows: {len(result)}")
@@ -230,7 +231,7 @@ def episode_processing(single=''):
                                       where=f"epiid={epi['episode_id']}",
                                       table='episodes')
         sql = sql.replace('None', 'NULL')
-        execute_sql(sqltype='Commit', sql=sql)
+        db.execute_sql(sqltype='Commit', sql=sql)
         updated += 1
         if updated % 5000 == 0:
             if vli > 2:
@@ -243,7 +244,7 @@ def episode_processing(single=''):
     
     log.write(f'Starting to find episodes to reset')
     found = False
-    result = execute_sql(sqltype='Fetch', sql=std_sql.episodes)
+    result = db.execute_sql(sqltype='Fetch', sql=std_sql.episodes)
     count = 0
     ep_list = []
     for res in result:
@@ -262,16 +263,16 @@ def episode_processing(single=''):
     
     log.write(f'Number of Episodes to reset is {len(ep_list)}')
     for epi in ep_list:
-        result = execute_sql(sqltype='Commit', sql=f'UPDATE episodes '
-                                                   f'SET mystatus = NULL, mystatus_date = NULL '
-                                                   f'WHERE epiid = {epi}')
+        result = db.execute_sql(sqltype='Commit', sql=f'UPDATE episodes '
+                                                      f'SET mystatus = NULL, mystatus_date = NULL '
+                                                      f'WHERE epiid = {epi}')
         if not result:
             log.write(f'Epi reset for {epi} went wrong {result}')
     
     # Checking to see if there are any episodes with no status on TVMaze for Followed shows set to skip downloading
     # and tracking so that we can set them to skipped on TVMaze
     
-    eps_to_update = execute_sql(sqltype='Fetch', sql=tvm_views.eps_to_check)
+    eps_to_update = db.execute_sql(sqltype='Fetch', sql=tvm_views.eps_to_check)
     if len(eps_to_update) != 0:
         log.write(f'There are {len(eps_to_update)} episodes to update')
         for epi in eps_to_update:
@@ -287,8 +288,6 @@ def episode_processing(single=''):
 
 '''Main Program'''
 log = logging(caller='Episodes', filename='Process')
-log.open()
-log.close()
 log.start()
 
 options = docopt(__doc__, version='Episodes Release 1.0')
@@ -299,11 +298,14 @@ if vli > 5 or vli < 1:
 elif vli > 1:
     log.write(f'Verbosity level is set to: {options["--vl"]}')
 
+db = mariaDB(caller=log.caller, filename=log.filename, vli=vli)
+
 if options['-s']:
     log.write(f'Processing Episodes where Shows are not set for "Followed"')
     find_shows_not_followed_or_skipped()
 else:
     episode_processing()
 
+db.close()
 log.end()
 quit()
