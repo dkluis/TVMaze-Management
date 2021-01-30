@@ -22,10 +22,8 @@ Options:
 from bs4 import BeautifulSoup as Soup
 from docopt import docopt
 
-from Libraries import mariaDB, tvm_views, os, datetime, timedelta
-from Libraries import def_downloader, date_delta, re
-from Libraries import execute_tvm_request, tvmaze_apis, date
-from Libraries import logging
+from Libraries import mariaDB, tvm_views, os, datetime, timedelta, date_delta, re, execute_tvm_request, \
+    tvmaze_apis, date, logging
 
 
 def update_show_status(showid, status):
@@ -33,7 +31,7 @@ def update_show_status(showid, status):
     if status == "Skipped":
         dl = None
     elif status == "Followed":
-        dl = def_downloader.dl
+        dl = db.execute_sql(sqltype='Fetch', sql=f'SELECT info FROM key_values WHERE `key` = "def_dl"')[0][0]
     elif status == 'Undecided':
         d = datetime.today() + timedelta(days=14)
         dl = str(d)[:10]

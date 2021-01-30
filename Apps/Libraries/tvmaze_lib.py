@@ -1,7 +1,6 @@
 import requests
 import mariadb
 import sqlite3
-from sqlalchemy import create_engine
 import sys
 from datetime import datetime, timedelta, date
 import re
@@ -247,8 +246,9 @@ def update_tvmaze_episode_status(epiid, log_errors, vli):
     :param vli:            The verbose level
     :return:               Response from TVMaze or False if episode was updated before
     """
+    db = mariaDB()
     status_sql = f'select epiid, mystatus from episodes where epiid = {epiid}'
-    result = execute_sql(sql=status_sql, sqltype='Fetch')[0]
+    result = db.execute_sql(sql=status_sql, sqltype='Fetch')[0]
     if result[1] == 'Downloaded' or result[1] == 'Watched':
         log_errors.write(f'This episode {epiid} has already been update with "{result[1]}"')
         return False
@@ -257,7 +257,7 @@ def update_tvmaze_episode_status(epiid, log_errors, vli):
     baseurl = tvmaze_apis.update_episode_status + str(epiid)
     epoch_date = int(date.today().strftime("%s"))
     data = {"marked_at": epoch_date, "type": 1}
-    return execute_tvm_request(baseurl, data=data, req_type='put', code=True, log=True)
+    return execute_tvm_request(baseurl, data=data, req_type='put', code=True, log_ind=True)
 
 
 '''
@@ -391,7 +391,7 @@ class mariaDB:
         if self.__active:
             self.__connection.commit()
     
-    def execute_sql(self, sql='', sqltype='Fetch', data_dict=False, dd_id=False, field_list=[]):
+    def execute_sql(self, sql='', sqltype='Fetch', data_dict=False, dd_id=False, field_list=list):
         """
                 Execute SQL
         :param sql:         The SQL to execute
@@ -400,7 +400,6 @@ class mariaDB:
         :param field_list:  The list of fields to be returned in the dict.  The lib will try to figure out the
                                 field array itself but for joins you need the list to be passed in.
         :param dd_id:       Default False, True adds and id number for every row of data returned in the data_dict
-        :param vli:         vli level to activate the log.write
         :return:            True, False or the result or data_dict set from a fetch
         """
         if not self.__active:
@@ -512,84 +511,6 @@ class mdbi:
             self.db = d
         self.admin = config_info.user_admin
         self.admin_password = config_info.user_password
-
-
-def connect_mdb(h='', d='', err=True):
-    log_mdb = logging(caller='Lib connect_mdb', filename='Process')
-    mdb_info = mdbi(h, d)
-    mdb = ''
-    try:
-        mdb = mariadb.connect(
-            host=mdb_info.host,
-            user=mdb_info.user,
-            password=mdb_info.password,
-            database=mdb_info.db)
-    except mariadb.Error as e:
-        if err:
-            log_mdb.write(f"Connect MDB: Error connecting to MariaDB Platform: {e}")
-            log_mdb.write('--------------------------------------------------------------------------')
-            sys.exit(1)
-    mcur = mdb.cursor()
-    mdict = {'mdb': mdb,
-             'mcursor': mcur}
-    return mdict
-
-
-def close_mdb(mdb):
-    mdb.close()
-
-
-def connect_pd():
-    mdb_info = mdbi('', '')
-    sql_alchemy = f'mysql://{mdb_info.user}:{mdb_info.password}@{mdb_info.host}/{mdb_info.db}'
-    mdbe = create_engine(sql_alchemy)
-    return mdbe
-
-
-def execute_sql(con='', db='', cur='', batch='', h='', d='', sqltype='', sql=''):
-    log_exec = logging(caller='Lib execute_sql', filename='Process')
-    mdb_info = mdbi(h, d)
-    if h == '':
-        h = mdb_info.host
-    if d == '':
-        d = mdb_info.db
-    if con != "Y":
-        tvm = connect_mdb(mdb_info.host, mdb_info.db)
-        tvmcur = tvm['mcursor']
-        tvmdb = tvm['mdb']
-    else:
-        tvmcur = cur
-        tvmdb = db
-    
-    if sqltype == 'Commit':
-        try:
-            tvmcur.execute(sql)
-            if batch != "Y":
-                tvmdb.commit()
-        except mariadb.Error as er:
-            log_exec.write(f'Execute SQL (Commit) Database Error: {d}, {er}, {sql}')
-            log_exec.write('----------------------------------------------------------------------')
-            if con != 'Y':
-                close_mdb(tvmdb)
-            return False, er
-        if con != 'Y':
-            close_mdb(tvmdb)
-        return True
-    elif sqltype == "Fetch":
-        try:
-            tvmcur.execute(sql)
-            result = tvmcur.fetchall()
-        except mariadb.Error as er:
-            log_exec.write(f'Execute SQL (Fetch) Database Error: {d}, {er}, {sql}')
-            log_exec.write('----------------------------------------------------------------------')
-            if con != 'Y':
-                close_mdb(tvmdb)
-            return False, er
-        if con != 'Y':
-            close_mdb(tvmdb)
-        return result
-    else:
-        return False, 'Not implemented yet'
 
 
 class sdb_info:
@@ -928,8 +849,9 @@ def generate_insert_sql(primary, table, **kwargs):
 
 
 def get_tvmaze_info(key):
+    db = mariaDB()
     sql = f"SELECT info from key_values WHERE `key` = '{key}' "
-    result = execute_sql(sqltype='Fetch', sql=sql)
+    result = db.execute_sql(sqltype='Fetch', sql=sql)
     if not result:
         return False
     else:
@@ -938,16 +860,18 @@ def get_tvmaze_info(key):
 
 
 def find_new_shows():
-    info = execute_sql(sqltype='Fetch', sql=tvm_views.shows_to_review)
+    db = mariaDB()
+    info = db.execute_sql(sqltype='Fetch', sql=tvm_views.shows_to_review)
     return info
 
 
 def get_download_options(html=False):
+    db = mariaDB()
     if not html:
-        download_options = execute_sql(sqltype='Fetch', sql="SELECT * from download_options ")
+        download_options = db.execute_sql(sqltype='Fetch', sql="SELECT * from download_options ")
     else:
-        download_options = execute_sql(sqltype='Fetch', sql="SELECT * from download_options "
-                                                            "where link_prefix like 'http%' ")
+        download_options = db.execute_sql(sqltype='Fetch', sql="SELECT * from download_options "
+                                                               "where link_prefix like 'http%' ")
     return download_options
 
 
@@ -957,30 +881,33 @@ class num_list:
 
 
 def count_by_download_options():
-    rarbg_api = execute_sql(sqltype='Fetch',
-                            sql="SELECT COUNT(*) from shows WHERE download = 'rarbgAPI' AND status = 'Followed'")
-    rarbg = execute_sql(sqltype='Fetch',
-                        sql="SELECT COUNT(*) from shows WHERE download = 'rarbg' AND status = 'Followed'")
-    rarbgmirror = execute_sql(sqltype='Fetch',
-                              sql="SELECT COUNT(*) from shows WHERE download = 'rarbgmirror' AND status = 'Followed'")
-    showrss = execute_sql(sqltype='Fetch',
-                          sql="SELECT COUNT(*) from shows WHERE download = 'ShowRSS' AND status = 'Followed'")
-    eztv_api = execute_sql(sqltype='Fetch',
-                           sql="SELECT COUNT(*) from shows WHERE download = 'eztvAPI' AND status = 'Followed'")
-    no_dl = execute_sql(sqltype='Fetch',
-                        sql="SELECT COUNT(*) from shows WHERE download is NULL AND status = 'Followed'")
-    skip = execute_sql(sqltype='Fetch',
-                       sql="SELECT COUNT(*) from shows WHERE download = 'Skip' AND status = 'Followed'")
-    eztv = execute_sql(sqltype='Fetch',
-                       sql="SELECT COUNT(*) from shows WHERE download = 'eztv' AND status = 'Followed'")
-    magnetdl = execute_sql(sqltype='Fetch',
-                           sql="SELECT COUNT(*) from shows WHERE download = 'magnetdl' AND status = 'Followed'")
-    torrentfunk = execute_sql(sqltype='Fetch',
-                              sql="SELECT COUNT(*) from shows WHERE download = 'torrentfunk' AND status = 'Followed'")
-    piratebay = execute_sql(sqltype='Fetch',
-                            sql="SELECT COUNT(*) from shows WHERE download = 'piratebay' AND status = 'Followed'")
-    multi = execute_sql(sqltype='Fetch',
-                        sql="SELECT COUNT(*) from shows WHERE download = 'Multi' AND status = 'Followed'")
+    db = mariaDB()
+    rarbg_api = db.execute_sql(sqltype='Fetch',
+                               sql="SELECT COUNT(*) from shows WHERE download = 'rarbgAPI' AND status = 'Followed'")
+    rarbg = db.execute_sql(sqltype='Fetch',
+                           sql="SELECT COUNT(*) from shows WHERE download = 'rarbg' AND status = 'Followed'")
+    rarbgmirror = db.execute_sql(sqltype='Fetch',
+                                 sql="SELECT COUNT(*) from shows "
+                                     "WHERE download = 'rarbgmirror' AND status = 'Followed'")
+    showrss = db.execute_sql(sqltype='Fetch',
+                             sql="SELECT COUNT(*) from shows WHERE download = 'ShowRSS' AND status = 'Followed'")
+    eztv_api = db.execute_sql(sqltype='Fetch',
+                              sql="SELECT COUNT(*) from shows WHERE download = 'eztvAPI' AND status = 'Followed'")
+    no_dl = db.execute_sql(sqltype='Fetch',
+                           sql="SELECT COUNT(*) from shows WHERE download is NULL AND status = 'Followed'")
+    skip = db.execute_sql(sqltype='Fetch',
+                          sql="SELECT COUNT(*) from shows WHERE download = 'Skip' AND status = 'Followed'")
+    eztv = db.execute_sql(sqltype='Fetch',
+                          sql="SELECT COUNT(*) from shows WHERE download = 'eztv' AND status = 'Followed'")
+    magnetdl = db.execute_sql(sqltype='Fetch',
+                              sql="SELECT COUNT(*) from shows WHERE download = 'magnetdl' AND status = 'Followed'")
+    torrentfunk = db.execute_sql(sqltype='Fetch',
+                                 sql="SELECT COUNT(*) from shows "
+                                     "WHERE download = 'torrentfunk' AND status = 'Followed'")
+    piratebay = db.execute_sql(sqltype='Fetch',
+                               sql="SELECT COUNT(*) from shows WHERE download = 'piratebay' AND status = 'Followed'")
+    multi = db.execute_sql(sqltype='Fetch',
+                           sql="SELECT COUNT(*) from shows WHERE download = 'Multi' AND status = 'Followed'")
     value = (no_dl[0][0], rarbg_api[0][0], rarbg[0][0], rarbgmirror[0][0], showrss[0][0], skip[0][0],
              eztv_api[0][0], eztv[0][0], magnetdl[0][0], torrentfunk[0][0], piratebay[0][0], multi[0][0])
     return value
@@ -1070,6 +997,7 @@ def func_crud_delete(sender, data):
 
 
 def func_crud_search(sender, data):
+    db = mariaDB()
     log_info(f'Searching CRUD {sender}, {data}')
     key = get_value(f'{data}_input')
     if data == 'Key Values':
@@ -1083,7 +1011,7 @@ def func_crud_search(sender, data):
     else:
         sql = f'Should not happen, sql is ""'
     
-    result = execute_sql(sqltype='Fetch', sql=sql)
+    result = db.execute_sql(sqltype='Fetch', sql=sql)
     func_fill_a_table(f'Table##{data}', result)
 
 
@@ -1175,7 +1103,8 @@ def eliminate_prefixes(name):
     :param name:  Full name to be cleaned up
     :return:    cleaned name without any prefixes
     """
-    plexprefs = execute_sql(sqltype='Fetch', sql="SELECT info FROM key_values WHERE `key` = 'plexprefs'")[0]
+    db = mariaDB()
+    plexprefs = db.execute_sql(sqltype='Fetch', sql="SELECT info FROM key_values WHERE `key` = 'plexprefs'")[0]
     plexprefs = str(plexprefs).replace('(', '').replace(')', '').replace("'", "").split(',')
     for plexpref in plexprefs:
         if plexpref in name:
@@ -1186,11 +1115,12 @@ def eliminate_prefixes(name):
 
 def determine_directory(name):
     """
-                Function to determine if a name indicate a directory or an individual file
+                    Function to determine if a name indicate a directory or an individual file
     :param name:    Full name of the directory or file
     :return:        Bool True is directory, File is False
     """
-    plexexts = execute_sql(sqltype='Fetch', sql="SELECT info FROM key_values WHERE `key` = 'plexexts'")[0]
+    db = mariaDB()
+    plexexts = db.execute_sql(sqltype='Fetch', sql="SELECT info FROM key_values WHERE `key` = 'plexexts'")[0]
     plexexts = str(plexexts).replace('(', '').replace(')', '').replace("'", "").split(',')
     for plexext in plexexts:
         if plexext in name:
@@ -1285,9 +1215,10 @@ def process_download_name(download_name):
 
 
 def get_showid(clean_showname):
+    db = mariaDB()
     logfile = logging(caller='Get Show Id', filename='Process')
     sql = f'select showid, showname from shows where alt_showname = "{clean_showname}" and status = "Followed"'
-    result = execute_sql(sqltype='Fetch', sql=sql)
+    result = db.execute_sql(sqltype='Fetch', sql=sql)
     if len(result) > 1:
         logfile.write(f'Something is up, too many shows found {result}', 0)
         return {'showid': 99999999, 'real_showname': 'Too Many Shows Found'}
@@ -1301,9 +1232,10 @@ def get_showid(clean_showname):
 
 
 def get_episodeid(showid, season, episode):
+    db = mariaDB()
     logfile = logging(caller='Get Episode Id', filename='Process')
     sql = f'select epiid from episodes where showid = {showid} and season = {season} and episode = {episode}'
-    result = execute_sql(sqltype='Fetch', sql=sql)
+    result = db.execute_sql(sqltype='Fetch', sql=sql)
     if len(result) != 1:
         logfile.write(f'Something is up, either too many episodes found or no episode found {result}', 0)
         episodeid = 0
@@ -1345,31 +1277,6 @@ class paths:
         self.scr_path = sp
         self.process = lp + 'Process.log'
         self.transmission = lp + "Transmission.log"
-
-
-class def_downloader:
-    dl = execute_sql(sqltype='Fetch', sql=f'SELECT info FROM key_values WHERE `key` = "def_dl"')[0][0]
-
-
-def print_tvm(mode='Test', app='', line=''):
-    p_time = time.strftime("%D - %T")
-    if mode == '':
-        quit('Mode was empty')
-    path_info = paths(mode)
-    if app != '':
-        p_file = open(f'{path_info.log_path + app[:-3] + ".log"}', 'a')
-        p_file.write(f'{p_time} -> {app} => {line}\n')
-        p_file.close()
-
-
-class operational_mode:
-    def __init__(self):
-        check = os.getcwd()
-        if 'Pycharm' in check:
-            prod = False
-        else:
-            prod = True
-        self.prod = prod
 
 
 def convert_to_dict_within_list(data, data_type='DB', field_list=None):

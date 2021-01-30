@@ -1,22 +1,25 @@
 from flask import Flask
 from flask_cors import CORS
-from Libraries import execute_sql, convert_to_dict_within_list
-from Libraries import connect_pd, shows
 import pandas as pd
+
+from Libraries import mariaDB, convert_to_dict_within_list, connect_pd, shows
+
 
 app = Flask(__name__)
 cors = CORS(app)
 app.config['CORS_HEADERS'] = 'http://127.0.0.1'
 
+db = mariaDB()
+
 
 @app.route('/apis/v1/shows/page/<page>')
 def get_shows_page(page):
     if int(page) <= 0:
-        result = execute_sql(sqltype='Fetch', sql=f'select * from shows where showid < 1000')
+        result = db.execute_sql(sqltype='Fetch', sql=f'select * from shows where showid < 1000')
     else:
         start = int(page) * 1000
         end = int(page) * 1000 + 999
-        result = execute_sql(sqltype='Fetch', sql=f'select * from shows where showid between {start} and {end}')
+        result = db.execute_sql(sqltype='Fetch', sql=f'select * from shows where showid between {start} and {end}')
     result = convert_to_dict_within_list(result, data_type='DB', field_list=shows.field_list)
     return result
 
@@ -24,11 +27,11 @@ def get_shows_page(page):
 @app.route('/apis/v1/shows/page/<page>/followed')
 def get_shows_page_followed(page):
     if int(page) <= 0:
-        result = execute_sql(sqltype='Fetch', sql=f'select * from shows where showid < 1000 and status = "Followed"')
+        result = db.execute_sql(sqltype='Fetch', sql=f'select * from shows where showid < 1000 and status = "Followed"')
     else:
         start = int(page) * 1000
         end = int(page) * 1000 + 999
-        result = execute_sql(sqltype='Fetch', sql=f'select * from shows '
+        result = db.execute_sql(sqltype='Fetch', sql=f'select * from shows '
                                                   f'where status = "Followed" and showid between {start} and {end}')
     result = convert_to_dict_within_list(result, data_type='DB', field_list=shows.field_list)
     return result
@@ -36,14 +39,14 @@ def get_shows_page_followed(page):
 
 @app.route('/apis/v1/shows/followed')
 def get_shows_followed():
-    result = execute_sql(sqltype='Fetch', sql=f'select * from shows where status = "Followed"')
+    result = db.execute_sql(sqltype='Fetch', sql=f'select * from shows where status = "Followed"')
     result = convert_to_dict_within_list(result, data_type='DB', field_list=shows.field_list)
     return result
 
 
 @app.route('/apis/v1/show/<showid>')
 def get_show_by_id(showid):
-    result = execute_sql(sqltype='Fetch', sql=f'select * from shows '
+    result = db.execute_sql(sqltype='Fetch', sql=f'select * from shows '
                                               f'where `showid` = {showid}')
     result = convert_to_dict_within_list(result, data_type='DB', field_list=shows.field_list)
     return f'{result}'
@@ -51,7 +54,7 @@ def get_show_by_id(showid):
 
 @app.route('/apis/v1/show/name/<showname>/wild')
 def get_show_by_name_wild(showname):
-    result = execute_sql(sqltype='Fetch', sql=f'select * from shows '
+    result = db.execute_sql(sqltype='Fetch', sql=f'select * from shows '
                                               f'where showname like "%{showname}%"')
     result = convert_to_dict_within_list(result, data_type='DB', field_list=shows.field_list)
     return f'{result}'
@@ -59,7 +62,7 @@ def get_show_by_name_wild(showname):
 
 @app.route('/apis/v1/show/name/<showname>/followed/wild')
 def get_show_by_name_followed_wild(showname):
-    result = execute_sql(sqltype='Fetch', sql=f'select * from shows '
+    result = db.execute_sql(sqltype='Fetch', sql=f'select * from shows '
                                               f'where showname like "%{showname}%" and status = "Followed"')
     result = convert_to_dict_within_list(result, data_type='DB', field_list=shows.field_list)
     return f'{result}'
@@ -67,7 +70,7 @@ def get_show_by_name_followed_wild(showname):
 
 @app.route('/apis/v1/show/name/<showname>')
 def get_show_by_name(showname):
-    result = execute_sql(sqltype='Fetch', sql=f'select * from shows '
+    result = db.execute_sql(sqltype='Fetch', sql=f'select * from shows '
                                               f'where showname = "{showname}"')
     result = convert_to_dict_within_list(result, data_type='DB', field_list=shows.field_list)
     return f'{result}'
@@ -75,7 +78,7 @@ def get_show_by_name(showname):
 
 @app.route('/apis/v1/show/name/<showname>/followed')
 def get_show_by_name_followed(showname):
-    result = execute_sql(sqltype='Fetch', sql=f'select * from shows '
+    result = db.execute_sql(sqltype='Fetch', sql=f'select * from shows '
                                               f'where showname = "{showname}" and status = "Followed"')
     result = convert_to_dict_within_list(result, data_type='DB', field_list=shows.field_list)
     return f'{result}'

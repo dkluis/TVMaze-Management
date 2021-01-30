@@ -125,7 +125,7 @@ def update_tvmaze_episode_status(epiid, upd_date):
     else:
         epoch_date = int(date.today().strftime("%s"))
     data = {"marked_at": epoch_date, "type": 0}
-    response = execute_tvm_request(baseurl, data=data, req_type='put', code=True, log=do_log)
+    response = execute_tvm_request(baseurl, data=data, req_type='put', code=True, log_ind=do_log)
     return response
 
 

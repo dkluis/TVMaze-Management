@@ -272,8 +272,9 @@ def process_followed_shows():
             new_followed += 1
             if vli > 2:
                 log.write(f'Process Followed shows {validates[0][0]}  {validates[0][1]}', 3)
+            download = db.execute_sql(sqltype='Fetch', sql=f'SELECT info FROM key_values WHERE `key` = "def_dl"')[0][0]
             result = mariadb.execute_sql(sqltype='Commit', sql=f'UPDATE shows SET status="Followed", '
-                                                               f'download="{def_downloader.dl}" '
+                                                               f'download="{download}" '
                                                                f'WHERE showid={res["show_id"]}')
             if not result:
                 log.write(f'Update error on Shows table for show: '
