@@ -324,7 +324,7 @@ class config:
 
 
 class mariaDB:
-    def __init__(self, h='', d='', batch=False):
+    def __init__(self, h='', d='', batch=False, caller='Lib mariaDB', filename='Process'):
         """
             mariaDB handles the DB activities for the mariadb DB of TVM-Management
 
@@ -333,7 +333,7 @@ class mariaDB:
         :param batch:   Default False, which mean a commit after all executes of sql with require a commit
                         True, mean that commits are postpone until a commit is trigger or when the DB is closed
         """
-        self.__log = logging(caller='Lib mariaDB', filename='Process')
+        self.__log = logging(caller=caller, filename=filename)
         conf = config()
         if h != '':
             self.__host = h
@@ -390,7 +390,7 @@ class mariaDB:
         if self.__active:
             self.__connection.commit()
     
-    def execute_sql(self, sql='', sqltype='Fetch', data_dict=False, dd_id=False, field_list=[]):
+    def execute_sql(self, sql='', sqltype='Fetch', data_dict=False, dd_id=False, field_list=[], vli=9):
         """
                 Execute SQL
         :param sql:         The SQL to execute
@@ -398,11 +398,13 @@ class mariaDB:
         :param data_dict:   Default False, True create a dictionary out of the result of a fetch
         :param field_list:  The list of fields to be returned in the dict.  The lib will try to figure out the
                                 field array itself but for joins you need the list to be passed in.
-        :param dd_id        Default False, True adds and id number for every row of data returned in the data_dict
+        :param dd_id:       Default False, True adds and id number for every row of data returned in the data_dict
+        :param vli:         vli level to activate the log.write
         :return:            True, False or the result or data_dict set from a fetch
         """
         if not self.__active:
             self.open()
+        sql = sql.replace("'None'", 'NULL').replace('None', 'NULL')
         if sqltype == 'Commit':
             try:
                 self.__cursor.execute(sql)
@@ -412,6 +414,8 @@ class mariaDB:
                 self.__log.write(f'Execute SQL (Commit) Database Error: {self.db}, {er}, {sql}', 0)
                 self.__log.write('----------------------------------------------------------------------')
                 return False, er
+            if vli > 2:
+                self.__log.write(f'Executed SQL: {sql} with result {True}')
             return True
         elif sqltype == "Fetch":
             try:
@@ -427,8 +431,12 @@ class mariaDB:
                 else:
                     self.__extract_fields(sql)
                 self.__data_as_dict(result, dd_id)
+                if vli > 2:
+                    self.__log.write(f'Executed SQL: {sql} and returned a data dictionary')
                 return self.data_dict
             else:
+                if vli > 2:
+                    self.__log.write(f'Executed SQL: {sql} and returned sql result')
                 return result
         else:
             return False, 'Not implemented yet'

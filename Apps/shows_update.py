@@ -56,7 +56,7 @@ def func_get_cli():
 
 
 def func_get_the_shows():
-    shows = db.execute_sql(sqltype='Fetch', sql=sql)
+    shows = db.execute_sql(sqltype='Fetch', sql=sql, vli=vli)
     return shows
 
 
@@ -70,7 +70,7 @@ def func_get_tvmaze_show_info(showid):
         if "404" in showinfo:
             log.write(f'Now Deleting: {showid}')
             sql_tvm = f'delete from shows where `showid` = {showid}'
-            result = db.execute_sql(sqltype='Commit', sql=sql_tvm)
+            result = db.execute_sql(sqltype='Commit', sql=sql_tvm, vli=vli)
             log.write(f'Delete result: {result}')
         return
     
@@ -82,8 +82,7 @@ def func_get_tvmaze_show_info(showid):
                 f"thetvdb = '{showinfo['externals']['thetvdb']}', " \
                 f"imdb = '{showinfo['externals']['imdb']}' " \
                 f"where `showid` = {showid}"
-    sql_shows = sql_shows.replace("'None'", 'NULL').replace('None', 'NULL')
-    result = db.execute_sql(sqltype='Commit', sql=sql_shows)
+    result = db.execute_sql(sqltype='Commit', sql=sql_shows, vli=vli)
     if not result:
         log.write(f'Error when updating show {showid} {result}', 0)
 
@@ -100,8 +99,8 @@ def func_update_shows(shows):
 
 
 def func_update_the_show(showid, showname):
-    if vli > 2:
-        log.write(f'Updating show {showid}, {showname}', 3)
+    if vli > 1:
+        log.write(f'Updating show {showid}, {showname}', 2)
     func_get_tvmaze_show_info(showid)
 
 
@@ -113,10 +112,12 @@ def main():
 if __name__ == '__main__':
     vli = 0
     shows_to_update = []
-    db = mariaDB()
-    sql = ''
+    
     log = logging(caller='Shows Update', filename='ShowsUpdate')
     log.start()
+    
+    db = mariaDB(caller=log.caller, filename=log.filename)
+    sql = ''
     
     main()
     
