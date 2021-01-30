@@ -24,9 +24,7 @@ Options:
 from docopt import docopt
 import pandas as pd
 
-from Libraries import get_today, time
-from Libraries import stat_views, execute_sql, count_by_download_options, connect_pd
-from Libraries import logging
+from Libraries import get_today, time, stat_views, mariaDB, count_by_download_options, connect_pd, logging
 
 
 def go_store_statistics(f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12):
@@ -53,15 +51,15 @@ def go_store_statistics(f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12):
           f"{f8}, {f9}, {f10}, {f11}, {f12}, " \
           f"'TVMaze', Null, Null, Null, Null, Null, Null, Null, Null, Null, Null, Null, Null);"
     sql = sql.replace('None', 'NULL')
-    execute_sql(sqltype='Commit', sql=sql)
+    db.execute_sql(sqltype='Commit', sql=sql)
     if vli > 1:
         log.write(f"Updated TVMaze", 2)
     return True
 
 
 def go_store_download_options(dls_in):
-    stats = execute_sql(sql='SELECT * from statistics where statrecind = "Downloaders" order by statdate desc ',
-                        sqltype='Fetch')
+    stats = db.execute_sql(sql='SELECT * from statistics where statrecind = "Downloaders" order by statdate desc ',
+                           sqltype='Fetch')
     if len(stats) != 0:
         stats = stats[0]
         if (str(dls_in[0]) == str(stats[15]) and
@@ -87,15 +85,15 @@ def go_store_download_options(dls_in):
                   f"{dls_in[0]}, {dls_in[1]}, {dls_in[2]}, {dls_in[3]}, {dls_in[4]}, {dls_in[5]}, " \
                   f"{dls_in[6]}, {dls_in[7]}, {dls_in[8]}, {dls_in[9]}, {dls_in[10]}, {dls_in[11]});"
             sql = sql.replace('None', 'NULL')
-            execute_sql(sql=sql, sqltype='Commit')
+            db.execute_sql(sql=sql, sqltype='Commit')
             if vli > 1:
                 log.write(f"Updated Download Options", 2)
 
 
 def view_history(last: False):
     if last:
-        shows = execute_sql(sqltype='Fetch',
-                            sql='SELECT * from statistics where statrecind = "TVMaze" order by statdate desc ')
+        shows = db.execute_sql(sqltype='Fetch',
+                               sql='SELECT * from statistics where statrecind = "TVMaze" order by statdate desc ')
         if len(shows) == 0:
             return False
         else:
@@ -117,8 +115,6 @@ def view_history(last: False):
 Main Program
 '''
 log = logging(caller='Statistics', filename='Process')
-log.open()
-log.close()
 log.start()
 
 options = docopt(__doc__, version='Statistics Release 1.0')
@@ -130,20 +126,22 @@ if vli > 5 or vli < 1:
 elif vli > 1:
     log.write(f'Verbosity level is set to: {options["--vl"]}')
 
-tvmshows = execute_sql(sql=stat_views.count_all_shows, sqltype="Fetch")[0][0]
-myshows = execute_sql(sql=stat_views.count_my_shows, sqltype="Fetch")[0][0]
-myshowsrunning = execute_sql(sql=stat_views.count_my_shows_running, sqltype="Fetch")[0][0]
-myshowsended = execute_sql(sql=stat_views.count_my_shows_ended, sqltype="Fetch")[0][0]
-myshowstbd = execute_sql(sql=stat_views.count_my_shows_in_limbo, sqltype="Fetch")[0][0]
-myshowsid = execute_sql(sql=stat_views.count_my_shows_in_development, sqltype="Fetch")[0][0]
-tvmshows_skipped = execute_sql(sql=stat_views.count_all_shows_skipped, sqltype="Fetch")[0][0]
+db = mariaDB(caller=log.caller, filename=log.filename, vli=vli)
 
-myeps = execute_sql(sql=stat_views.count_my_episodes, sqltype='Fetch')[0][0]
-mywatchedeps = execute_sql(sql=stat_views.count_my_episodes_watched, sqltype='Fetch')[0][0]
-mytowatcheps = execute_sql(sql=stat_views.count_my_episodes_to_watch, sqltype='Fetch')[0][0]
-myskippedeps = execute_sql(sql=stat_views.count_my_episodes_skipped, sqltype='Fetch')[0][0]
-mytodownloadeps = execute_sql(sql=stat_views.count_my_episodes_to_download, sqltype='Fetch')[0][0]
-myfutureeps = execute_sql(sql=stat_views.count_my_episodes_future, sqltype='Fetch')[0][0] - mytodownloadeps
+tvmshows = db.execute_sql(sql=stat_views.count_all_shows, sqltype="Fetch")[0][0]
+myshows = db.execute_sql(sql=stat_views.count_my_shows, sqltype="Fetch")[0][0]
+myshowsrunning = db.execute_sql(sql=stat_views.count_my_shows_running, sqltype="Fetch")[0][0]
+myshowsended = db.execute_sql(sql=stat_views.count_my_shows_ended, sqltype="Fetch")[0][0]
+myshowstbd = db.execute_sql(sql=stat_views.count_my_shows_in_limbo, sqltype="Fetch")[0][0]
+myshowsid = db.execute_sql(sql=stat_views.count_my_shows_in_development, sqltype="Fetch")[0][0]
+tvmshows_skipped = db.execute_sql(sql=stat_views.count_all_shows_skipped, sqltype="Fetch")[0][0]
+
+myeps = db.execute_sql(sql=stat_views.count_my_episodes, sqltype='Fetch')[0][0]
+mywatchedeps = db.execute_sql(sql=stat_views.count_my_episodes_watched, sqltype='Fetch')[0][0]
+mytowatcheps = db.execute_sql(sql=stat_views.count_my_episodes_to_watch, sqltype='Fetch')[0][0]
+myskippedeps = db.execute_sql(sql=stat_views.count_my_episodes_skipped, sqltype='Fetch')[0][0]
+mytodownloadeps = db.execute_sql(sql=stat_views.count_my_episodes_to_download, sqltype='Fetch')[0][0]
+myfutureeps = db.execute_sql(sql=stat_views.count_my_episodes_future, sqltype='Fetch')[0][0] - mytodownloadeps
 
 dls = count_by_download_options()
 
@@ -155,5 +153,6 @@ if options['-s']:
 else:
     log.write(f'No option like -d, -s, or -v was supplied', 0)
     
+db.close()
 log.end()
 quit()

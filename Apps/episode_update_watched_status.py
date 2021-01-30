@@ -13,9 +13,7 @@ Options:
 
 """
 
-from Libraries import mariaDB
-from Libraries import execute_tvm_request
-from Libraries import logging
+from Libraries import mariaDB, execute_tvm_request, logging
 
 log = logging(caller='Episodes Watched Update', filename='Episodes_Watched_Update')
 log.start()

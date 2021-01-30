@@ -24,7 +24,7 @@ from docopt import docopt
 from bs4 import BeautifulSoup as Soup
 
 from Libraries import execute_tvm_request, tvmaze_apis, date, mariaDB, tvm_views, generate_insert_sql, \
-     generate_update_sql, std_sql, logging, timer, datetime
+                      generate_update_sql, std_sql, logging, timer, datetime
 
 
 def update_tvm_show_status(showid, logfile):

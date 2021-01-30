@@ -25,9 +25,7 @@ Options:
 
 from docopt import docopt
 
-from Libraries import execute_tvm_request
-from Libraries import mariaDB
-from Libraries import logging
+from Libraries import execute_tvm_request, mariaDB, logging
 
 
 def func_get_cli():

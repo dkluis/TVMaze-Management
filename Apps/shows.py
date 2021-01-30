@@ -31,10 +31,8 @@ Options:
 
 from docopt import docopt
 
-from Libraries import execute_tvm_request, tvmaze_apis, datetime, date
-from Libraries import execute_sql, generate_update_sql, generate_insert_sql, std_sql, mdbi, connect_mdb, close_mdb
-from Libraries import def_downloader
-from Libraries import logging, timer
+from Libraries import execute_tvm_request, tvmaze_apis, datetime, date, mariaDB, generate_update_sql, \
+    generate_insert_sql, std_sql, def_downloader, logging, timer
 
 
 def transform_showname(name):
@@ -110,7 +108,8 @@ def process_all_shows(start, end, sync):
             log.write(f'Last TVMaze page found was: {ind - 1}', 4)
             break
         for res in response.json():
-            result = execute_sql(sql="SELECT * from shows WHERE showid = {0}".format(res['id']), sqltype="Fetch")
+            result = mariadb.execute_sql(sql="SELECT * from shows WHERE showid = {0}".format(res['id']),
+                                         sqltype="Fetch")
             if not result:
                 if vli > 2:
                     log.write(f'Inserting: {res["id"]}, {res["name"]}', 3)
@@ -126,7 +125,7 @@ def process_all_shows(start, end, sync):
         ind = ind + 1
 
 
-def process_update_all_shows(mdb, mcur):
+def process_update_all_shows():
     response = execute_tvm_request(api=tvmaze_apis.get_updated_shows, err=True)
     if response:
         response = response.json()
@@ -147,8 +146,7 @@ def process_update_all_shows(mdb, mcur):
                 log.write(f"Processed {processed} records. ", 4)
         showid = key
         showupdated = response[key]
-        result = execute_sql(con="Y", db=mdb, cur=mcur,
-                             sql="SELECT * from shows WHERE showid = {0}".format(showid), sqltype="Fetch")
+        result = mariadb.execute_sql(sql=f"SELECT * from shows WHERE showid = {showid}", sqltype="Fetch")
         if not result:
             showinfo = execute_tvm_request(f'http://api.tvmaze.com/shows/{showid}')
             if not showinfo:
@@ -182,11 +180,12 @@ def process_update_all_shows(mdb, mcur):
                 f21=(21, None)
             )
             sql = sql.replace("'None'", 'NULL').replace('None', 'NULL')
-            execute_sql(con="Y", db=mdb, cur=mcur, sql=sql, sqltype='Commit')
+            mariadb.execute_sql(sql=sql, sqltype='Commit')
             inserted = inserted + 1
         else:
             if len(result) != 1:
                 log.write(f"Found too many records or not enough:{result}", 0)
+                mariadb.close()
                 quit()
             else:
                 result = result[0]
@@ -230,17 +229,15 @@ def process_update_all_shows(mdb, mcur):
                                               record_updated='current_date',
                                               where=f"showid={showid}",
                                               table='shows')
-                execute_sql(con="Y", batch="Y", db=mdb, cur=mcur, sql=sql, sqltype='Commit')
+                mariadb.execute_sql(sql=sql, sqltype='Commit')
                 updated = updated + 1
                 batch = batch + 1
                 if batch % 100 == 0:
                     if vli > 3:
                         log.write(f"Commit of {batch} updated records", 4)
-                    mdb.commit()
     if batch != 0:
         if vli > 3:
             log.write(f"Final Commit of updated records", 4)
-        mdb.commit()
     log.write(f"Processed {processed} records. ")
     log.write(f'Shows Evaluated: {len(response)} -> Inserted: {inserted} '
               f'-> Updated: {updated}, No Update Needed: {skipped}')
@@ -254,7 +251,7 @@ def process_followed_shows():
         return
     result = result.json()
     found = False
-    records = execute_sql(sqltype='Fetch', sql=std_sql.followed_shows)
+    records = mariadb.execute_sql(sqltype='Fetch', sql=std_sql.followed_shows)
     count = 0
     nf_list = []
     for show in records:
@@ -269,17 +266,19 @@ def process_followed_shows():
             nf_list.append(show[0])
     new_followed = 0
     for res in result:
-        validates = execute_sql(sqltype='Fetch',
-                                sql=f'SELECT showname, status from shows where showid={res["show_id"]}')
+        validates = mariadb.execute_sql(sqltype='Fetch',
+                                        sql=f'SELECT showname, status from shows where showid={res["show_id"]}')
         if validates[0][1] != 'Followed':
             new_followed += 1
             if vli > 2:
                 log.write(f'Process Followed shows {validates[0][0]}  {validates[0][1]}', 3)
-            result = execute_sql(sqltype='Commit', sql=f'UPDATE shows SET status="Followed", '
-                                                       f'download="{def_downloader.dl}" WHERE showid={res["show_id"]}')
+            result = mariadb.execute_sql(sqltype='Commit', sql=f'UPDATE shows SET status="Followed", '
+                                                               f'download="{def_downloader.dl}" '
+                                                               f'WHERE showid={res["show_id"]}')
             if not result:
                 log.write(f'Update error on Shows table for show: '
                           f'{res["show_id"]} trying to make a followed show', 0)
+                mariadb.close()
                 quit()
             if vli > 1:
                 log.write(f'Now following show {validates[0][0]}', 2)
@@ -287,22 +286,26 @@ def process_followed_shows():
     un_followed = 0
     for nf in nf_list:
         un_followed += 1
-        result = execute_sql(sqltype="Fetch", sql=f'SELECT showname, status from shows where showid={nf}')
+        result = mariadb.execute_sql(sqltype="Fetch", sql=f'SELECT showname, status from shows where showid={nf}')
         if not result:
             log.write(f'Read error in for nf loop on: {nf}', 0)
+            mariadb.close()
             quit()
         if len(result) != 1:
             log.write(f'Did not get a single record for show in nf loop: {nf}', 0)
+            mariadb.close()
             quit()
         showname = result[0][0]
-        result = execute_sql(sqltype='Commit', sql=f'DELETE FROM episodes WHERE showid={nf}')
+        result = mariadb.execute_sql(sqltype='Commit', sql=f'DELETE FROM episodes WHERE showid={nf}')
         if not result:
             log.write(f'Delete error on Episodes table for show in nf loop: {nf}', 0)
+            mariadb.close()
             quit()
-        result = execute_sql(sqltype='Commit',
-                             sql=f'UPDATE shows SET status="Skipped", download=NULL WHERE showid={nf}')
+        result = mariadb.execute_sql(sqltype='Commit',
+                                     sql=f'UPDATE shows SET status="Skipped", download=NULL WHERE showid={nf}')
         if not result:
             log.write(f'Update error on Shows table for show in nf loop: {nf} trying to un-follow', 0)
+            mariadb.close()
             quit()
         if vli > 1:
             log.write(f'Un-followed show {showname}', 2)
@@ -313,8 +316,6 @@ def process_followed_shows():
 
 ''' Main Program'''
 log = logging(caller='Shows', filename='Process')
-log.open()
-log.close()   # Closing so that the log.writes are saved individually to the log file for monitoring
 log.start()
 options = docopt(__doc__, version='Shows Release 1.0')
 vli = int(options['--vl'])
@@ -324,11 +325,7 @@ if vli > 5 or vli < 1:
 elif vli > 1:
     log.write(f'Verbosity level is set to: {options["--vl"]}')
 
-mdb_info = mdbi('', '')
-tvmaze = connect_mdb(d=mdb_info.db)
-db = tvmaze['mdb']
-cur = tvmaze['mcursor']
-db.autocommit = False
+mariadb = mariaDB(caller=log.caller, filename=log.filename, vli=vli)
 
 if options['-s']:
     log.write(f"Starting to process all tvmaze show with updates "
@@ -342,7 +339,7 @@ if options['-i']:
 if options['-u']:
     started = timer()
     log.write(f'Starting to process recently updated shows for insert and sync')
-    process_update_all_shows(mdb=db, mcur=cur)
+    process_update_all_shows()
     ended = timer()
     log.write(f'The process (including calling the TVMaze APIs) took: {round(ended - started, 3)} seconds')
     started = timer()
@@ -351,7 +348,6 @@ if options['-u']:
     ended = timer()
     log.write(f'The process (including calling the TVMaze APIs) took: {round(ended - started, 3)} seconds')
 
-db.commit()
-close_mdb(mdb=db)
+mariadb.close()
 log.end()
 quit()

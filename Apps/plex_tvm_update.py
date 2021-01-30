@@ -22,31 +22,28 @@ Options:
 import os
 import shutil
 import time
-
 from docopt import docopt
 
-from Libraries import config
-from Libraries import execute_sql
-from Libraries import logging
-from Libraries import process_download_name, update_tvmaze_episode_status
+from Libraries import config, mariaDB, logging, process_download_name, update_tvmaze_episode_status
 
 
 def gather_all_key_info():
-    px_extensions = execute_sql(sqltype='Fetch', sql='SELECT info FROM key_values where `key` = "plexexts"')[0][0]
+    px_extensions = db.execute_sql(sqltype='Fetch', sql='SELECT info FROM key_values where `key` = "plexexts"')[0][0]
     px_extensions = str(px_extensions).split(',')
-    px_prefs = execute_sql(sqltype='Fetch', sql='SELECT info FROM key_values where `key` = "plexprefs"')[0][0]
+    px_prefs = db.execute_sql(sqltype='Fetch', sql='SELECT info FROM key_values where `key` = "plexprefs"')[0][0]
     px_prefs = str(px_prefs).split(',')
-    px_source_dir = execute_sql(sqltype='Fetch', sql='SELECT info FROM key_values where `key` = "plexsd"')[0][0]
-    px_movie_dir = execute_sql(sqltype='Fetch', sql='SELECT info FROM key_values where `key` = "plexmovd"')[0][0]
-    px_show_dir = execute_sql(sqltype='Fetch', sql='SELECT info FROM key_values where `key` = "plextvd1"')[0][0]
-    px_kids_show_dir = execute_sql(sqltype='Fetch', sql='SELECT info FROM key_values where `key` = "plextvd2"')[0][0]
-    px_kids_shows = execute_sql(sqltype='Fetch', sql='SELECT info FROM key_values where `key` = "plextvd2selections"')
+    px_source_dir = db.execute_sql(sqltype='Fetch', sql='SELECT info FROM key_values where `key` = "plexsd"')[0][0]
+    px_movie_dir = db.execute_sql(sqltype='Fetch', sql='SELECT info FROM key_values where `key` = "plexmovd"')[0][0]
+    px_show_dir = db.execute_sql(sqltype='Fetch', sql='SELECT info FROM key_values where `key` = "plextvd1"')[0][0]
+    px_kids_show_dir = db.execute_sql(sqltype='Fetch', sql='SELECT info FROM key_values where `key` = "plextvd2"')[0][0]
+    px_kids_shows = db.execute_sql(sqltype='Fetch', sql='SELECT info FROM key_values '
+                                                        'where `key` = "plextvd2selections"')
     px_kids_shows = str(px_kids_shows[0][0]).split(',')
-    px_do_not_move = execute_sql(sqltype='Fetch', sql='SELECT info FROM key_values where `key` = "plexdonotmove"')
+    px_do_not_move = db.execute_sql(sqltype='Fetch', sql='SELECT info FROM key_values where `key` = "plexdonotmove"')
     px_do_not_move = str(px_do_not_move[0][0]).split(',')
-    px_processed_dir = execute_sql(sqltype='Fetch', sql='SELECT info FROM key_values where `key` = "plexprocessed"')
+    px_processed_dir = db.execute_sql(sqltype='Fetch', sql='SELECT info FROM key_values where `key` = "plexprocessed"')
     px_processed_dir = str(px_processed_dir[0][0]).split(',')[0]
-    px_trash_dir = execute_sql(sqltype='Fetch', sql='SELECT info FROM key_values where `key` = "plextrash"')
+    px_trash_dir = db.execute_sql(sqltype='Fetch', sql='SELECT info FROM key_values where `key` = "plextrash"')
     px_trash_dir = str(px_trash_dir[0][0]).split(',')[0]
     return px_extensions, px_prefs, px_source_dir, px_movie_dir, px_show_dir, px_kids_show_dir, px_kids_shows, \
         px_do_not_move, px_processed_dir, px_trash_dir
@@ -163,6 +160,8 @@ if vli > 5 or vli < 1:
 elif vli >= 1:
     log.write(f'Verbosity level is set to: {options["--vl"]}', 2)
     
+db = mariaDB(caller=log.caller, filename=log.filename, vli=vli)
+    
 config_info = config()
 transmission_log = config_info.log + 'Transmission.log'
 transmission_archive_log = config_info.log + 'Transmissions_Processed.log'
@@ -176,6 +175,7 @@ else:
 
 if len(downloads) == 0:
     log.write(f'Nothing to Process in the transmission log')
+    db.close()
     log.end()
     quit()
 
@@ -217,7 +217,7 @@ for download in downloads:
         else:
             sql = f'select epiid from episodes where showid = {processed_info["showid"]} and ' \
                   f'season = {seas}'
-            episodes = execute_sql(sql=sql, sqltype='Fetch')
+            episodes = db.execute_sql(sql=sql, sqltype='Fetch')
             if len(episodes) != 0:
                 for episode in episodes:
                     all_episodes.append(episode[0])
@@ -228,6 +228,7 @@ for download in downloads:
         log.write(f'Processing Movie {full_tor_name}')
         move_to_plex(False, full_tor_name, directory, '', '')
         log.write(f'Processing Movie {full_tor_name}')
-    
+
+db.close()
 log.end()
 quit()

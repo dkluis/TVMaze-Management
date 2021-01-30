@@ -24,10 +24,7 @@ Options:
 from docopt import docopt
 from datetime import date
 
-from Libraries import execute_sqlite, execute_sql, config
-from Libraries import execute_tvm_request
-from Libraries import fix_showname
-from Libraries import logging
+from Libraries import execute_sqlite, mariaDB, config, execute_tvm_request, fix_showname, logging
 
 
 class sdb_info:
@@ -43,6 +40,7 @@ class log_file:
             self.we = open(wetxt, "w")
         except IOError as error:
             log.write(f'Error Opening the txt file {error}', 0)
+            db.close()
             quit()
     
     def save(self, info):
@@ -77,7 +75,7 @@ def func_get_plex_watched_episodes():
 def func_find_episode(showid, season, episode):
     sql = f'select showid, epiname, airdate, mystatus_date, mystatus, epiid from episodes ' \
           f'where showid = {showid} and season = {season} and episode = {episode}'
-    result = execute_sql(sqltype='Fetch', sql=sql)
+    result = db.execute_sql(sqltype='Fetch', sql=sql)
     return result
 
 
@@ -142,7 +140,7 @@ def func_update_plex(episodes):
         sql = f'select showid from shows ' \
               f'where (showname = "{fixed_showname}" or alt_showname = "{fixed_showname}") ' \
               f'and status = "Followed"'
-        result = execute_sql(sqltype='Fetch', sql=sql)
+        result = db.execute_sql(sqltype='Fetch', sql=sql)
         if not result:
             if vli > 3:
                 log.write(f'Watched Showid not Found for "{fixed_showname}" {episode}', 4)
@@ -186,8 +184,6 @@ def func_write_the_log_file(episodes):
 ''' Main Program'''
 ''' Get Options'''
 log = logging(caller='Plex Extract', filename='Process')
-log.open()
-log.close()
 log.start()
 
 options = docopt(__doc__, version='Plex Extract Release 0.1')
@@ -202,6 +198,8 @@ if vli > 5 or vli < 1:
     quit()
 elif vli > 1:
     log.write(f'Verbosity level is set to: {options["--vl"]}', 2)
+    
+db = mariaDB(caller=log.caller, filename=log.filename, vli=vli)
     
 process_all = False
 write_watched = True
@@ -221,6 +219,7 @@ if options['-p']:
 watched_episodes = func_get_plex_watched_episodes()
 if not watched_episodes:
     log.write(f'Reading Plex DB while trying to get the watched episodes {watched_episodes}', 0)
+    db.close()
     quit()
 
 '''Process the watched episodes'''
@@ -235,5 +234,6 @@ if update_plex or process_all:
 if vli > 1:
     log.write(f'Updated Plex Episodes {updated} and written {written} to the log', 2)
 
+db.close()
 log.end()
 quit()

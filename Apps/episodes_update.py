@@ -23,9 +23,7 @@ Options:
 
 from docopt import docopt
 
-from Libraries import execute_tvm_request
-from Libraries import execute_sql
-from Libraries import logging
+from Libraries import execute_tvm_request, mariaDB, logging
 
 
 def func_get_cli():
@@ -50,7 +48,7 @@ def func_get_cli():
 
 
 def func_get_the_episodes():
-    episodes = execute_sql(sqltype='Fetch', sql=sql)
+    episodes = db.execute_sql(sqltype='Fetch', sql=sql)
     return episodes
 
 
@@ -64,7 +62,7 @@ def func_get_tvmaze_episode_info(epiid):
         if "404" in epiinfo:
             log.write(f'Now Deleting: {epiid}')
             sql_tvm = f'delete from episodes where `epiid` = {epiid}'
-            result = execute_sql(sqltype='Commit', sql=sql_tvm)
+            result = db.execute_sql(sqltype='Commit', sql=sql_tvm)
             log.write(f'Delete result: {result}')
         return
     
@@ -77,7 +75,7 @@ def func_get_tvmaze_episode_info(epiid):
                    f"episode = '{epiinfo['number']}' " \
                    f"where `epiid` = {epiid}"
     sql_episodes = sql_episodes.replace("'None'", 'NULL').replace('None', 'NULL')
-    result = execute_sql(sqltype='Commit', sql=sql_episodes)
+    result = db.execute_sql(sqltype='Commit', sql=sql_episodes)
     if not result:
         log.write(f'Error when updating episode {epiid} {result}', 0)
 
@@ -110,6 +108,7 @@ if __name__ == '__main__':
     sql = ''
     log = logging(caller='Episodes Update', filename='Episodes_Update')
     log.start()
+    db = mariaDB(caller=log.caller, filename=log.filename, vli=vli)
     
     main()
     
