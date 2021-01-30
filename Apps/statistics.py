@@ -23,8 +23,9 @@ Options:
 
 from docopt import docopt
 import pandas as pd
+from sqlalchemy import create_engine
 
-from Libraries import get_today, time, stat_views, mariaDB, count_by_download_options, connect_pd, logging
+from Libraries import get_today, time, stat_views, mariaDB, count_by_download_options, logging
 
 
 def go_store_statistics(f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12):
@@ -99,7 +100,8 @@ def view_history(last: False):
         else:
             return shows[0]
     else:
-        mdbe = connect_pd()
+        mdb_engine = create_engine(f'mysql+pymsql://user:password@localhost/db?host=localhost?port=3306')
+        mdbe = mdb_engine.connect()
         pd.set_option('max_rows', 31)
         pd.set_option('min_rows', 30)
         df = pd.read_sql_query('select statepoch, statdate, tvmshows, myshows, myshowsended,'

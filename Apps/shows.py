@@ -32,7 +32,7 @@ Options:
 from docopt import docopt
 
 from Libraries import execute_tvm_request, tvmaze_apis, datetime, date, mariaDB, generate_update_sql, \
-    generate_insert_sql, std_sql, def_downloader, logging, timer
+    generate_insert_sql, std_sql, logging, timer
 
 
 def transform_showname(name):
@@ -272,7 +272,8 @@ def process_followed_shows():
             new_followed += 1
             if vli > 2:
                 log.write(f'Process Followed shows {validates[0][0]}  {validates[0][1]}', 3)
-            download = db.execute_sql(sqltype='Fetch', sql=f'SELECT info FROM key_values WHERE `key` = "def_dl"')[0][0]
+            download = mariadb.execute_sql(sqltype='Fetch',
+                                           sql=f'SELECT info FROM key_values WHERE `key` = "def_dl"')[0][0]
             result = mariadb.execute_sql(sqltype='Commit', sql=f'UPDATE shows SET status="Followed", '
                                                                f'download="{download}" '
                                                                f'WHERE showid={res["show_id"]}')
