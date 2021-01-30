@@ -37,6 +37,7 @@ def func_get_cli():
     vli = int(options['--vl'])
     if vli > 5 or vli < 0:
         log.write(f"Unknown Verbosity level of {vli}, try plex_extract.py -h", 0)
+        db.close()
         quit()
     elif vli > 1:
         log.write(f'Verbosity level is set to: {options["--vl"]}', 2)
@@ -52,11 +53,12 @@ def func_get_cli():
         sql = f'select showid, showname from shows where showid >= {options["<showid>"]}'
     else:
         log.write(f"No known - parameter given, try plex_extract.py -h", 0)
+        db.close()
         quit()
 
 
 def func_get_the_shows():
-    shows = db.execute_sql(sqltype='Fetch', sql=sql, vli=vli)
+    shows = db.execute_sql(sqltype='Fetch', sql=sql)
     return shows
 
 
@@ -70,7 +72,7 @@ def func_get_tvmaze_show_info(showid):
         if "404" in showinfo:
             log.write(f'Now Deleting: {showid}')
             sql_tvm = f'delete from shows where `showid` = {showid}'
-            result = db.execute_sql(sqltype='Commit', sql=sql_tvm, vli=vli)
+            result = db.execute_sql(sqltype='Commit', sql=sql_tvm)
             log.write(f'Delete result: {result}')
         return
     
@@ -82,7 +84,7 @@ def func_get_tvmaze_show_info(showid):
                 f"thetvdb = '{showinfo['externals']['thetvdb']}', " \
                 f"imdb = '{showinfo['externals']['imdb']}' " \
                 f"where `showid` = {showid}"
-    result = db.execute_sql(sqltype='Commit', sql=sql_shows, vli=vli)
+    result = db.execute_sql(sqltype='Commit', sql=sql_shows)
     if not result:
         log.write(f'Error when updating show {showid} {result}', 0)
 
@@ -116,7 +118,7 @@ if __name__ == '__main__':
     log = logging(caller='Shows Update', filename='ShowsUpdate')
     log.start()
     
-    db = mariaDB(caller=log.caller, filename=log.filename)
+    db = mariaDB(caller=log.caller, filename=log.filename, vli=vli)
     sql = ''
     
     main()

@@ -324,7 +324,7 @@ class config:
 
 
 class mariaDB:
-    def __init__(self, h='', d='', batch=False, caller='Lib mariaDB', filename='Process'):
+    def __init__(self, h='', d='', batch=False, caller='Lib mariaDB', filename='Process', vli=9):
         """
             mariaDB handles the DB activities for the mariadb DB of TVM-Management
 
@@ -349,6 +349,7 @@ class mariaDB:
         else:
             self.__db = conf.db
         self.__batch = batch
+        self.__vli = vli
         
         self.__connection = ''
         self.__cursor = ''
@@ -390,7 +391,7 @@ class mariaDB:
         if self.__active:
             self.__connection.commit()
     
-    def execute_sql(self, sql='', sqltype='Fetch', data_dict=False, dd_id=False, field_list=[], vli=9):
+    def execute_sql(self, sql='', sqltype='Fetch', data_dict=False, dd_id=False, field_list=[]):
         """
                 Execute SQL
         :param sql:         The SQL to execute
@@ -414,7 +415,7 @@ class mariaDB:
                 self.__log.write(f'Execute SQL (Commit) Database Error: {self.db}, {er}, {sql}', 0)
                 self.__log.write('----------------------------------------------------------------------')
                 return False, er
-            if vli > 2:
+            if self.__vli > 2:
                 self.__log.write(f'Executed SQL: {sql} with result {True}')
             return True
         elif sqltype == "Fetch":
@@ -431,11 +432,11 @@ class mariaDB:
                 else:
                     self.__extract_fields(sql)
                 self.__data_as_dict(result, dd_id)
-                if vli > 2:
+                if self.__vli > 2:
                     self.__log.write(f'Executed SQL: {sql} and returned a data dictionary')
                 return self.data_dict
             else:
-                if vli > 2:
+                if self.__vli > 2:
                     self.__log.write(f'Executed SQL: {sql} and returned sql result')
                 return result
         else:

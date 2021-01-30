@@ -22,7 +22,7 @@ Options:
 from bs4 import BeautifulSoup as Soup
 from docopt import docopt
 
-from Libraries import execute_sql, tvm_views, os, datetime, timedelta
+from Libraries import mariaDB, tvm_views, os, datetime, timedelta
 from Libraries import def_downloader, date_delta, re
 from Libraries import execute_tvm_request, tvmaze_apis, date
 from Libraries import logging
@@ -41,7 +41,7 @@ def update_show_status(showid, status):
         sql = f'UPDATE shows SET status = "{status}", download = NULL WHERE `showid` = {showid}'
     else:
         sql = f'UPDATE shows SET status = "{status}", download = "{dl}" WHERE `showid` = {showid}'
-    result = execute_sql(sqltype='Commit', sql=sql)
+    result = db.execute_sql(sqltype='Commit', sql=sql)
     if not result:
         log.write(f'Error updating show status {result}', 0)
     return
@@ -117,9 +117,9 @@ def get_eztv_api_options(imdb_id, seas, showname):
     if not imdb_id:
         return download_options
     eztv_show = imdb_id
-    eztv_url = execute_sql(sqltype='Fetch',
-                           sql='SELECT link_prefix FROM download_options '
-                               'where `providername` = "eztvAPI"')[0][0] + eztv_show[2:]
+    eztv_url = db.execute_sql(sqltype='Fetch',
+                              sql='SELECT link_prefix FROM download_options '
+                                  'where `providername` = "eztvAPI"')[0][0] + eztv_show[2:]
     eztv_req_result = execute_tvm_request(api=eztv_url, timeout=(20, 20), err=False)
     if not eztv_req_result:
         return download_options
@@ -146,10 +146,9 @@ def get_eztv_api_options(imdb_id, seas, showname):
 
 def get_eztv_options(show, seas):
     eztv_titles = []
-    api = execute_sql(sqltype='Fetch',
-                      sql='SELECT link_prefix FROM download_options '
-                          'where `providername` = "eztv"')[0][0] + show + '-' + seas
-    # api = f'https://eztv.io/search/{show}-{seas}'
+    api = db.execute_sql(sqltype='Fetch',
+                         sql='SELECT link_prefix FROM download_options '
+                             'where `providername` = "eztv"')[0][0] + show + '-' + seas
     eztv_data = execute_tvm_request(api=api, timeout=(20, 20), err=False)
     if not eztv_data:
         return eztv_titles
@@ -194,7 +193,8 @@ def get_eztv_options(show, seas):
 
 def get_rarbg_api_options(show, seas):
     dl_options = []
-    dl_info = execute_sql(sqltype='Fetch', sql=f'SELECT * from download_options WHERE `providername` = "rarbgAPI"')[0]
+    dl_info = db.execute_sql(sqltype='Fetch', sql=f'SELECT * from download_options '
+                                                  f'WHERE `providername` = "rarbgAPI"')[0]
     main_link = f"{dl_info[1]}{show} {seas}{dl_info[2]}"
     main_request = execute_tvm_request(api=main_link, req_type='get')
     if main_request:
@@ -271,7 +271,7 @@ def get_piratebay_api_options(show, seas):
 
 
 def get_episodes_to_download():
-    todownload = execute_sql(sqltype='Fetch', sql=tvm_views.eps_to_download)
+    todownload = db.execute_sql(sqltype='Fetch', sql=tvm_views.eps_to_download)
     if not todownload:
         if vli > 2:
             log.write(f'No episodes to download {todownload}', 3)
@@ -279,14 +279,14 @@ def get_episodes_to_download():
 
 
 def get_download_apis():
-    results = execute_sql(sqltype='Fetch', sql="SELECT * from download_options")
+    results = db.execute_sql(sqltype='Fetch', sql="SELECT * from download_options")
     if not results:
         log.write(f'Error getting the download_options {results}', 0)
     return results
 
 
 def get_shows_to_review():
-    showstoreview = execute_sql(sqltype='Fetch', sql=tvm_views.shows_to_review)
+    showstoreview = db.execute_sql(sqltype='Fetch', sql=tvm_views.shows_to_review)
     return showstoreview
 
 
@@ -403,7 +403,7 @@ def process_the_episodes_to_download():
                 season = season_info[0]
                 season_dled = True
                 display_status(processed, epi_to_download, do_text, season)
-                epis = execute_sql(sqltype='Fetch', sql=f'SELECT epiid '
+                epis = db.execute_sql(sqltype='Fetch', sql=f'SELECT epiid '
                                                         f'FROM episodes '
                                                         f'WHERE showid = {epi_to_download[1]} AND '
                                                         f'season = {epi_to_download[4]}')
@@ -454,14 +454,18 @@ if vli > 5 or vli < 1:
 elif vli > 1:
     log.write(f'Verbosity level is set to: {options["--vl"]}', 2)
 
+db = mariaDB(caller=log.caller, filename=log.filename, vli=vli)
+
 download_apis = get_download_apis()
 if not download_apis:
     log.write(f"Error getting Download Options: {download_apis}", 0)
+    db.close()
     log.end()
     quit()
 
 if options['-d']:
     process_the_episodes_to_download()
 
+db.close()
 log.end()
 quit()
