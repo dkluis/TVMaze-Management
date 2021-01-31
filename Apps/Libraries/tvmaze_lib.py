@@ -412,11 +412,11 @@ class mariaDB:
                     self.__extract_fields(sql)
                 self.__data_as_dict(result, dd_id)
                 if self.__vli > 2:
-                    self.__log.write(f'Executed SQL: {sql} and returned a data dictionary')
+                    self.__log.write(f'Executed SQL: {sql} with DD -> {len(result)}')
                 return self.data_dict
             else:
                 if self.__vli > 2:
-                    self.__log.write(f'Executed SQL: {sql} and returned sql result')
+                    self.__log.write(f'Executed SQL: {sql} with -> {len(result)}')
                 return result
         else:
             return False, 'Not implemented yet'

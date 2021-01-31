@@ -1,10 +1,10 @@
 """
 tvmaze.py   The App that is the UI to all TVMaze function.
 Usage:
-  tvmaze.py [-p] [-e] [-l] [-d] [--th=<theme>]
-  tvmaze.py [-p] [-s] [-l] [-d] [--th=<theme>]
-  tvmaze.py -p   [-m] [-l] [-d] [--th=<theme>]
-  tvmaze.py -i
+  tvmaze.py [-p] [-e] [-l] [-d] [--th=<theme>] [--vl=<vli>]
+  tvmaze.py [-p] [-s] [-l] [-d] [--th=<theme>] [--vl=<vli>]
+  tvmaze.py -p   [-m] [-l] [-d] [--th=<theme>] [--vl=<vli>]
+  tvmaze.py -i [--vl=<vli>]
   tvmaze.py -h | --help
   tvmaze.py --version
 
@@ -20,6 +20,7 @@ Options:
                     MariaDB info to connect can be setup, currently on supports macOS and it creates a .TVMaze
                     directory under the set up User's home directory
   --th=<theme>   D = Dark Theme, G = Gold Theme  [default: G]
+  --vl=<vli>     Verbose Level [default: 2]
   --version      Show version.
 """
 
@@ -46,7 +47,7 @@ class lists:
 
 
 def func_accelerator_callback(sender, data):
-    # log_info(f'{sender}, {data}')
+    # log.write(f'{sender}, {data}')
     mapping = {
         "Q": mvKey_Q,
         'S': mvKey_S,
@@ -74,13 +75,13 @@ def func_accelerator_callback(sender, data):
 
 
 def func_async(sender, process):
-    log_info(f'Starting subprocess {process[0]} for function {process[1]}, with s {sender}')
+    log.write(f'Starting subprocess {process[0]} for function {process[1]}, with s {sender}')
     subprocess.call(process[0], shell=True)
     return process[1]
 
 
 def func_async_return(sender, data):
-    log_info(f'Async Callback s {sender} with d {data}')
+    log.write(f'Async Callback s {sender} with d {data}')
     configure_item('Processes', enabled=True)
     refresh = ''
     if (data == 'Update Statistics' or data == 'Get Episodes' or data == 'Update Episodes' or data == 'Update Shows'
@@ -97,14 +98,14 @@ def func_db_opposite():
     
     :return: The name of the opposite DB to toggle to
     """
-    log_info(f'Retrieving Mode {get_value("mode")}')
+    log.write(f'Retrieving Mode {get_value("mode")}')
     if get_value('mode') == 'Prod':
         set_value('db_opposite', 'Test DB')
         configure_item('Processes', enabled=True)
     else:
         set_value('db_opposite', "Production DB")
         configure_item('Processes', enabled=False)
-    log_info(f'db_opposite {get_value("db_opposite")}')
+    log.write(f'db_opposite {get_value("db_opposite")}')
 
 
 def func_buttons(win='', fc='Show', buttons=None):
@@ -118,18 +119,18 @@ def func_buttons(win='', fc='Show', buttons=None):
     """
     if buttons is None:
         buttons = []
-    log_info(f'function Buttons s {win} f {fc}, b {buttons}')
+    log.write(f'function Buttons s {win} f {fc}, b {buttons}')
     if fc == 'Hide':
         for button in buttons:
-            log_info(f'Hiding button {button}')
+            log.write(f'Hiding button {button}')
             configure_item(f'{button}##{win}', enabled=False)
     elif fc == 'Show':
-        log_info(f'Showing buttons for {win}')
+        log.write(f'Showing buttons for {win}')
         if win == 'Maintenance':
             buttons = lists.maintenance_buttons
-            log_info(f'Buttons are {buttons}')
+            log.write(f'Buttons are {buttons}')
             for button in buttons:
-                log_info(f'Showing button {button}')
+                log.write(f'Showing button {button}')
                 configure_item(f'{button}##{win}', enabled=True)
     else:
         log_error(f'None existing function code {fc}')
@@ -146,7 +147,7 @@ def func_empty_logfile_sub(filename):
     logfile.open()
     logfile.close()
     logfile.empty()
-    log_info(f'Emptied Run Log: {filename}')
+    log.write(f'Emptied Run Log: {filename}')
 
 
 def func_empty_logfile(sender='', data=''):
@@ -158,7 +159,7 @@ def func_empty_logfile(sender='', data=''):
     :return:        None
     """
     win = func_sender_breakup(sender, 1)
-    log_info(f'Start the empty logfile process with {sender}, {data}')
+    log.write(f'Start the empty logfile process with {sender}, {data}')
     if win == 'Processing Log':
         func_empty_logfile_sub(filename='Process')
     elif win == 'Show Updates Log':
@@ -175,7 +176,7 @@ def func_empty_logfile(sender='', data=''):
 def func_episode_statuses(sender, data):
     erd = get_value(f'erd##Top 10 Graphs')
     etrd = get_value(f'etrd##Top 10 Graphs')
-    log_info(f'Episode Statuses s {sender}, d {data}, srd {erd}, etrd {etrd}')
+    log.write(f'Episode Statuses s {sender}, d {data}, srd {erd}, etrd {etrd}')
     set_value(f'erd#{sender}', erd)
     set_value(f'etrd#{sender}', etrd)
     if does_item_exist('Episodes##Top 10 Charts'):
@@ -232,17 +233,17 @@ def func_every_frame(sender, data):
     if is_item_clicked('Tools'):
         set_value(f'##db', get_value('db_opposite'))
         set_value(f'##theme', get_value('theme_opposite'))
-        log_info(f'Every Frame: Tools was clicked, {sender} {data}')
+        log.write(f'Every Frame: Tools was clicked, {sender} {data}')
     elif is_item_clicked('Shows'):
         sql = tvm_views.shows_to_review_count
         count = db.execute_sql(sqltype='Fetch', sql=sql)
         set_value('##no_new_shows: ', str(count[0][0]))
-        log_info(f'Every Frame: Shows was clicked, {sender} {data}')
+        log.write(f'Every Frame: Shows was clicked, {sender} {data}')
 
 
 def func_fill_watched_errors(sender, data):
     win = func_sender_breakup(sender, 1)
-    log_info(f'Fill Watched Errors table s {sender}, d {data}, w {win}')
+    log.write(f'Fill Watched Errors table s {sender}, d {data}, w {win}')
     sql = f'''select * from plex_episodes where tvm_update_status is null'''
     we = db.execute_sql(sqltype='Fetch', sql=sql)[0]
     set_value(f'table##{sender}', we)
@@ -257,7 +258,7 @@ def func_filter_graph_sql(sql, g_filter):
 
 
 def func_find_shows(si, sn):
-    log_info(f'Find Shows SQL with showid {si} and showname {sn}')
+    log.write(f'Find Shows SQL with showid {si} and showname {sn}')
     if si == 0 and sn == 'New':
         sql = tvm_views.shows_to_review_tvmaze
     elif sn == 'Shows Due':
@@ -283,7 +284,7 @@ def func_find_shows(si, sn):
 
 
 def func_get_getter(getters):
-    log_info(f'Get Getters {getters}')
+    log.write(f'Get Getters {getters}')
     links = []
     for getter in getters:
         link = db.execute_sql(sqltype='Fetch', sql=f"SELECT * from download_options WHERE `providername` = '{getter}'")
@@ -297,20 +298,20 @@ def func_key_main(sender, data):
     if win == 'Maintenance' and function == 'window':
         if data == mvKey_Return:
             shows_fill_table(f'Search##{sender}', data)
-            log_info(f'{win} Key detected for Function {function}')
+            log.write(f'{win} Key detected for Function {function}')
     elif win == 'Login Popup' and function == 'Undefined for now':
         if data == mvKey_Return:
             func_login(sender, data)
-            log_info(f'{win} Key detected for Function {function}')
+            log.write(f'{win} Key detected for Function {function}')
     elif win == 'Processing Log' or win == 'Python Errors' \
             or win == 'Transmission Log' or win == 'TVMaze Log' or win == 'Show Updates Log':
         if data == mvKey_Return:
             func_log_filter(f'Refresh##{win}', get_value(f'{win}ft'))
-            log_info(f'{win} Key detected for Function {function}')
+            log.write(f'{win} Key detected for Function {function}')
 
 
 def func_log_filter(sender, data):
-    log_info(f'Func Log Filter s {sender}, d {data}')
+    log.write(f'Func Log Filter s {sender}, d {data}')
     win = func_sender_breakup(sender, 1)
     filter_table = get_table_data(f'log_table##{win}')
     if len(filter_table) != 0:
@@ -323,7 +324,7 @@ def func_log_filter(sender, data):
 
 
 def func_login(sender, data):
-    log_info(f'Password Checker s {sender}, d {data}')
+    log.write(f'Password Checker s {sender}, d {data}')
     mdb_info = mdbi(None, None)
     if get_value('Password') == mdb_info.admin_password:
         close_popup("Sign In")
@@ -333,7 +334,7 @@ def func_login(sender, data):
 
 
 def func_plex_episode_table(sender, data):
-    log_info(f'Fill Plex Episode {sender} {data}')
+    log.write(f'Fill Plex Episode {sender} {data}')
     table = []
     sql = 'select * from plex_episodes order by`date_watched`'
     pe_recs = db.execute_sql(sqltype='Fetch', sql=sql)
@@ -367,11 +368,11 @@ def func_sender_breakup(sender, pos):
 
 
 def func_set_theme(sender, data):
-    log_info(f'Set Theme s {sender}, d {data}')
+    log.write(f'Set Theme s {sender}, d {data}')
     ind = get_value('##Themesrd')
-    log_info(f'Radio Button index {ind}')
+    log.write(f'Radio Button index {ind}')
     theme = lists.themes[ind]
-    log_info(f'Change the Theme s {sender} d {data}, t {theme}')
+    log.write(f'Change the Theme s {sender} d {data}, t {theme}')
     set_theme(theme)
     close_popup('##Themespopup')
 
@@ -379,7 +380,7 @@ def func_set_theme(sender, data):
 def func_show_statuses(sender, data):
     srd = get_value(f'srd##Top 10 Graphs')
     strd = get_value(f'strd##Top 10 Graphs')
-    log_info(f'Show Statuses s {sender}, d {data}, srd {srd} strd{strd}')
+    log.write(f'Show Statuses s {sender}, d {data}, srd {srd} strd{strd}')
     set_value(f'srd#{sender}', srd)
     if does_item_exist('Shows##Top 10 Charts'):
         clear_plot('Shows##Top 10 Charts')
@@ -430,12 +431,12 @@ def func_show_statuses(sender, data):
 
 
 def func_test_tab_bar(sender, data):
-    log_info(f'Tab Bar Callback test sender: {sender} with data: {data}')
+    log.write(f'Tab Bar Callback test sender: {sender} with data: {data}')
     # ToDo delete after the tab bar callback works.
     
 
 def func_tvm_update(fl, si):
-    log_info(f'TVMaze update {fl}, {si}')
+    log.write(f'TVMaze update {fl}, {si}')
     api = f'{tvmaze_apis.update_followed_shows}/{si}'
     sql = []
     if fl == "F":
@@ -465,7 +466,7 @@ def func_tvm_update(fl, si):
         download = None
         sql.append(f'update shows set status = "{success}", download = "{download}" where `showid` = {si}')
     else:
-        log_info(f'Not implement {fl} option')
+        log.write(f'Not implement {fl} option')
         return False
     any_error = False
     for esql in sql:
@@ -478,7 +479,7 @@ def func_tvm_update(fl, si):
 
 
 def func_toggle_db(sender, data):
-    log_info(f'Toggle DB, {sender}, {data}')
+    log.write(f'Toggle DB, {sender}, {data}')
     if get_value('mode') == 'Prod':
         set_value('mode', 'Test')
         set_value('db_opposite', 'Production DB')
@@ -492,7 +493,7 @@ def func_toggle_db(sender, data):
 
 
 def func_toggle_theme(sender, data):
-    log_info(f'{sender}, {data}')
+    log.write(f'{sender}, {data}')
     ot = get_value('theme_opposite')
     set_theme(str(ot))
     if ot == 'Dark':
@@ -502,7 +503,7 @@ def func_toggle_theme(sender, data):
 
 
 def epis_fill_table(sender, data):
-    log_info(f'Fill Episode Table {sender} {data}')
+    log.write(f'Fill Episode Table {sender} {data}')
     win = func_sender_breakup(sender, 1)
     button = func_sender_breakup(sender, 0)
     showid = get_value(f'Show ID##{win}')
@@ -510,7 +511,7 @@ def epis_fill_table(sender, data):
     showname = get_value(f'Show Name##{win}')
     if showid == 0 and showname == '' and button == 'Search':
         set_value(f'##epi_showname{win}', 'Nothing was entered in Show ID or Showname')
-    log_info(f'showid: {showid} - showname: {showname}')
+    log.write(f'showid: {showid} - showname: {showname}')
     found_shows = ''
     if button == 'Search':
         found_shows = func_find_shows(showid, showname)
@@ -527,7 +528,7 @@ def epis_fill_table(sender, data):
 
 
 def epis_view_clear(sender, data):
-    log_info(f'Epi Maint clear {sender} {data}')
+    log.write(f'Epi Maint clear {sender} {data}')
     win = func_sender_breakup(sender, 1)
     if data != 'input_fields_only':
         set_table_data(f'table##{win}', [])
@@ -541,7 +542,7 @@ def epis_view_clear(sender, data):
 
 
 def graph_execute_get_value(sql, sender, pi, g_filter):
-    log_info(f'Filling the plot data for {sender} with {sql} and {g_filter}')
+    log.write(f'Filling the plot data for {sender} with {sql} and {g_filter}')
     data = db.execute_sql(sqltype='Fetch', sql=sql)
     all_data = graph_split_data(data)
     plot_index = sender
@@ -555,7 +556,7 @@ def graph_execute_get_value(sql, sender, pi, g_filter):
 
 
 def graph_get_value(sender, g_filter):
-    log_info(f'Grabbing the graphs for {sender}')
+    log.write(f'Grabbing the graphs for {sender}')
     data = []
     if sender == 'All Shows':
         sql = f'select statepoch, tvmshows from statistics where statrecind = "TVMaze"'
@@ -596,12 +597,12 @@ def graph_refresh(sender, data):
         g_filter = func_sender_breakup(sender, 0)
     else:
         requester = sender
-    log_info(f'Refreshing Graph Data for {requester} with filter {g_filter}')
+    log.write(f'Refreshing Graph Data for {requester} with filter {g_filter}')
     graph_get_value(requester, g_filter)
 
 
 def graph_refresh_other(sender, g_filter):
-    log_info(f'Graph refresh for all Others')
+    log.write(f'Graph refresh for all Others')
     if sender != 'Other Shows':
         return
     sql = f'select statepoch, myshowsended from statistics where statrecind = "TVMaze"'
@@ -616,7 +617,7 @@ def graph_refresh_other(sender, g_filter):
     
     
 def graph_split_data(all_data):
-    log_info(f'Splitting Graph Data')
+    log.write(f'Splitting Graph Data')
     x_data = []
     y_data = []
     for data in all_data:
@@ -631,7 +632,7 @@ def graph_split_data(all_data):
 
 
 def program_callback(sender, data):
-    log_info(f'Main Callback activated {sender}, {data}')
+    log.write(f'Main Callback activated {sender}, {data}')
     if sender == 'Shows':
         sql = tvm_views.shows_to_review_count
         count = db.execute_sql(sqltype='Fetch', sql=sql)
@@ -796,7 +797,7 @@ def program_mainwindow():
 
 
 def shows_fill_table(sender, data):
-    log_info(f'Fill Show Table {sender} {data}')
+    log.write(f'Fill Show Table {sender} {data}')
     win = func_sender_breakup(sender, 1)
     button = func_sender_breakup(sender, 0)
     showid = get_value(f'Show ID##{win}')
@@ -805,7 +806,7 @@ def shows_fill_table(sender, data):
     found_shows = ''
     if showid == 0 and showname == '' and button == 'Search':
         set_value(f'##show_showname{win}', 'Nothing was entered in Show ID or Showname')
-    log_info(f'showid: {showid} - showname: {showname}')
+    log.write(f'showid: {showid} - showname: {showname}')
     if button == 'Search':
         found_shows = func_find_shows(showid, showname)
     elif button == 'Evaluate Shows':
@@ -825,7 +826,7 @@ def shows_find_on_web(sender, data):
     function = func_sender_breakup(sender, 0)
     selected = get_value(f'selected##{win}')
     showid = get_value(f'Show ID##{win}')
-    log_info(f'Shows Find On the Web s {sender}, d {data}, w "{win}", f "{function}", si {showid}')
+    log.write(f'Shows Find On the Web s {sender}, d {data}, w "{win}", f "{function}", si {showid}')
     if not selected:
         set_value(f'##show_showname{win}', 'No Show was selected yet, nothing to do yet')
     else:
@@ -847,7 +848,7 @@ def shows_find_on_web(sender, data):
 
 
 def shows_maint_clear(sender, data):
-    log_info(f'Show Maint clear {sender} {data}')
+    log.write(f'Show Maint clear {sender} {data}')
     win = func_sender_breakup(sender, 1)
     if data != 'input_fields_only':
         set_table_data(f'shows_table##{win}', [])
@@ -861,7 +862,7 @@ def shows_maint_clear(sender, data):
 
 
 def shows_table_click(sender, data):
-    log_info(f'Shows Table Click {sender} {data}')
+    log.write(f'Shows Table Click {sender} {data}')
     show_options = ''
     win = func_sender_breakup(sender, 1)
     row_cell = get_table_selections(f'shows_table##{win}')
@@ -870,7 +871,7 @@ def shows_table_click(sender, data):
     showid = get_table_data(f'shows_table##{win}')[row][0]
     show_status = get_table_data(f'shows_table##{win}')[row][6]
     my_status = get_table_data(f'shows_table##{win}')[row][7]
-    log_info(f'Show Table Click id {showid}, status {show_status}, my status {my_status}')
+    log.write(f'Show Table Click id {showid}, status {show_status}, my status {my_status}')
     func_buttons(win, 'Show')
     if show_status == 'New' or show_status == 'Undecided':
         func_buttons(win=win, fc='Hide',
@@ -891,13 +892,13 @@ def shows_table_click(sender, data):
     set_value(f'##show_showname{win}', f"Selected Show: {showid}, {showname} {show_options}")
     set_value(f'Show ID##{win}', int(showid))
     set_value(f'Show Name##{win}', showname)
-    log_info(f'Table Click for row cell {row_cell} selected showid {showid}')
+    log.write(f'Table Click for row cell {row_cell} selected showid {showid}')
     for sel in row_cell:
         set_table_selection(f'shows_table##{win}', sel[0], sel[1], False)
 
 
 def tvmaze_calendar(sender, data):
-    log_info(f'TVM Calendar started in Safari {sender}, {data}')
+    log.write(f'TVM Calendar started in Safari {sender}, {data}')
     subprocess.call("open -a safari  https://www.tvmaze.com/calendar", shell=True)
 
 
@@ -905,24 +906,24 @@ def tvmaze_change_getter(sender, data):
     win = func_sender_breakup(sender, 1)
     si = get_value(f'Show ID##Maintenance')
     function = func_sender_breakup(sender, 0)
-    log_info(f'Change where to get s {sender}, d {data}, showid {si}, w {win}, f {function}')
+    log.write(f'Change where to get s {sender}, d {data}, showid {si}, w {win}, f {function}')
     if function == 'Submit':
         ind = get_value(f'Getters##RadioButtons')
-        log_info(f'Getter Selected {lists.getters[ind]}')
+        log.write(f'Getter Selected {lists.getters[ind]}')
         sql = f'update shows set download = "{lists.getters[ind]}" where `showid` = {si}'
         db.execute_sql(sqltype='Commit', sql=sql)
     close_popup('Change Getter##getterpopup')
 
 
 def tvmaze_logout(sender, data):
-    log_info(f'{sender}, {data}')
+    log.write(f'{sender}, {data}')
     hide_item('Main Window', children_only=True)
     window_close_all('', '')
     window_login()
 
 
 def tvmaze_processes(sender, data):
-    log_info(f'TVMaze processes Started s {sender}, d {data}')
+    log.write(f'TVMaze processes Started s {sender}, d {data}')
     paths_info = paths(get_value('mode'))
     action = ''
     if sender == 'Plex - TVM':
@@ -943,10 +944,10 @@ def tvmaze_processes(sender, data):
         print(f'TVMaze Processes: Not Found "{action}"')
         quit()
     async_action = ((action + f' >>{paths_info.process} 2>>{paths_info.process}'), sender)
-    log_info(f'TVMaze async process starting with: {async_action}')
+    log.write(f'TVMaze async process starting with: {async_action}')
     configure_item('Processes', enabled=False)
     # run_async_function(func_async, async_action, return_handler=func_async_return)
-    log_info(f'TVMaze async process Finished s {async_action}')
+    log.write(f'TVMaze async process Finished s {async_action}')
     window_logs('Processing Log', '')
 
 
@@ -955,25 +956,25 @@ def tvmaze_update(sender, data):
     function = func_sender_breakup(sender, 0)
     selected = get_value(f'selected##{win}')
     si = get_value(f'Show ID##{win}')
-    log_info(f'TVMaze update s {sender}, d {data}, w "{win}", f "{function}", si {si}')
+    log.write(f'TVMaze update s {sender}, d {data}, w "{win}", f "{function}", si {si}')
     if not selected:
         set_value(f'##show_showname{win}', 'No Show was selected yet, nothing to do yet')
     else:
         if function == 'Follow':
             result = func_tvm_update('F', si)
-            log_info(f'TVMaze Follow result: {result}')
+            log.write(f'TVMaze Follow result: {result}')
             set_value(f'##show_showname{win}', f'Show {si} update on TVMaze and set Follow = {result}')
         elif function == 'Unfollow':
             result = func_tvm_update('U', si)
-            log_info(f'TVMaze Unfollow result: {result}')
+            log.write(f'TVMaze Unfollow result: {result}')
             set_value(f'##show_showname{win}', f'Show {si} update on TVMaze and set Unfollow = {result}')
         elif function == 'Undecided':
             result = func_tvm_update('UD', si)
-            log_info(f'TVMaze Undecided result: {result}')
+            log.write(f'TVMaze Undecided result: {result}')
             set_value(f'##show_showname{win}', f'Show {si} update on TVMaze and set Unfollow = {result}')
         elif function == 'Not Interested':
             result = func_tvm_update('SK', si)
-            log_info(f'TVMaze Skipping result: {result}')
+            log.write(f'TVMaze Skipping result: {result}')
             set_value(f'##show_showname{win}', f'Show {si} update on TVMaze and set Skipped = {result}')
         else:
             log_error(f'Unknown Function: "{function}"')
@@ -981,7 +982,7 @@ def tvmaze_update(sender, data):
 
 
 def tvmaze_view_show(sender, data):
-    log_info(f'{sender}, {data}')
+    log.write(f'{sender}, {data}')
     win = func_sender_breakup(sender, 1)
     selected = get_value(f'selected##{win}')
     if not selected:
@@ -996,19 +997,19 @@ def tvmaze_view_show(sender, data):
 def window_close(sender, data):
     win = f'{sender}'
     delete_item(win)
-    log_info(f'Delete item (window): "{win}", {data}')
+    log.write(f'Delete item (window): "{win}", {data}')
 
 
 def window_close_all(sender, data):
-    log_info(f'Close Open Windows {sender}, {data}')
+    log.write(f'Close Open Windows {sender}, {data}')
     all_windows = get_windows()
     for win in all_windows:
-        log_info(f'Processing to close: {win}')
+        log.write(f'Processing to close: {win}')
         if 'Main Window' in win:
             continue
         elif '##standard' in win:
             continue
-        log_info(f'Closing window found: {win}')
+        log.write(f'Closing window found: {win}')
         if does_item_exist(win):
             delete_item(win)
     
@@ -1022,7 +1023,7 @@ def window_close_all(sender, data):
 
 def window_episodes(sender, data):
     win = f'{sender}##window'
-    log_info(f'Window Shows {sender} {data}')
+    log.write(f'Window Shows {sender} {data}')
     if not does_item_exist(win):
         with window(name=win, width=1500, height=750, x_pos=30, y_pos=70, no_resize=True, on_close=window_close):
             add_input_int(f'Show ID##{sender}', default_value=0, width=250)
@@ -1037,7 +1038,7 @@ def window_episodes(sender, data):
 
 
 def window_episodes_all_graphs(sender, data):
-    log_info(f'{sender}, {data}')
+    log.write(f'{sender}, {data}')
     window_graphs('All Episodes', None)
     set_window_pos('All Episodes##graphs', 15, 35)
     set_item_width('All Episodes##graphs', 690)
@@ -1065,12 +1066,12 @@ def window_episodes_all_graphs(sender, data):
 
 
 def window_getters(sender, data):
-    log_info(f'{sender}, {data}')
+    log.write(f'{sender}, {data}')
     return
 
 
 def window_key_values(sender, data):
-    log_info(f'{sender}, {data}')
+    log.write(f'{sender}, {data}')
     return
 
 
@@ -1085,9 +1086,9 @@ def window_login():
 
 
 def window_logs(sender, data):
-    log_info(f'View Logs Window -> s {sender} d {data}')
+    log.write(f'View Logs Window -> s {sender} d {data}')
     if does_item_exist(f'{sender}##window'):
-        log_info(f'{sender}##window already running')
+        log.write(f'{sender}##window already running')
     else:
         if sender == 'Processing Log':
             width = 1955
@@ -1121,13 +1122,13 @@ def window_logs(sender, data):
             
 
 def func_start_refresh_timer(win, data):
-    log_info(f'Start Timer w {win} d {data}')
+    log.write(f'Start Timer w {win} d {data}')
     sleep(3)
     return data
 
 
 def window_do_logs_refresh(win, data):
-    log_info(f'Refresh after time ends w {win} d {data}')
+    log.write(f'Refresh after time ends w {win} d {data}')
     window_logs_refresh(f'timer##{data}', '')
     auto_refresh_off = get_item_configuration(f"Auto Refresh Off##{data}")
     if auto_refresh_off['enabled']:
@@ -1137,7 +1138,7 @@ def window_do_logs_refresh(win, data):
 def window_logs_auto_refresh(sender, on_off):
     win = func_sender_breakup(sender, 1)
     function = func_sender_breakup(sender, 0)
-    log_info(f'Log Refresh s {sender}, d {on_off}, f {function}, w {win}')
+    log.write(f'Log Refresh s {sender}, d {on_off}, f {function}, w {win}')
     if on_off:
         run_async_function(func_start_refresh_timer, win, return_handler=window_do_logs_refresh)
         configure_item(f'Auto Refresh Off##{win}', enabled=True)
@@ -1150,7 +1151,7 @@ def window_logs_auto_refresh(sender, on_off):
 def window_logs_refresh(sender, data):
     win = func_sender_breakup(sender, 1)
     function = func_sender_breakup(sender, 0)
-    log_info(f'Log Refresh s {sender}, d {data}, f {function}, w {win}')
+    log.write(f'Log Refresh s {sender}, d {data}, f {function}, w {win}')
     
     filename = ''
     if win == 'Processing Log':
@@ -1165,7 +1166,7 @@ def window_logs_refresh(sender, data):
         log_warning(f'Refresh for {sender} not defined')
 
     logfile = logging(env=get_value('mode'), caller='TVMaze', filename=filename)
-    log_info(f'Refreshing log file: {logfile.filename} for s{sender}, d {data}')
+    log.write(f'Refreshing log file: {logfile.filename} for s{sender}, d {data}')
     consolelines = logfile.read()
     table = []
     for line in consolelines:
@@ -1176,9 +1177,9 @@ def window_logs_refresh(sender, data):
 
 
 def window_get_pos(sender, data):
-    log_info(f'{sender}, {data}')
+    log.write(f'{sender}, {data}')
     all_windows = get_windows()
-    log_info(f'Log Open Window Positions for {all_windows}')
+    log.write(f'Log Open Window Positions for {all_windows}')
     if len(all_windows) >= 2:
         for win in all_windows:
             if win == 'Main Window':
@@ -1186,7 +1187,7 @@ def window_get_pos(sender, data):
             pos = get_window_pos(win)
             height = get_item_height(win)
             width = get_item_width(win)
-            log_info(f'Position for: {win} is {pos[0]}, {pos[1]}, width {width}, height {height}')
+            log.write(f'Position for: {win} is {pos[0]}, {pos[1]}, width {width}, height {height}')
 
 
 def window_graphs(sender, data):
@@ -1200,11 +1201,11 @@ def window_graphs(sender, data):
         set_style_window_title_align(0.5, 0.5)
         graph_refresh(sender, 'Last 7 days')
         # graph_refresh(sender, 'All Days')
-        log_info(f'Create item (window): "{win}", {data}')
+        log.write(f'Create item (window): "{win}", {data}')
 
 
 def window_plex_episodes(sender, data):
-    log_info(f'{sender}, {data}')
+    log.write(f'{sender}, {data}')
     with window(name='Plex Episode Maintenance', width=1300, height=600, x_pos=330, y_pos=225):
         with group(name='Header##PEM', parent='Plex Episode Maintenance'):
             add_input_int(f'Show ID##{sender}', default_value=0, width=250)
@@ -1227,17 +1228,17 @@ def window_plex_episodes(sender, data):
 
 
 def window_plex_shows(sender, data):
-    log_info(f'{sender}, {data}')
+    log.write(f'{sender}, {data}')
     return
 
 
 def window_quit(sender, data):
-    log_info(f'{sender}, {data}')
+    log.write(f'{sender}, {data}')
     stop_dearpygui()
 
 
 def window_shows(sender, data):
-    log_info(f'{sender}, {data}')
+    log.write(f'{sender}, {data}')
     if sender == 'New Shows Found: ':
         sender = 'Maintenance'
         ens = True
@@ -1245,7 +1246,7 @@ def window_shows(sender, data):
         ens = False
     
     win = f'{sender}##window'
-    log_info(f'Window Shows {sender}')
+    log.write(f'Window Shows {sender}')
     if not does_item_exist(win):
         with window(name=win, width=1500, height=750, x_pos=15, y_pos=35, no_resize=True, on_close=window_close):
             if sender == 'Maintenance':
@@ -1284,7 +1285,7 @@ def window_shows(sender, data):
                 add_button(name=f'Change Getter##{sender}', enabled=False, tip='Set the website where to get the show')
                 with popup(popupparent=f'Change Getter##{sender}', name='Change Getter##getterpopup',
                            mousebutton=mvMouseButton_Left, modal=True):
-                    log_info(f'Popup Test of it works')
+                    log.write(f'Popup Test of it works')
                     add_radio_button(f'Getters##RadioButtons',
                                      items=lists.getters, default_value=0,
                                      tip='Multiple will use rarbgAPI, eztvAPI, Piratebay and eztv.')
@@ -1307,11 +1308,11 @@ def window_shows(sender, data):
         set_style_window_title_align(0.5, 0.5)
         if ens:
             shows_fill_table(f'Evaluate Shows##{sender}', None)
-        log_info(f'Create item (window): "{win}"')
+        log.write(f'Create item (window): "{win}"')
 
 
 def window_shows_all_graphs(sender, data):
-    log_info(f'{sender}, {data}')
+    log.write(f'{sender}, {data}')
     window_graphs('Other Shows', None)
     set_window_pos('Other Shows##graphs', 830, 600)
     set_item_width('Other Shows##graphs', 800)
@@ -1331,7 +1332,7 @@ def window_shows_all_graphs(sender, data):
 
 
 def window_standards(sender, data):
-    log_info(f'{data}')
+    log.write(f'{data}')
     if sender == 'Show Logger':
         show_logger()
         set_window_pos('logger##standard', 1120, 1015)
@@ -1356,7 +1357,7 @@ def window_standards(sender, data):
 
 def window_top_10(sender, data):
     win = f'{sender}##window'
-    log_info(f'Window Top 10 s {sender}, d {data}')
+    log.write(f'Window Top 10 s {sender}, d {data}')
     if not does_item_exist(win):
         with window(name=win, width=890, height=970, x_pos=15, y_pos=35, on_close=window_close):
             if sender == 'Top 10 Graphs':
@@ -1382,7 +1383,7 @@ def window_top_10(sender, data):
             else:
                 add_label_text(name=f'##uw{sender}', default_value='Tried to create an undefined Pie Graph Window')
         set_style_window_title_align(0.5, 0.5)
-    log_info(f'Create item (window): "{win}"')
+    log.write(f'Create item (window): "{win}"')
 
 
 # Program
@@ -1407,7 +1408,7 @@ if options['-e']:
 if options['-s']:
     log.write('Starting with all the Show Graphs')
 
-db = mariaDB()
+db = mariaDB(caller=log.caller, filename=log.filename, vli=5)
 program_data()
 program_mainwindow()
 # if get_value('mode') == 'Prod':
