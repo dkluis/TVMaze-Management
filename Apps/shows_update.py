@@ -25,7 +25,7 @@ Options:
 
 from docopt import docopt
 
-from Libraries import execute_tvm_request, mariaDB, logging
+from Libraries import execute_tvm_request, mariaDB, logging, tvmaze_apis
 
 
 def func_get_cli():
@@ -61,7 +61,7 @@ def func_get_the_shows():
 
 
 def func_get_tvmaze_show_info(showid):
-    showinfo = execute_tvm_request(f'http://api.tvmaze.com/shows/{showid}', timeout=(20, 10), return_err=True)
+    showinfo = execute_tvm_request(f'{tvmaze_apis.get_episodes_by_show_pre}{showid}', timeout=(20, 10), return_err=True)
     if not showinfo:
         log.write(f'Error with API call {showinfo}', 0)
         return

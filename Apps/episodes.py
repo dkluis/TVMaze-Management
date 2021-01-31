@@ -53,7 +53,7 @@ def find_shows_not_followed_or_skipped():
     eps_to_process = episodes_found.json()
     logfile.write(f'Number of Episodes to Process {len(eps_to_process)}')
     log.write(f'Number of Episodes to Process {len(eps_to_process)}')
-    base_url = 'https://www.tvmaze.com/episodes/'
+    base_url = tvmaze_apis.get_episodes_status + '/'
     base_show = ''
     base_epi = -1
     for epi in eps_to_process:
@@ -276,7 +276,7 @@ def episode_processing(single=''):
     if len(eps_to_update) != 0:
         log.write(f'There are {len(eps_to_update)} episodes to update')
         for epi in eps_to_update:
-            baseurl = 'https://api.tvmaze.com/v1/user/episodes/' + str(epi[0])
+            baseurl = tvmaze_apis.get_episodes_status + '/' + str(epi[0])
             epoch_date = int(date.today().strftime("%s"))
             data = {"marked_at": epoch_date, "type": 2}
             response = execute_tvm_request(baseurl, data=data, req_type='put', code=True)

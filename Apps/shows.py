@@ -148,7 +148,7 @@ def process_update_all_shows():
         showupdated = response[key]
         result = mariadb.execute_sql(sql=f"SELECT * from shows WHERE showid = {showid}", sqltype="Fetch")
         if not result:
-            showinfo = execute_tvm_request(f'http://api.tvmaze.com/shows/{showid}')
+            showinfo = execute_tvm_request(f'{tvmaze_apis.get_episodes_by_show_pre}{showid}')
             if not showinfo:
                 log.write(f'Working on {key} in response and cannot find the show info {showinfo}', 0)
                 continue
@@ -192,7 +192,7 @@ def process_update_all_shows():
             if result[13] == showupdated or result[15] != "Followed":
                 skipped = skipped + 1
             else:
-                showinfo = execute_tvm_request(f'http://api.tvmaze.com/shows/{showid}')
+                showinfo = execute_tvm_request(f'{tvmaze_apis.get_episodes_by_show_pre}{showid}')
                 if not showinfo:
                     log.write(f'Request timed-out, skipping update')
                     continue

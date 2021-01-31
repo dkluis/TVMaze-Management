@@ -24,7 +24,7 @@ Options:
 from docopt import docopt
 from datetime import date
 
-from Libraries import execute_sqlite, mariaDB, config, execute_tvm_request, fix_showname, logging
+from Libraries import execute_sqlite, mariaDB, config, execute_tvm_request, fix_showname, logging, tvmaze_apis
 
 
 class sdb_info:
@@ -119,7 +119,7 @@ def func_update_episode_and_tvm(epi_showid, epi_season, epi_episode, epi_watched
 def update_tvmaze_episode_status(epiid, upd_date):
     if vli > 1:
         log.write(f'Update TVM Episode Status: {epiid}, {upd_date}', 2)
-    baseurl = 'https://api.tvmaze.com/v1/user/episodes/' + str(epiid)
+    baseurl = tvmaze_apis.get_episodes_status + '/' + str(epiid)
     if upd_date:
         epoch_date = int(upd_date.strftime("%s"))
     else:
