@@ -24,7 +24,26 @@ import shutil
 import time
 from docopt import docopt
 
-from Libraries import config, mariaDB, logging, process_download_name, update_tvmaze_episode_status
+from Libraries import config, mariaDB, logging, process_download_name, tvmaze_apis, execute_tvm_request, date
+
+
+def update_tvmaze_episode_status(epiid):
+    """
+                           Function to update TVMaze
+    :param epiid:          The episode to update
+    :return:               Response from TVMaze or False if episode was updated before
+    """
+    status_sql = f'select epiid, mystatus from episodes where epiid = {epiid}'
+    result = db.execute_sql(sql=status_sql, sqltype='Fetch')[0]
+    if result[1] == 'Downloaded' or result[1] == 'Watched':
+        log.write(f'This episode {epiid} has already been update with "{result[1]}"')
+        return False
+    if vli > 2:
+        log.write(f"Updating TVMaze for: {epiid}", 3)
+    baseurl = tvmaze_apis.update_episode_status + str(epiid)
+    epoch_date = int(date.today().strftime("%s"))
+    data = {"marked_at": epoch_date, "type": 1}
+    return execute_tvm_request(baseurl, data=data, req_type='put', code=True, log_ind=True)
 
 
 def gather_all_key_info():
@@ -102,7 +121,7 @@ def transform_season_string(season_in):
 
 def update_tvmaze_with_downloaded_episodes(epis):
     for epi in epis:
-        update_tvmaze_episode_status(epi, log, vli)
+        update_tvmaze_episode_status(epi)
     return
 
 

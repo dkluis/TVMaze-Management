@@ -193,6 +193,9 @@ def process_update_all_shows():
                 skipped = skipped + 1
             else:
                 showinfo = execute_tvm_request(f'http://api.tvmaze.com/shows/{showid}')
+                if not showinfo:
+                    log.write(f'Request timed-out, skipping update')
+                    continue
                 showinfo = showinfo.json()
                 si = process_show_info(showinfo)
                 if result[19] is None:

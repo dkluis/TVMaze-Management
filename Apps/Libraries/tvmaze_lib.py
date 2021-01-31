@@ -238,28 +238,6 @@ def execute_tvm_request(api, req_type='get', data='', err=True, return_err=False
     return response
 
 
-def update_tvmaze_episode_status(epiid, log_errors, vli):
-    """
-                           Function to update TVMaze
-    :param epiid:          The episode to update
-    :param log_errors:     Where to report the actions
-    :param vli:            The verbose level
-    :return:               Response from TVMaze or False if episode was updated before
-    """
-    db = mariaDB()
-    status_sql = f'select epiid, mystatus from episodes where epiid = {epiid}'
-    result = db.execute_sql(sql=status_sql, sqltype='Fetch')[0]
-    if result[1] == 'Downloaded' or result[1] == 'Watched':
-        log_errors.write(f'This episode {epiid} has already been update with "{result[1]}"')
-        return False
-    if vli > 2:
-        log_errors.write(f"Updating TVMaze for: {epiid}", 3)
-    baseurl = tvmaze_apis.update_episode_status + str(epiid)
-    epoch_date = int(date.today().strftime("%s"))
-    data = {"marked_at": epoch_date, "type": 1}
-    return execute_tvm_request(baseurl, data=data, req_type='put', code=True, log_ind=True)
-
-
 '''
     All TVM-DB Library
 '''
@@ -324,7 +302,7 @@ class config:
 
 
 class mariaDB:
-    def __init__(self, h='', d='', batch=False, caller='Lib mariaDB', filename='Process', vli=9):
+    def __init__(self, h='', d='', batch=False, caller='Lib mariaDB', filename='Process', vli=0):
         """
             mariaDB handles the DB activities for the mariadb DB of TVM-Management
 
