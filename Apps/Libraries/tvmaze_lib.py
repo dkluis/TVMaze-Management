@@ -2,14 +2,15 @@ import requests
 import mariadb
 import sqlite3
 import sys
-from datetime import datetime, timedelta, date
 import re
 import os
 import time
 import ast
+from datetime import datetime, timedelta, date
 from timeit import default_timer as timer
-from dearpygui.core import *
-from dearpygui.simple import *
+from dearpygui.core import log_info, does_item_exist, add_input_text, add_same_line, add_button, add_separator, \
+    add_table, get_value, set_table_data
+from dearpygui.simple import window
 
 """
     Logging Library for TVM-Management
@@ -317,7 +318,8 @@ class mariaDB:
             self.__host = h
         else:
             self.__host = conf.host
-        self.__log.write(f'Host is setup as {self.__host}')
+        if vli > 2:
+            self.__log.write(f'Host is setup as {self.__host}', 3)
         self.__user = conf.db_admin
         self.__password = conf.db_password
         self.__user_admin = conf.user_admin
@@ -836,11 +838,12 @@ def get_tvmaze_info(key):
         info = result[0][0]
     return info
 
-
+'''
 def find_new_shows():
     db = mariaDB()
     info = db.execute_sql(sqltype='Fetch', sql=tvm_views.shows_to_review)
     return info
+
 
 
 def get_download_options(html=False):
@@ -856,39 +859,7 @@ def get_download_options(html=False):
 class num_list:
     new_list = find_new_shows()
     num_newshows = len(new_list)
-
-
-def count_by_download_options():
-    db = mariaDB()
-    rarbg_api = db.execute_sql(sqltype='Fetch',
-                               sql="SELECT COUNT(*) from shows WHERE download = 'rarbgAPI' AND status = 'Followed'")
-    rarbg = db.execute_sql(sqltype='Fetch',
-                           sql="SELECT COUNT(*) from shows WHERE download = 'rarbg' AND status = 'Followed'")
-    rarbgmirror = db.execute_sql(sqltype='Fetch',
-                                 sql="SELECT COUNT(*) from shows "
-                                     "WHERE download = 'rarbgmirror' AND status = 'Followed'")
-    showrss = db.execute_sql(sqltype='Fetch',
-                             sql="SELECT COUNT(*) from shows WHERE download = 'ShowRSS' AND status = 'Followed'")
-    eztv_api = db.execute_sql(sqltype='Fetch',
-                              sql="SELECT COUNT(*) from shows WHERE download = 'eztvAPI' AND status = 'Followed'")
-    no_dl = db.execute_sql(sqltype='Fetch',
-                           sql="SELECT COUNT(*) from shows WHERE download is NULL AND status = 'Followed'")
-    skip = db.execute_sql(sqltype='Fetch',
-                          sql="SELECT COUNT(*) from shows WHERE download = 'Skip' AND status = 'Followed'")
-    eztv = db.execute_sql(sqltype='Fetch',
-                          sql="SELECT COUNT(*) from shows WHERE download = 'eztv' AND status = 'Followed'")
-    magnetdl = db.execute_sql(sqltype='Fetch',
-                              sql="SELECT COUNT(*) from shows WHERE download = 'magnetdl' AND status = 'Followed'")
-    torrentfunk = db.execute_sql(sqltype='Fetch',
-                                 sql="SELECT COUNT(*) from shows "
-                                     "WHERE download = 'torrentfunk' AND status = 'Followed'")
-    piratebay = db.execute_sql(sqltype='Fetch',
-                               sql="SELECT COUNT(*) from shows WHERE download = 'piratebay' AND status = 'Followed'")
-    multi = db.execute_sql(sqltype='Fetch',
-                           sql="SELECT COUNT(*) from shows WHERE download = 'Multi' AND status = 'Followed'")
-    value = (no_dl[0][0], rarbg_api[0][0], rarbg[0][0], rarbgmirror[0][0], showrss[0][0], skip[0][0],
-             eztv_api[0][0], eztv[0][0], magnetdl[0][0], torrentfunk[0][0], piratebay[0][0], multi[0][0])
-    return value
+'''
 
 
 class shows:
@@ -1090,7 +1061,7 @@ def eliminate_prefixes(name):
             return name_no_pref
     return name
 
-
+'''
 def determine_directory(name):
     """
                     Function to determine if a name indicate a directory or an individual file
@@ -1104,6 +1075,7 @@ def determine_directory(name):
         if plexext in name:
             return False
         return True
+'''
 
 
 def fix_showname(sn):

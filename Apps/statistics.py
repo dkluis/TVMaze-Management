@@ -25,7 +25,39 @@ from docopt import docopt
 import pandas as pd
 from sqlalchemy import create_engine
 
-from Libraries import get_today, time, stat_views, mariaDB, count_by_download_options, logging
+from Libraries import get_today, time, stat_views, mariaDB, logging
+
+
+def count_by_download_options():
+    rarbg_api = db.execute_sql(sqltype='Fetch',
+                               sql="SELECT COUNT(*) from shows WHERE download = 'rarbgAPI' AND status = 'Followed'")
+    rarbg = db.execute_sql(sqltype='Fetch',
+                           sql="SELECT COUNT(*) from shows WHERE download = 'rarbg' AND status = 'Followed'")
+    rarbgmirror = db.execute_sql(sqltype='Fetch',
+                                 sql="SELECT COUNT(*) from shows "
+                                     "WHERE download = 'rarbgmirror' AND status = 'Followed'")
+    showrss = db.execute_sql(sqltype='Fetch',
+                             sql="SELECT COUNT(*) from shows WHERE download = 'ShowRSS' AND status = 'Followed'")
+    eztv_api = db.execute_sql(sqltype='Fetch',
+                              sql="SELECT COUNT(*) from shows WHERE download = 'eztvAPI' AND status = 'Followed'")
+    no_dl = db.execute_sql(sqltype='Fetch',
+                           sql="SELECT COUNT(*) from shows WHERE download is NULL AND status = 'Followed'")
+    skip = db.execute_sql(sqltype='Fetch',
+                          sql="SELECT COUNT(*) from shows WHERE download = 'Skip' AND status = 'Followed'")
+    eztv = db.execute_sql(sqltype='Fetch',
+                          sql="SELECT COUNT(*) from shows WHERE download = 'eztv' AND status = 'Followed'")
+    magnetdl = db.execute_sql(sqltype='Fetch',
+                              sql="SELECT COUNT(*) from shows WHERE download = 'magnetdl' AND status = 'Followed'")
+    torrentfunk = db.execute_sql(sqltype='Fetch',
+                                 sql="SELECT COUNT(*) from shows "
+                                     "WHERE download = 'torrentfunk' AND status = 'Followed'")
+    piratebay = db.execute_sql(sqltype='Fetch',
+                               sql="SELECT COUNT(*) from shows WHERE download = 'piratebay' AND status = 'Followed'")
+    multi = db.execute_sql(sqltype='Fetch',
+                           sql="SELECT COUNT(*) from shows WHERE download = 'Multi' AND status = 'Followed'")
+    value = (no_dl[0][0], rarbg_api[0][0], rarbg[0][0], rarbgmirror[0][0], showrss[0][0], skip[0][0],
+             eztv_api[0][0], eztv[0][0], magnetdl[0][0], torrentfunk[0][0], piratebay[0][0], multi[0][0])
+    return value
 
 
 def go_store_statistics(f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12):
