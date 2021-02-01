@@ -36,7 +36,7 @@ def update_tvmaze_episode_status(epiid):
     status_sql = f'select epiid, mystatus from episodes where epiid = {epiid}'
     result = db.execute_sql(sql=status_sql, sqltype='Fetch')
     if not result:
-        log.write(f'Episode could not be found {epiid}', 0)
+        log.write(f'Episode could not be found {epiid} #############################', 0)
         return False
     else:
         result = result[0]
