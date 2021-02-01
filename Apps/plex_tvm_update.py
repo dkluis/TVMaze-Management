@@ -34,7 +34,12 @@ def update_tvmaze_episode_status(epiid):
     :return:               Response from TVMaze or False if episode was updated before
     """
     status_sql = f'select epiid, mystatus from episodes where epiid = {epiid}'
-    result = db.execute_sql(sql=status_sql, sqltype='Fetch')[0]
+    result = db.execute_sql(sql=status_sql, sqltype='Fetch')
+    if not result:
+        log.write(f'Episode could not be found {epiid}', 0)
+        return False
+    else:
+        result = result[0]
     if result[1] == 'Downloaded' or result[1] == 'Watched':
         log.write(f'This episode {epiid} has already been update with "{result[1]}"')
         return False
