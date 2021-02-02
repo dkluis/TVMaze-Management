@@ -47,7 +47,8 @@ class lists:
 
 
 def func_accelerator_callback(sender, data):
-    # log.write(f'{sender}, {data}')
+    if vli > 4:
+        log.write(f'{sender}, {data}', 5)
     mapping = {
         "Q": mvKey_Q,
         'S': mvKey_S,
@@ -75,13 +76,15 @@ def func_accelerator_callback(sender, data):
 
 
 def func_async(sender, process):
-    log.write(f'Starting subprocess {process[0]} for function {process[1]}, with s {sender}')
+    if vli > 3:
+        log.write(f'Starting subprocess {process[0]} for function {process[1]}, with s {sender}', 4)
     subprocess.call(process[0], shell=True)
     return process[1]
 
 
 def func_async_return(sender, data):
-    log.write(f'Async Callback s {sender} with d {data}')
+    if vli > 3:
+      log.write(f'Async Callback s {sender} with d {data}', 4)
     configure_item('Processes', enabled=True)
     refresh = ''
     if (data == 'Update Statistics' or data == 'Get Episodes' or data == 'Update Episodes' or data == 'Update Shows'
@@ -98,14 +101,16 @@ def func_db_opposite():
     
     :return: The name of the opposite DB to toggle to
     """
-    log.write(f'Retrieving Mode {get_value("mode")}')
+    if vli > 4:
+        log.write(f'Retrieving Mode {get_value("mode")}', 5)
     if get_value('mode') == 'Prod':
         set_value('db_opposite', 'Test DB')
         configure_item('Processes', enabled=True)
     else:
         set_value('db_opposite', "Production DB")
         configure_item('Processes', enabled=False)
-    log.write(f'db_opposite {get_value("db_opposite")}')
+    if vli > 4:
+        log.write(f'db_opposite {get_value("db_opposite")}', 5)
 
 
 def func_buttons(win='', fc='Show', buttons=None):
@@ -119,21 +124,26 @@ def func_buttons(win='', fc='Show', buttons=None):
     """
     if buttons is None:
         buttons = []
-    log.write(f'function Buttons s {win} f {fc}, b {buttons}')
+    if vli > 4:
+        log.write(f'function Buttons s {win} f {fc}, b {buttons}', 5)
     if fc == 'Hide':
         for button in buttons:
-            log.write(f'Hiding button {button}')
+            if vli > 4:
+                log.write(f'Hiding button {button}', 5)
             configure_item(f'{button}##{win}', enabled=False)
     elif fc == 'Show':
-        log.write(f'Showing buttons for {win}')
+        if vli > 4:
+            log.write(f'Showing buttons for {win}', 5)
         if win == 'Maintenance':
             buttons = lists.maintenance_buttons
-            log.write(f'Buttons are {buttons}')
+            if vli > 4:
+                log.write(f'Buttons are {buttons}', 5)
             for button in buttons:
-                log.write(f'Showing button {button}')
+                if vli > 4:
+                    log.write(f'Showing button {button}', 5)
                 configure_item(f'{button}##{win}', enabled=True)
     else:
-        log_error(f'None existing function code {fc}')
+        log.write(f'None existing function code {fc}')
         
         
 def func_empty_logfile_sub(filename):
@@ -147,7 +157,8 @@ def func_empty_logfile_sub(filename):
     logfile.open()
     logfile.close()
     logfile.empty()
-    log.write(f'Emptied Run Log: {filename}')
+    if vli > 4:
+        log.write(f'Emptied Run Log: {filename}', 5)
 
 
 def func_empty_logfile(sender='', data=''):
@@ -159,7 +170,8 @@ def func_empty_logfile(sender='', data=''):
     :return:        None
     """
     win = func_sender_breakup(sender, 1)
-    log.write(f'Start the empty logfile process with {sender}, {data}')
+    if vli > 4:
+        log.write(f'Start the empty logfile process with {sender}, {data}', 5)
     if win == 'Processing Log':
         func_empty_logfile_sub(filename='Process')
     elif win == 'Show Updates Log':
@@ -169,14 +181,15 @@ def func_empty_logfile(sender='', data=''):
     elif win == 'TVMaze Log':
         func_empty_logfile_sub(filename='TVMaze')
     else:
-        log_warning(f'Did not process the emptying, could not find {sender}')
+        log.write(f'Did not process the emptying, could not find {sender}', 0)
     delete_item(f'{win}##window')
 
 
 def func_episode_statuses(sender, data):
     erd = get_value(f'erd##Top 10 Graphs')
     etrd = get_value(f'etrd##Top 10 Graphs')
-    log.write(f'Episode Statuses s {sender}, d {data}, srd {erd}, etrd {etrd}')
+    if vli > 3:
+        log.write(f'Episode Statuses s {sender}, d {data}, srd {erd}, etrd {etrd}', 4)
     set_value(f'erd#{sender}', erd)
     set_value(f'etrd#{sender}', etrd)
     if does_item_exist('Episodes##Top 10 Charts'):
@@ -233,17 +246,20 @@ def func_every_frame(sender, data):
     if is_item_clicked('Tools'):
         set_value(f'##db', get_value('db_opposite'))
         set_value(f'##theme', get_value('theme_opposite'))
-        log.write(f'Every Frame: Tools was clicked, {sender} {data}')
+        if vli > 4:
+            log.write(f'Every Frame: Tools was clicked, {sender} {data}', 5)
     elif is_item_clicked('Shows'):
         sql = tvm_views.shows_to_review_count
         count = db.execute_sql(sqltype='Fetch', sql=sql)
         set_value('##no_new_shows: ', str(count[0][0]))
-        log.write(f'Every Frame: Shows was clicked, {sender} {data}')
+        if vli > 4:
+            log.write(f'Every Frame: Shows was clicked, {sender} {data}', 5)
 
 
 def func_fill_watched_errors(sender, data):
     win = func_sender_breakup(sender, 1)
-    log.write(f'Fill Watched Errors table s {sender}, d {data}, w {win}')
+    if vli > 4:
+        log.write(f'Fill Watched Errors table s {sender}, d {data}, w {win}', 5)
     sql = f'''select * from plex_episodes where tvm_update_status is null'''
     we = db.execute_sql(sqltype='Fetch', sql=sql)[0]
     set_value(f'table##{sender}', we)
@@ -258,7 +274,8 @@ def func_filter_graph_sql(sql, g_filter):
 
 
 def func_find_shows(si, sn):
-    log.write(f'Find Shows SQL with showid {si} and showname {sn}')
+    if vli > 4:
+        log.write(f'Find Shows SQL with showid {si} and showname {sn}', 5)
     if si == 0 and sn == 'New':
         sql = tvm_views.shows_to_review_tvmaze
     elif sn == 'Shows Due':
@@ -284,7 +301,8 @@ def func_find_shows(si, sn):
 
 
 def func_get_getter(getters):
-    log.write(f'Get Getters {getters}')
+    if vli > 4:
+        log.write(f'Get Getters {getters}', 5)
     links = []
     for getter in getters:
         link = db.execute_sql(sqltype='Fetch', sql=f"SELECT * from download_options WHERE `providername` = '{getter}'")
@@ -298,20 +316,24 @@ def func_key_main(sender, data):
     if win == 'Maintenance' and function == 'window':
         if data == mvKey_Return:
             shows_fill_table(f'Search##{sender}', data)
-            log.write(f'{win} Key detected for Function {function}')
+            if vli > 4:
+                log.write(f'{win} Key detected for Function {function}', 5)
     elif win == 'Login Popup' and function == 'Undefined for now':
         if data == mvKey_Return:
             func_login(sender, data)
-            log.write(f'{win} Key detected for Function {function}')
+            if vli > 4:
+                log.write(f'{win} Key detected for Function {function}', 5)
     elif win == 'Processing Log' or win == 'Python Errors' \
             or win == 'Transmission Log' or win == 'TVMaze Log' or win == 'Show Updates Log':
         if data == mvKey_Return:
             func_log_filter(f'Refresh##{win}', get_value(f'{win}ft'))
-            log.write(f'{win} Key detected for Function {function}')
+            if vli > 4:
+                log.write(f'{win} Key detected for Function {function}', 5)
 
 
 def func_log_filter(sender, data):
-    log.write(f'Func Log Filter s {sender}, d {data}')
+    if vli > 4:
+        log.write(f'Func Log Filter s {sender}, d {data}', 5)
     win = func_sender_breakup(sender, 1)
     filter_table = get_table_data(f'log_table##{win}')
     if len(filter_table) != 0:
@@ -442,7 +464,7 @@ def func_tvm_update(fl, si):
     if fl == "F":
         result = execute_tvm_request(api, req_type='put', code=True)
         if not result:
-            log_error(f"Web error trying to follow show: {si}")
+            log.write(f"Web error trying to follow show: {si}", 0)
             return False
         success = 'Followed'
         download = 'Multi'
@@ -450,7 +472,7 @@ def func_tvm_update(fl, si):
     elif fl == "U":
         result = execute_tvm_request(api, req_type='delete', code=True)
         if not result:
-            log_error(f"Web error trying to unfollow show: {si}")
+            log.write(f"Web error trying to unfollow show: {si}", 0)
             return False
         success = 'Skipped'
         download = None
@@ -474,7 +496,7 @@ def func_tvm_update(fl, si):
         result = db.execute_sql(sqltype='Commit', sql=esql)
         if not result:
             any_error = True
-            log_error(f'Update of the DB failed: {sql}, {result}')
+            log.write(f'Update of the DB failed: {sql}, {result}', 0)
     return any_error
 
 
@@ -520,7 +542,7 @@ def epis_fill_table(sender, data):
     elif button == 'Shows Due':
         found_shows = func_find_shows(0, 'Shows Due')
     else:
-        log_error(f'Unknown Button Pressed to fill the table b {button}')
+        log.write(f'Unknown Button Pressed to fill the table b {button}', 0)
     
     func_fill_a_table(f'table##{win}', found_shows)
     func_buttons(win=win, fc='Show')
@@ -814,7 +836,7 @@ def shows_fill_table(sender, data):
     elif button == 'Shows Due':
         found_shows = func_find_shows(0, 'Shows Due')
     else:
-        log_error(f'Unknown Button Pressed to fill the table b {button}')
+        log.write(f'Unknown Button Pressed to fill the table b {button}', 0)
         
     func_fill_a_table(f'shows_table##{win}', found_shows)
     func_buttons(win=win, fc='Hide', buttons=lists.maintenance_buttons)
@@ -977,7 +999,7 @@ def tvmaze_update(sender, data):
             log.write(f'TVMaze Skipping result: {result}')
             set_value(f'##show_showname{win}', f'Show {si} update on TVMaze and set Skipped = {result}')
         else:
-            log_error(f'Unknown Function: "{function}"')
+            log.write(f'Unknown Function: "{function}"', 0)
         shows_maint_clear(sender, 'input_fields_only')
 
 
@@ -1396,10 +1418,14 @@ else:
     add_value('mode', 'Test')
     add_value('db_opposite', "Production DB")
     mode = 'Test'
+    
+vli = 0
+if options['--vl']:
+    vli = int(options['--vl'])
 
 log = logging(env=get_value('mode'), caller='TVMaze', filename='TVMaze')
 log.start()
-log.write(f'Mode is: {get_value("mode")}')
+log.write(f'Mode is: {get_value("mode")} and vli is: {vli}')
 
 if options['-d']:
     log.write('Starting in Debug Mode')
@@ -1408,7 +1434,7 @@ if options['-e']:
 if options['-s']:
     log.write('Starting with all the Show Graphs')
 
-db = mariaDB(caller=log.caller, filename=log.filename, vli=5)
+db = mariaDB(caller=log.caller, filename=log.filename, vli=vli)
 program_data()
 program_mainwindow()
 # if get_value('mode') == 'Prod':
