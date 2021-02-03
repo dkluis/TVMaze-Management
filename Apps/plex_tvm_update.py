@@ -239,6 +239,8 @@ for download in downloads:
         if not processed_info['whole_season']:
             all_episodes.append(processed_info['episodeid'])
         else:
+            if 's' in str(seas):
+                seas = int(seas.replace('s', ''))
             sql = f'select epiid from episodes where showid = {processed_info["showid"]} and ' \
                   f'season = {seas}'
             episodes = db.execute_sql(sql=sql, sqltype='Fetch')
