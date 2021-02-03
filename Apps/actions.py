@@ -353,12 +353,15 @@ def do_api_process(epi_tdl, req):
     else:
         main_link = formatted_call[0]
     sdl_options = sorted(dl_options, key=lambda x: [x[0], x[3]], reverse=True)
+    
+    if vli > 1:
+        log.write(f'Sorted options are:')
+        for dslo in sdl_options:
+            log.write(f'Option: {dslo}')
+
     if len(sdl_options) == 0:
         return False, main_link, dler
     else:
-        for sdl_o in sdl_options:
-            if vli > 2:
-                log.write(f'The Options are {sdl_o[0]}, {sdl_o[3]}, {sdl_o[1]}, {sdl_o[4]}', 3)
         for dlo in sdl_options:
             if vli > 2:
                 log.write(f'Selected Option = {dlo[0]}, {dlo[3]}, {dlo[1]}, {dlo[4]}', 3)
