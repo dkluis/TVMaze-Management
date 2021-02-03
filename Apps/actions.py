@@ -355,9 +355,9 @@ def do_api_process(epi_tdl, req):
     sdl_options = sorted(dl_options, key=lambda x: [x[0], x[3]], reverse=True)
     
     if vli > 1:
-        log.write(f'Sorted options are:')
-        for dslo in sdl_options:
-            log.write(f'Option: {dslo}')
+        log.write(f'Sorted options number is: {len(sdl_options)}')
+        for sdlo in sdl_options:
+            log.write(f'Option: {sdlo}')
 
     if len(sdl_options) == 0:
         return False, main_link, dler
