@@ -72,7 +72,7 @@ def validate_requirements(filename, extension, epi_no, showname, base):
     cont1 = "mkv"
     cont2 = "mp4"
     cont3 = 'avi'
-    prov1 = 'bae[eztv'
+    prov1 = 'bae'
     priority = base
     if res1 in filename.lower():
         priority = priority + 40
@@ -85,7 +85,7 @@ def validate_requirements(filename, extension, epi_no, showname, base):
     if codex in filename.lower():
         priority = priority + 100
     elif codex2 in filename.lower():
-        priority = priority + 110
+        priority = priority + 120
     if extension:
         if cont1 in filename.lower():
             priority = priority + 15
@@ -94,11 +94,11 @@ def validate_requirements(filename, extension, epi_no, showname, base):
         elif cont3 in filename.lower():
             priority = priority + 5
     if prov1 in filename.lower():
-        priority = priority - 40
+        priority = priority - 20
     if 'proper' in filename.lower():
-        priority = priority + 10
+        priority += 30
     elif 'repack' in filename.lower():
-        priority += 10
+        priority += 30
     if showname:
         if vli > 2:
             log.write(f'''Checking showname {showname.replace(' ', '.').lower()} > {filename}.lower()''', 3)
@@ -356,8 +356,10 @@ def do_api_process(epi_tdl, req):
     
     if vli > 1:
         log.write(f'Sorted options number is: {len(sdl_options)}')
+        idx = 1
         for sdlo in sdl_options:
-            log.write(f'Option: {sdlo}')
+            log.write(f'Option {idx}: {sdlo[0]} - {sdlo[3]} - {sdlo[4]} --> {sdlo[1]} ---> {sdlo[2]} ')
+            idx = idx + 1
 
     if len(sdl_options) == 0:
         return False, main_link, dler
