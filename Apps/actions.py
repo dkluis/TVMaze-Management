@@ -94,7 +94,7 @@ def validate_requirements(filename, extension, epi_no, showname, base):
         elif cont3 in filename.lower():
             priority = priority + 5
     if prov1 in filename.lower():
-        priority = priority - 20
+        priority = priority - 66
     if 'proper' in filename.lower():
         priority += 30
     elif 'repack' in filename.lower():
@@ -358,7 +358,7 @@ def do_api_process(epi_tdl, req):
         log.write(f'Sorted options number is: {len(sdl_options)}')
         idx = 1
         for sdlo in sdl_options:
-            log.write(f'Option {idx}: {sdlo[0]} - {sdlo[3]} - {sdlo[4]} --> {sdlo[1]} ---> {sdlo[2]} ')
+            log.write(f'Option {idx}: {sdlo[0]} - {sdlo[3]} - {sdlo[4]} ---> {sdlo[1]}')
             idx = idx + 1
 
     if len(sdl_options) == 0:
