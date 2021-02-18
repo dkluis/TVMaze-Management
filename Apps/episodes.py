@@ -207,10 +207,10 @@ def episode_processing(single=''):
         log.write(f'Api call {api} resulted with: {episodes}')
         return
 
-    epis = str(episodes.content, encoding='utf-8').replace('null', '')
-    eps_updated = epis.replace('[', '').replace(']', '')
-    eps_updated = ast.literal_eval(eps_updated)
-    # eps_updated = episodes.json()
+    # epis = str(episodes.content, encoding='utf-8').replace('null', '')
+    # eps_updated = epis.replace('[', '').replace(']', '')
+    # eps_updated = ast.literal_eval(eps_updated)
+    eps_updated = episodes.json()
     updated = 0
     if vli > 2:
         log.write(f"Episodes to process: {len(eps_updated)}", 3)
