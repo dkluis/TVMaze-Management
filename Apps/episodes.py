@@ -206,6 +206,9 @@ def episode_processing(single=''):
     elif "Error Code" in episodes:
         log.write(f'Api call {api} resulted with: {episodes}')
         return
+    elif "null" in episodes.content:
+        log.write(f'Json formatting error: {episodes.content[:20]}')
+        return
     eps_updated = episodes.json()
     updated = 0
     if vli > 2:
