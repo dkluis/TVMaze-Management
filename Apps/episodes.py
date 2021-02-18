@@ -199,9 +199,12 @@ def episode_processing(single=''):
     log.write(f'The process (including calling the TVMaze APIs) took: {ended - started} seconds')
     
     log.write(f"Starting update of episode statuses and date")
-    episodes = execute_tvm_request(api=tvmaze_apis.get_episodes_status, code=True, sleep=0)
+    episodes = execute_tvm_request(api=tvmaze_apis.get_episodes_status, code=True, sleep=0, err=True)
     if not episodes:
         log.write(f'API: {api} failed')
+        return
+    elif "Error Code" in episodes:
+        log.write(f'Api call {api} resulted with: {episodes}')
         return
     eps_updated = episodes.json()
     updated = 0
