@@ -24,7 +24,7 @@ from docopt import docopt
 from bs4 import BeautifulSoup as Soup
 
 from Libraries import execute_tvm_request, tvmaze_apis, date, mariaDB, tvm_views, generate_insert_sql, \
-                      generate_update_sql, std_sql, logging, timer, datetime
+                      generate_update_sql, std_sql, logging, timer, datetime, ast
 
 
 def update_tvm_show_status(showid, logfile):
@@ -206,10 +206,11 @@ def episode_processing(single=''):
     elif "Error Code" in episodes:
         log.write(f'Api call {api} resulted with: {episodes}')
         return
-    elif "null" in episodes.content:
-        log.write(f'Json formatting error: {episodes.content[:20]}')
-        return
-    eps_updated = episodes.json()
+
+    epis = str(episodes.content, encoding='utf-8').replace('null', '')
+    eps_updated = epis.replace('[', '').replace(']', '')
+    eps_updated = ast.literal_eval(eps_updated)
+    # eps_updated = episodes.json()
     updated = 0
     if vli > 2:
         log.write(f"Episodes to process: {len(eps_updated)}", 3)
