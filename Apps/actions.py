@@ -85,7 +85,7 @@ def validate_requirements(filename, extension, epi_no, showname, base):
     if codex in filename.lower():
         priority = priority + 100
     elif codex2 in filename.lower():
-        priority = priority + 120
+        priority = priority + 100
     if extension:
         if cont1 in filename.lower():
             priority = priority + 15
