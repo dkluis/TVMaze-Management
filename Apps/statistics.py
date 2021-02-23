@@ -25,7 +25,7 @@ from docopt import docopt
 import pandas as pd
 from sqlalchemy import create_engine
 
-from Libraries import get_today, time, stat_views, mariaDB, logging
+from Libraries import get_today, time, stat_views, mariaDB, logging, check_vli
 
 
 def count_by_download_options():
@@ -152,13 +152,7 @@ log = logging(caller='Statistics', filename='Process')
 log.start()
 
 options = docopt(__doc__, version='Statistics Release 1.0')
-vli = int(options['--vl'])
-if vli > 5 or vli < 1:
-    log.write(f"Unknown Verbosity level of {vli}, try statistics.py -h", 0)
-    log.end()
-    quit()
-elif vli > 1:
-    log.write(f'Verbosity level is set to: {options["--vl"]}')
+vli = check_vli(options, log)
 
 db = mariaDB(caller=log.caller, filename=log.filename, vli=vli)
 

@@ -24,7 +24,9 @@ Options:
 """
 
 from docopt import docopt
-from Libraries.tvm_db import mariaDB
+from Libraries import mariaDB, check_vli, logging
+
+log = logging(caller="Try", filename='Try')
 
 args = docopt(__doc__, version='Try Release 1.0')
 print(args)
@@ -35,6 +37,7 @@ print(f'Option -m was selected {args["-m"]} show = {args["<mshow>"]} episode = {
 print(f'Option -s was selected {args["-s"]} list of show = {args["<sshow>"]}')
 print(f'Option -b was selected {args["-b"]} DB schema to use = {args["--db"]}')
 print(f'Option -v was selected {args["-v"]}')
+vli = check_vli(args, log)
 
 db = mariaDB()
 sql = f'select * from key_values'
@@ -45,8 +48,3 @@ for rec in result:
     print(rec['info'], rec['id'])
 
 quit()
-
-
-
-
-

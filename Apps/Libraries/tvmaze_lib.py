@@ -143,6 +143,16 @@ class logging:
         self.write('<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<')
 
 
+def check_vli(ops: dict, log_it: logging):
+    vl = int(ops['--vl'])
+    if vl > 5 or vl < 1:
+        log_it.write(f"Unknown Verbosity level of {vl}, try actions.py -h", 0)
+        quit()
+    elif vl > 1:
+        log_it.write(f'Verbosity level is set to: {vl}', 2)
+    return vl
+
+
 '''
         All TVM-APIs Library
 '''

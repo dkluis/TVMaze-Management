@@ -23,7 +23,7 @@ from bs4 import BeautifulSoup as Soup
 from docopt import docopt
 
 from Libraries import mariaDB, tvm_views, os, datetime, timedelta, date_delta, re, execute_tvm_request, \
-    tvmaze_apis, date, logging
+    tvmaze_apis, date, logging, check_vli
 
 
 def update_show_status(showid, status):
@@ -410,9 +410,9 @@ def process_the_episodes_to_download():
                 season_dled = True
                 display_status(processed, epi_to_download, do_text, season)
                 epis = db.execute_sql(sqltype='Fetch', sql=f'SELECT epiid '
-                                                        f'FROM episodes '
-                                                        f'WHERE showid = {epi_to_download[1]} AND '
-                                                        f'season = {epi_to_download[4]}')
+                                                           f'FROM episodes '
+                                                           f'WHERE showid = {epi_to_download[1]} AND '
+                                                           f'season = {epi_to_download[4]}')
                 if len(epis) == 0:
                     log.write(f'Process the Epi(s) to Download: '
                               f'No episodes found while they should exist for show {epi_to_download[1]}')
@@ -444,8 +444,8 @@ def process_the_episodes_to_download():
             update_tvmaze_episode_status(epi_to_download[0])
         downloaded_show = ''
         display_status(processed, epi_to_download, do_text, season)
-
-
+        
+    
 '''
     Main program
     First get all the supporting lists we use
@@ -453,16 +453,11 @@ def process_the_episodes_to_download():
 log = logging(caller='Actions', filename='Process')
 log.start()
 options = docopt(__doc__, version='Statistics Release 1.0')
-vli = int(options['--vl'])
-if vli > 5 or vli < 1:
-    log.write(f"Unknown Verbosity level of {vli}, try actions.py -h", 0)
-    quit()
-elif vli > 1:
-    log.write(f'Verbosity level is set to: {options["--vl"]}', 2)
+vli = check_vli(options, log)
 
 db = mariaDB(caller=log.caller, filename=log.filename, vli=vli)
-
 download_apis = get_download_apis()
+
 if not download_apis:
     log.write(f"Error getting Download Options: {download_apis}", 0)
     db.close()

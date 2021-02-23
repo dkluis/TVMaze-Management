@@ -24,7 +24,7 @@ from docopt import docopt
 from bs4 import BeautifulSoup as Soup
 
 from Libraries import execute_tvm_request, tvmaze_apis, date, mariaDB, tvm_views, generate_insert_sql, \
-                      generate_update_sql, std_sql, logging, timer, datetime, ast
+                      generate_update_sql, std_sql, logging, timer, datetime, check_vli
 
 
 def update_tvm_show_status(showid, logfile):
@@ -298,12 +298,7 @@ log = logging(caller='Episodes', filename='Process')
 log.start()
 
 options = docopt(__doc__, version='Episodes Release 1.0')
-vli = int(options['--vl'])
-if vli > 5 or vli < 1:
-    log.write(f"Unknown Verbosity level of {vli}, try plex_extract.py -h", 0)
-    quit()
-elif vli > 1:
-    log.write(f'Verbosity level is set to: {options["--vl"]}')
+vli = check_vli(options, log)
 
 db = mariaDB(caller=log.caller, filename=log.filename, vli=vli)
 

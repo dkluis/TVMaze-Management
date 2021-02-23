@@ -31,7 +31,7 @@ from docopt import docopt
 from dearpygui.core import *
 from dearpygui.simple import *
 from Libraries import date_delta, datetime, timedelta, tvmaze_apis, mdbi, execute_tvm_request, func_fill_a_table, \
-    window_crud_maintenance, os, paths, tvm_views, logging, mariaDB
+    window_crud_maintenance, os, paths, tvm_views, logging, mariaDB, check_vli
 
 
 class lists:
@@ -84,7 +84,7 @@ def func_async(sender, process):
 
 def func_async_return(sender, data):
     if vli > 3:
-      log.write(f'Async Callback s {sender} with d {data}', 4)
+        log.write(f'Async Callback s {sender} with d {data}', 4)
     configure_item('Processes', enabled=True)
     refresh = ''
     if (data == 'Update Statistics' or data == 'Get Episodes' or data == 'Update Episodes' or data == 'Update Shows'
@@ -1409,7 +1409,12 @@ def window_top_10(sender, data):
 
 
 # Program
+log = logging(env=get_value('mode'), caller='TVMaze', filename='TVMaze')
+log.start()
+
 options = docopt(__doc__, version='TVMaze V1')
+vli = check_vli(options, log)
+
 if options['-p']:
     add_value('mode', 'Prod')
     add_value('db_opposite', "Test DB")
@@ -1418,15 +1423,6 @@ else:
     add_value('mode', 'Test')
     add_value('db_opposite', "Production DB")
     mode = 'Test'
-    
-vli = 0
-if options['--vl']:
-    vli = int(options['--vl'])
-
-log = logging(env=get_value('mode'), caller='TVMaze', filename='TVMaze')
-log.start()
-log.write(f'Mode is: {get_value("mode")} and vli is: {vli}')
-
 if options['-d']:
     log.write('Starting in Debug Mode')
 if options['-e']:

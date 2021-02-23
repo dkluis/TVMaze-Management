@@ -32,7 +32,7 @@ Options:
 from docopt import docopt
 
 from Libraries import execute_tvm_request, tvmaze_apis, datetime, date, mariaDB, generate_update_sql, \
-    generate_insert_sql, std_sql, logging, timer
+    generate_insert_sql, std_sql, logging, timer, check_vli
 
 
 def transform_showname(name):
@@ -323,12 +323,7 @@ def process_followed_shows():
 log = logging(caller='Shows', filename='Process')
 log.start()
 options = docopt(__doc__, version='Shows Release 1.0')
-vli = int(options['--vl'])
-if vli > 5 or vli < 1:
-    log.write(f'Unknown Verbosity level of {vli}, try plex_extract.py -h', 0)
-    quit()
-elif vli > 1:
-    log.write(f'Verbosity level is set to: {options["--vl"]}')
+vli = check_vli(options, log)
 
 mariadb = mariaDB(caller=log.caller, filename=log.filename, vli=vli)
 

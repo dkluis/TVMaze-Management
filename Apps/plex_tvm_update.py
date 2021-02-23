@@ -24,7 +24,8 @@ import shutil
 import time
 from docopt import docopt
 
-from Libraries import config, mariaDB, logging, process_download_name, tvmaze_apis, execute_tvm_request, date
+from Libraries import config, mariaDB, logging, process_download_name, tvmaze_apis, execute_tvm_request, date, \
+     check_vli
 
 
 def update_tvmaze_episode_status(epiid):
@@ -75,6 +76,7 @@ def gather_all_key_info():
 
 def get_all_tors_to_update():
     tors = []
+    transmissions_archive = str
     try:
         transmissions_in = open(transmission_log, 'r')
     except IOError as er:
@@ -177,12 +179,7 @@ log = logging(caller='Plex TVM Update', filename='Process')
 log.start()
 
 options = docopt(__doc__, version='Plex TVM Update Release 1.0')
-vli = int(options['--vl'])
-if vli > 5 or vli < 1:
-    log.write(f"{time.strftime('%D %T')} Plex TVM Update: Unknown Verbosity level of {vli}, try plex_extract.py -h", 0)
-    quit()
-elif vli >= 1:
-    log.write(f'Verbosity level is set to: {options["--vl"]}', 2)
+vli = check_vli(options, log)
     
 db = mariaDB(caller=log.caller, filename=log.filename, vli=vli)
     

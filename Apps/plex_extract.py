@@ -24,7 +24,8 @@ Options:
 from docopt import docopt
 from datetime import date
 
-from Libraries import execute_sqlite, mariaDB, config, execute_tvm_request, fix_showname, logging, tvmaze_apis
+from Libraries import execute_sqlite, mariaDB, config, execute_tvm_request, fix_showname, logging, \
+     tvmaze_apis, check_vli
 
 
 class sdb_info:
@@ -187,17 +188,11 @@ log = logging(caller='Plex Extract', filename='Process')
 log.start()
 
 options = docopt(__doc__, version='Plex Extract Release 0.1')
-vli = int(options['--vl'])
+vli = check_vli(options, log)
 if vli > 2:
     do_log = True
 else:
     do_log = False
-    
-if vli > 5 or vli < 1:
-    log.write(f'Unknown Verbosity level of {vli}, try plex_extract.py -h', 0)
-    quit()
-elif vli > 1:
-    log.write(f'Verbosity level is set to: {options["--vl"]}', 2)
     
 db = mariaDB(caller=log.caller, filename=log.filename, vli=vli)
     
