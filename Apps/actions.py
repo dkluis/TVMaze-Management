@@ -69,23 +69,27 @@ def validate_requirements(filename, extension, epi_no, showname, base):
     res3 = '480p'
     codex = '264'
     codex2 = '265'
+    '''
     cont1 = "mkv"
     cont2 = "mp4"
     cont3 = 'avi'
+    '''
     prov1 = 'bae'
+    prov2 = 'afi'
     priority = base
     if res1 in filename.lower():
-        priority = priority + 40
+        priority += 40
     elif res2 in filename.lower():
-        priority = priority + 30
+        priority += 30
     elif res3 in filename.lower():
         priority += 20
     else:
         priority = priority - 40
     if codex in filename.lower():
-        priority = priority + 100
+        priority += 100
     elif codex2 in filename.lower():
-        priority = priority + 100
+        priority += 100
+    '''
     if extension:
         if cont1 in filename.lower():
             priority = priority + 15
@@ -93,8 +97,11 @@ def validate_requirements(filename, extension, epi_no, showname, base):
             priority = priority + 10
         elif cont3 in filename.lower():
             priority = priority + 5
+    '''
     if prov1 in filename.lower():
-        priority = priority - 66
+        priority -= 66
+    elif prov2 in filename.lower():
+        priority -= 66
     if 'proper' in filename.lower():
         priority += 30
     elif 'repack' in filename.lower():
