@@ -87,15 +87,12 @@ def func_narrow_down_showids(showids, season, episode):
         result = func_find_episode(showid, season, episode)
         if result:
             valid_shows.append(result)
-    if not valid_shows:
-        return False
+    if len(valid_shows) == 0:
+        return []
     found_shows_with_epis = []
-    if len(valid_shows) > 1:
-        for show in valid_shows:
-            if show[0][4] == 'Downloaded' or show[0][4] is None:
-                found_shows_with_epis.append(show[0][0])
-    else:
-        found_shows_with_epis.append(valid_shows[0][0])
+    for show in valid_shows:
+        if show[0][4] == 'Downloaded' or show[0][4] is None:
+            found_shows_with_epis.append(show[0][0])
     return found_shows_with_epis
 
 
@@ -153,7 +150,7 @@ def func_update_plex(episodes):
                 log.write(f'Could not determine the right show "{fixed_showname}" {episode}')
                 found_show = []
             else:
-                found_show = found_sh[0][0]
+                found_show = found_sh[0]
         else:
             found_show = result[0][0]
         if not found_show:
