@@ -76,7 +76,7 @@ def process_show_info(rec, interest="New"):
             my_interest = "Skipped"
         elif language != "English":
             my_interest = "Skipped"
-        elif rec['status'] == "Ended" and premiered < "2019-01-01":
+        elif rec['status'] == "Ended" and premiered < "2020-01-01":
             my_interest = "Skipped"
         elif rec['type'] == 'Sports' or \
                 rec['type'] == 'News' or \
@@ -87,8 +87,8 @@ def process_show_info(rec, interest="New"):
                 network == 'YouTube Premium' or \
                 network == 'Facebook Watch':
             my_interest = 'Skipped'
-    if my_interest == 'Skipped' and vli > 4:
-        log.write(f'Skipping {rec} due to the interest rules', 5)
+    if my_interest == 'Skipped' and vli > 1:
+        log.write(f'Skipping {rec} due to the interest rules', 1)
     
     return {'network': network, 'country': country,
             'runtime': length, 'language': language,
