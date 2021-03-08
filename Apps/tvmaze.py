@@ -1154,7 +1154,8 @@ def window_do_logs_refresh(win, data):
     window_logs_refresh(f'timer##{data}', '')
     auto_refresh_off = get_item_configuration(f"Auto Refresh Off##{data}")
     if auto_refresh_off['enabled']:
-        run_async_function(func_start_refresh_timer, data, return_handler=window_do_logs_refresh)
+        ...
+        # run_async_function(func_start_refresh_timer, data, return_handler=window_do_logs_refresh)
         
         
 def window_logs_auto_refresh(sender, on_off):
@@ -1162,7 +1163,7 @@ def window_logs_auto_refresh(sender, on_off):
     function = func_sender_breakup(sender, 0)
     log.write(f'Log Refresh s {sender}, d {on_off}, f {function}, w {win}')
     if on_off:
-        run_async_function(func_start_refresh_timer, win, return_handler=window_do_logs_refresh)
+        # run_async_function(func_start_refresh_timer, win, return_handler=window_do_logs_refresh)
         configure_item(f'Auto Refresh Off##{win}', enabled=True)
         configure_item(f'Auto Refresh On##{win}', enabled=False)
     else:
