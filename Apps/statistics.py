@@ -22,8 +22,8 @@ Options:
 """
 
 from docopt import docopt
-import pandas as pd
-from sqlalchemy import create_engine
+# import pandas as pd
+# from sqlalchemy import create_engine
 
 from Libraries import get_today, time, stat_views, mariaDB, logging, check_vli
 
@@ -131,17 +131,17 @@ def view_history(last: False):
             return False
         else:
             return shows[0]
-    else:
-        mdb_engine = create_engine(f'mysql+pymsql://user:password@localhost/db?host=localhost?port=3306')
-        mdbe = mdb_engine.connect()
-        pd.set_option('max_rows', 31)
-        pd.set_option('min_rows', 30)
-        df = pd.read_sql_query('select statepoch, statdate, tvmshows, myshows, myshowsended,'
-                               'myshowstbd, myshowsrunning, myshowsindevelopment,'
-                               'myepisodes, myepisodeswatched, myepisodestowatch, myepisodesskipped, '
-                               'myepisodestodownloaded, myepisodesannounced '
-                               'from statistics where statrecind = "TVMaze" order by statepoch', mdbe)
-        print(df)
+    # else:
+    #    mdb_engine = create_engine(f'mysql+pymsql://user:password@localhost/db?host=localhost?port=3306')
+    #    mdbe = mdb_engine.connect()
+    #    pd.set_option('max_rows', 31)
+    #    pd.set_option('min_rows', 30)
+    #    df = pd.read_sql_query('select statepoch, statdate, tvmshows, myshows, myshowsended,'
+    #                           'myshowstbd, myshowsrunning, myshowsindevelopment,'
+    #                           'myepisodes, myepisodeswatched, myepisodestowatch, myepisodesskipped, '
+    #                           'myepisodestodownloaded, myepisodesannounced '
+    #                           'from statistics where statrecind = "TVMaze" order by statepoch', mdbe)
+    #    print(df)
     return
 
 
