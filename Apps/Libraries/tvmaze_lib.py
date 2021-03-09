@@ -1,5 +1,3 @@
-import requests
-import mariadb
 import sqlite3
 import sys
 import re
@@ -8,6 +6,10 @@ import time
 import ast
 from datetime import datetime, timedelta, date
 from timeit import default_timer as timer
+
+import requests
+import mariadb
+
 from dearpygui.core import log_info, does_item_exist, add_input_text, add_same_line, add_button, add_separator, \
     add_table, get_value, set_table_data
 from dearpygui.simple import window
@@ -39,16 +41,18 @@ class logging:
         except IOError as err:
             print('TVMaze config is not found at /Users/dick/.tvmaze/config with error', err)
             quit()
-        config = ast.literal_eval(secret.read())
+        conf = ast.literal_eval(secret.read())
         if env == 'Prod':
-            lp = config['prod_logs']
+            lp = conf['prod_logs']
         else:
-            lp = config['tst_logs']
+            lp = conf['tst_logs']
         if 'SharedFolders' in os.getcwd():
             lp = str(lp).replace('HD-Data-CA-Server', 'SharedFolders')
         
         self.log_path = lp
-        self.logfile = 'NotSet'
+        self.logfile = open('temp.txt', "+a")
+        self.logfile.close()
+        os.remove('temp.txt')
         if len(caller) < 15:
             spaces = '               '
             needed = 15 - len(caller)
@@ -341,8 +345,8 @@ class mariaDB:
         self.__batch = batch
         self.__vli = vli
         
-        self.__connection = ''
-        self.__cursor = ''
+        # self.__connection = ''
+        # self.__cursor = ''
         self.__active = False
         self.open()
         
@@ -401,7 +405,7 @@ class mariaDB:
                 if not self.__batch:
                     self.__connection.commit()
             except mariadb.Error as er:
-                self.__log.write(f'Execute SQL (Commit) Database Error: {self.db}, {er}, {sql}', 0)
+                self.__log.write(f'Execute SQL (Commit) Database Error: {self.__db}, {er}, {sql}', 0)
                 self.__log.write('----------------------------------------------------------------------')
                 return False, er
             if self.__vli > 2:
@@ -412,7 +416,7 @@ class mariaDB:
                 self.__cursor.execute(sql)
                 result = self.__cursor.fetchall()
             except mariadb.Error as er:
-                self.__log.write(f'Execute SQL (Fetch) Database Error: {self.db}, {er}, {sql}', 0)
+                self.__log.write(f'Execute SQL (Fetch) Database Error: {self.__db}, {er}, {sql}', 0)
                 self.__log.write(f'----------------------------------------------------------------------')
                 return False, er
             if data_dict and len(result) > 0:
@@ -439,6 +443,7 @@ class mariaDB:
         """
         sr = sql.lower().replace('select ', '').replace("`", "")
         sp = sr.lower().split(' from')[0]
+        st = ''
         if sp == '*':
             sf = sql.lower().split('from ')
             if len(sf) == 2:
@@ -550,164 +555,7 @@ def execute_sqlite(sqltype='', sql=''):
         return result
     else:
         return False, 'Not implemented yet'
-
-
-def create_db_sql(db):
-    return 'CREATE DATABASE ' + db
-
-
-class create_tb_key_values:
-    sql = "CREATE TABLE `key_values` " \
-          "(`key` varchar(25) NOT NULL, " \
-          "`info` varchar(375) DEFAULT NULL, " \
-          "`comments` varchar(125) DEFAULT NULL, " \
-          "UNIQUE KEY `key_values_UN` (`key`)) " \
-          "ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='TVMaze internal key info';"
-    fill = "INSERT INTO key_values (`key`,info,comments) VALUES " \
-           "('def_dl','piratebay','The default downloader to assign to newly followed shows')," \
-           "('email','YOUR GMAIL ADDRESS','your gmail email address')," \
-           "('emailpas','YOUR-EMAIL-PASSWORD','your gmail password')," \
-           "('minput_x','11','Line where the menu input is displayed:  Calc is mtop + minput_x')," \
-           "('mmenu_2y','65','Second Column of Menu items')," \
-           "('mmenu_3y','110','Third Column of Menu items')," \
-           "('mmenu_y','10','First Column of Menu items')," \
-           "('mstatus_x','2','Line where the Status is displayed:  Calc is minput_x + mstatus_x')," \
-           "('mstatus_y','18','Column where the status messasges are displayed')," \
-           "('msub_screen_x','2','Number of line to skip for sub_screen processing')," \
-           "('mtop','2','Top line where the Menu starts')," \
-           "('plexdonotmove','sample.mkv,sample.mp4,sample.avi,sample.wmv,rarbg.mp4,rarbg.mkv,rarbg.avi,rarbg.wmv'," \
-           "'Downloaded files that should not go to Plex')," \
-           "('plexexts','mkv,mp4,mv4,avi,wmv,srt','Media extension to process')," \
-           "('plexmovd','/Volumes/HD-Data-CA-Server/PlexMedia/Movies/','Movies Main Directory')," \
-           "('plexmovstr','720p,1080p,dvdscr,web-dl,web-,bluray,x264,dts-hd,acc-rarbg,solar,h264,hdtv,rarbg,-sparks," \
-           "-lucidtv','Eliminate these string from the movie name')," \
-           "('plexprefs','www.torrenting.org  -  ,www.torrenting.org - ,www.Torrenting.org       " \
-           ",www.torrenting.org.," \
-           "from [ www.torrenting.me ] -,[ www.torrenting.com ] -,www.Torrenting.com  -  ,www.torrenting.com -," \
-           "www.torrenting.com,www.torrenting.me -,www.torrenting.me,www.scenetime.com  -,www.scenetime.com - ," \
-           "www.scenetime.com -,www.scenetime.com,www.speed.cd - ,www.speed.cd,xxxxxxxxx'," \
-           "'Prefixes to ignore for show or movies names')," \
-           "('plexprocessed'," \
-           "'/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/TransmissionFiles/Processed/'" \
-           ",'Directory where the Plex Processor put undetermined downloads')," \
-           "('plexsd','/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/TransmissionFiles/'," \
-           "'Download Source Directory')," \
-           "('plextrash','/Users/dick/.Trash/','The Trash Directory')," \
-           "('plextvd1','/Volumes/HD-Data-CA-Server/PlexMedia/TV Shows/','TV Shows Main Direcotory')," \
-           "('plextvd2','/Volumes/HD-Data-CA-Server/PlexMedia/Kids/TV Shows/','Second directory to store tv shows " \
-           "(for the grandkids)')," \
-           "('plextvd2selections','Doc Mcstuffins,Elena Of Avalor,Mickey And The Roadster Racers,Sofia The First," \
-           "Tangled The Series,Star Wars Resistance,Avengers Assemble,Star Wars The Clone Wars'," \
-           "'The different shows to store separate for the grandkids')," \
-           "('sms','8138189195@tmomail.net','You cell phone providers email adress to get you text messages')," \
-           "('tvmheader','{''Authorization'': ''Basic YOUR-TVMAZE-API-ACCESS-TOKEN''}'," \
-           "'tvmaze private key:  Use Dashboard to pick up password and use Premiun API testing to login in and get " \
-           "authorization key');"
-
-
-class create_tb_dls:
-    sql = "CREATE TABLE `download_options` (`providername` varchar(15) DEFAULT NULL," \
-          " `link_prefix` varchar(75) DEFAULT NULL," \
-          " `suffixlink` varchar(50) DEFAULT NULL," \
-          " `searchchar` varchar(5) DEFAULT NULL," \
-          " UNIQUE KEY `download_options_UN` (`providername`)" \
-          ") ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='TVMaze Downloader Info'"
-    fill = [
-        "INSERT INTO download_options (`providername`,link_prefix,suffixlink,searchchar) VALUES "
-        "('rarbgAPI','Auto via RARBG API  --> ',NULL,' ');",
-        "INSERT INTO download_options (`providername`,link_prefix,suffixlink,searchchar) VALUES "
-        "('magnetdl','https://www.magnetdl.com/','/','-');",
-        "INSERT INTO download_options (`providername`,link_prefix,suffixlink,searchchar) VALUES "
-        "('torrentfunk','https://www.torrentfunk.com/television/torrents/','.html','-');",
-        "INSERT INTO download_options (`providername`,link_prefix,suffixlink,searchchar) VALUES "
-        "('ShowRSS','Auto via ShowRSS    --> ',NULL,' ');",
-        "INSERT INTO download_options (`providername`,link_prefix,suffixlink,searchchar) VALUES "
-        "('eztvAPI','Auto via Eztv''s API --> ',NULL,' ');",
-        "INSERT INTO download_options (`providername`,link_prefix,suffixlink,searchchar) VALUES "
-        "('rarbg','https://rarbg.to/torrents.php?search=',NULL,'+');",
-        "INSERT INTO download_options (`providername`,link_prefix,suffixlink,searchchar) VALUES "
-        "(NULL,'No Link associated',NULL,' ');",
-        "INSERT INTO download_options (`providername`,link_prefix,suffixlink,searchchar) VALUES "
-        "('rarbgmirror','--https://rarbgmirror.org/torrents.php?search=',NULL,'+');",
-        "INSERT INTO download_options (`providername`,link_prefix,suffixlink,searchchar) VALUES "
-        "('eztv','https://eztv.io/search/',NULL,'-');",
-        "INSERT INTO download_options (`providername`,link_prefix,suffixlink,searchchar) VALUES "
-        "('Skip','Still Following but not downloading',NULL,NULL);"
-    ]
-
-
-class create_tb_shows:
-    sql = "CREATE TABLE `shows` (`showid` bigint(10) UNSIGNED NOT NULL ," \
-          " `showname` varchar(100) DEFAULT NULL," \
-          " `url` varchar(130) DEFAULT NULL," \
-          " `type` varchar(20) DEFAULT NULL," \
-          " `showstatus` varchar(25) DEFAULT NULL," \
-          " `premiered` varchar(10) DEFAULT NULL," \
-          " `language` varchar(20) DEFAULT NULL," \
-          " `runtime` integer(3) unsigned DEFAULT NULL," \
-          " `network` varchar(50) DEFAULT NULL," \
-          " `country` varchar(50) DEFAULT NULL," \
-          " `tvrage` varchar(15) DEFAULT NULL," \
-          " `thetvdb` varchar(15) DEFAULT NULL," \
-          " `imdb` varchar(15) DEFAULT NULL," \
-          " `tvmaze_updated` bigint(15) DEFAULT NULL," \
-          " `tvmaze_upd_date` date DEFAULT NULL," \
-          " `status` varchar(15) DEFAULT NULL," \
-          " `download` varchar(15) DEFAULT NULL," \
-          " `record_updated` date DEFAULT NULL," \
-          " `alt_showname` varchar(100) DEFAULT NULL," \
-          " `alt_sn_override` varchar(5) DEFAULT NULL," \
-          " `eps_count` integer(4) unsigned default NULL," \
-          " `eps_updated` date default NULL," \
-          " UNIQUE KEY `shows_UN` (`showid`)" \
-          ") ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='ALL TVMaze Supported TV Shows'"
-
-
-class create_tb_eps_by_show:
-    sql = "CREATE TABLE `episodes` (`epiid` bigint(10) UNSIGNED NOT NULL ," \
-          " `showid` bigint(10) UNSIGNED NOT NULL," \
-          " `showname` varchar(100) DEFAULT NULL," \
-          " `epiname` varchar(130) DEFAULT NULL," \
-          " `url` varchar(175) DEFAULT NULL," \
-          " `season` int(3) UNSIGNED DEFAULT NULL," \
-          " `episode` int(4) UNSIGNED DEFAULT NULL," \
-          " `airdate` date DEFAULT NULL," \
-          " `mystatus` varchar(20) DEFAULT NULL," \
-          " `mystatus_updated` date DEFAULT NULL," \
-          " `rec_updated` date DEFAULT NULL," \
-          " UNIQUE KEY `episodes_UN` (`epiid`)" \
-          ") ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='TVMaze All episodes for all followed TV Shows'"
-
-
-class create_tb_statistics:
-    sql = "CREATE TABLE statistics (`statepoch` bigint(15) UNSIGNED PRIMARY KEY NOT NULL, " \
-          "`statdate` datetime, " \
-          "`tvmshows` integer DEFAULT NULL, " \
-          "`myshows` integer DEFAULT NULL, " \
-          "`myshowsended` integer DEFAULT NULL, " \
-          "`myshowstbd` integer DEFAULT NULL, " \
-          "`myshowsrunning` integer DEFAULT NULL, " \
-          "`myshowsindevelopment` integer DEFAULT NULL, " \
-          "`myepisodes` integer DEFAULT NULL, " \
-          "`myepisodeswatched` integer DEFAULT NULL, " \
-          "`myepisodestowatch` integer DEFAULT NULL, " \
-          "`myepisodesskipped` integer DEFAULT NULL, " \
-          "`myepisodestodownloaded` integer DEFAULT NULL, " \
-          "`myepisodesannounced` integer DEFAULT NULL, " \
-          "`statrecind` varchar(15) NOT NULL, " \
-          "`nodownloader` integer DEFAULT NULL, " \
-          "`rarbgapi` integer DEFAULT NULL, " \
-          "`rarbg` integer DEFAULT NULL, " \
-          "`rarbgmirror` integer DEFAULT NULL, " \
-          "`showrss` integer DEFAULT NULL, " \
-          "`skipmode` integer DEFAULT NULL, " \
-          "`eztvapi` integer DEFAULT NULL, " \
-          "`eztv` integer DEFAULT NULL, " \
-          "`magnetdl` integer DEFAULT NULL, " \
-          "`torrentfunk` integer DEFAULT NULL, " \
-          " UNIQUE KEY `statistic_UN` (`statepoch`)" \
-          ") ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='TVMaze Statistic'"
-
+   
 
 def tables(db, tbl=''):
     if tbl == '':
@@ -847,6 +695,7 @@ def get_tvmaze_info(key):
     else:
         info = result[0][0]
     return info
+
 
 '''
 def find_new_shows():
@@ -1071,6 +920,7 @@ def eliminate_prefixes(name):
             return name_no_pref
     return name
 
+
 '''
 def determine_directory(name):
     """
@@ -1235,8 +1085,8 @@ class paths:
         self.log_path = lp
         self.app_path = ap
         self.scr_path = sp
-        self.process = lp + 'Process.log'
-        self.transmission = lp + "Transmission.log"
+        self.process = f'{lp}Process.log'
+        self.transmission = f'{lp}Transmission.log'
 
 
 def convert_to_dict_within_list(data, data_type='DB', field_list=None):
