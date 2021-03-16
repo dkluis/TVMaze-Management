@@ -50,9 +50,9 @@ class logging:
             lp = str(lp).replace('HD-Data-CA-Server', 'SharedFolders')
         
         self.log_path = lp
-        self.logfile = open('temp.txt', "+a")
+        self.logfile = open('.temp.txt', "+a")
         self.logfile.close()
-        os.remove('temp.txt')
+
         if len(caller) < 15:
             spaces = '               '
             needed = 15 - len(caller)
@@ -141,6 +141,11 @@ class logging:
         """
             Record End time
         """
+        try:
+            os.remove('.temp.txt')
+        except os.error as er:
+            print(f'Error Delete the .temp file {self.caller}')
+            
         self.ended = timer()
         self.elapsed = self.ended - self.started
         self.write(f'{self.caller} Elapsed Time is:s {round(self.elapsed, 3)} seconds')
