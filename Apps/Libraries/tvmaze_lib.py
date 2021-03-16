@@ -48,16 +48,17 @@ class logging:
             lp = conf['tst_logs']
         if 'SharedFolders' in os.getcwd():
             lp = str(lp).replace('HD-Data-CA-Server', 'SharedFolders')
-        
-        self.log_path = lp
-        self.logfile = open('.temp.txt', "+a")
-        self.logfile.close()
 
         if len(caller) < 15:
             spaces = '               '
             needed = 15 - len(caller)
             caller = caller + spaces[:needed]
         self.caller = caller
+        
+        self.log_path = lp
+        self.logfile = open(f'.{self.caller}', "+a")
+        self.logfile.close()
+        
         self.filename = filename
         self.file_status = False
         self.content = []
@@ -142,7 +143,7 @@ class logging:
             Record End time
         """
         try:
-            os.remove('.temp.txt')
+            os.remove(f'.{self.caller}')
         except os.error as er:
             print(f'Error Delete the .temp file {self.caller}')
             
