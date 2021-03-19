@@ -145,7 +145,7 @@ class logging:
         try:
             os.remove(f'.{self.caller}')
         except os.error as er:
-            print(f'Error Delete the .temp file {self.caller}')
+            print(f'Error Delete the .temp file {self.caller} with error: {er}')
             
         self.ended = timer()
         self.elapsed = self.ended - self.started
@@ -181,10 +181,11 @@ class tvmaze_apis:
     update_followed_shows = 'https://api.tvmaze.com/v1/user/follows/shows'
     get_followed_shows = 'https://api.tvmaze.com/v1/user/follows/shows'
     update_episode_status = 'https://api.tvmaze.com/v1/user/episodes/'
+    episode_info = 'http://api.tvmaze.com/episodes/'
 
 
 def execute_tvm_request(api, req_type='get', data='', err=True, return_err=False, sleep=1.25, code=False, redirect=5,
-                        timeout=(10, 5), log_ind=False):
+                        timeout=(10, 5), log_ind=False, log_file='Process'):
     """
     Call TVMaze APIs
 
@@ -198,6 +199,7 @@ def execute_tvm_request(api, req_type='get', data='', err=True, return_err=False
     :param redirect:    Number of redirects allowed
     :param timeout:     Initial time-out limit and call time-out limit [Default: 10 and 5 seconds]
     :param log_ind:     Write to the log_file
+    :param log_file:    Log Filename
     :return:            Resulting json if successful for get or HTTPS result or False if unsuccessful
     """
     
@@ -205,7 +207,7 @@ def execute_tvm_request(api, req_type='get', data='', err=True, return_err=False
     session = requests.Session()
     session.max_redirects = redirect
     header_info = ''
-    logfile = logging(caller='TVM Request', filename='Process')
+    logfile = logging(caller='TVM Request', filename=log_file)
     if code:
         tvm_auth = get_tvmaze_info('tvm_api_auth')
         header_info = {'Authorization': tvm_auth}
@@ -351,8 +353,8 @@ class mariaDB:
         self.__batch = batch
         self.__vli = vli
         
-        # self.__connection = ''
-        # self.__cursor = ''
+        # self.__connection = None
+        # self.__cursor = None
         self.__active = False
         self.open()
         

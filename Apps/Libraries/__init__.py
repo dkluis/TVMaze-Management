@@ -7,3 +7,4 @@ from Libraries.tvm_logging import *
 """
 
 from Libraries.tvmaze_lib import *
+from Libraries.parts_lib import *

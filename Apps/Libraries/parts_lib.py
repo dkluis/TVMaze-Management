@@ -1,17 +1,17 @@
-from typing import Type, Dict, Union
+from Libraries import mariaDB
 
 
 class part:
-    def __init__(self):
+    def __init__(self, db=mariaDB):
         self.__data = None
         self.__initialized = False
         self.__data_structure = {
             'showid': int,
             'showname': str
         }
-        self._data = self.__data_structure
-        
+        self.__data = self.__data_structure
         self.info = None
+        self.db = db
  
     def read(self, showid: int = 0, showname: str = '') -> bool:
         """
@@ -43,12 +43,16 @@ class part:
         pass
     
     def __find(self, showid, showname):
+        self.__initialized = False
         if showid != 0:
-            self.__dict()
+            sql = f'select * from shows where showid = {showid}'
+            result = self.db.execute_sql(sql=sql, sqltype='Fetch', data_dict=True)
+            if result:
+                self.info = result
+                self.__initialized = True
         elif showname != '':
-            self.__dict()
-        else:
-            self.__exist
-
-    def __dict(self):
-        pass
+            sql = f'select * from shows where showname = {showname} or alt_showname = {showname}'
+            result = self.db.execute_sql(sql=sql, sqltype='Fetch', data_dict=True)
+            if result:
+                self.info = result
+                self.__initialized = True

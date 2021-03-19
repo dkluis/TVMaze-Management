@@ -37,11 +37,11 @@ def func_get_cli():
     elif vli > 1:
         log.write(f'Verbosity level is set to: {options["--vl"]}', 2)
     if options['-a']:
-        sql = 'select epiid from episodes'
+        sql = 'select epiid from episodes order by epiid desc'
     elif options['-t']:
         sql = f'select epiid from episodes where epiid = {options["<epiid>"]}'
     elif options['-r']:
-        sql = f'select epiid from episodes where epiid >= {options["<epiid>"]}'
+        sql = f'select epiid from episodes where epiid >= {options["<epiid>"]} order by epiid desc'
     else:
         log.write(f"No known - parameter given, try episodes_update.py -h", 0)
         quit()
@@ -53,7 +53,8 @@ def func_get_the_episodes():
 
 
 def func_get_tvmaze_episode_info(epiid):
-    epiinfo = execute_tvm_request(f'{tvmaze_apis.get_episodes_status}/{epiid}', timeout=(20, 10), return_err=True)
+    epiinfo = execute_tvm_request(f'{tvmaze_apis.episode_info}{epiid}',
+                                  timeout=(20, 10), return_err=True)
     if not epiinfo:
         log.write(f'Error with API call {epiinfo}', 0)
         return
@@ -67,9 +68,14 @@ def func_get_tvmaze_episode_info(epiid):
         return
     
     epiinfo = epiinfo.json()
+    if epiinfo['airdate'] == '':
+        airdate = None
+    else:
+        airdate = epiinfo['airdate']
+        
     sql_episodes = f"update episodes " \
                    f'set epiname = "{epiinfo["name"]}", ' \
-                   f"airdate = '{epiinfo['airdate']}', " \
+                   f"airdate = '{airdate}', " \
                    f"url = '{epiinfo['url']}', " \
                    f"season = '{epiinfo['season']}', " \
                    f"episode = '{epiinfo['number']}' " \
@@ -106,7 +112,7 @@ if __name__ == '__main__':
     vli = 0
     episodes_to_update = []
     sql = ''
-    log = logging(caller='Episodes Update', filename='Episodes_Update')
+    log = logging(caller='Episodes Update', filename='Episodes Update')
     log.start()
     db = mariaDB(caller=log.caller, filename=log.filename, vli=vli)
     

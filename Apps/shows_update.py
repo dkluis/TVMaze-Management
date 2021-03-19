@@ -40,15 +40,15 @@ def func_get_cli():
     elif vli > 1:
         log.write(f'Verbosity level is set to: {options["--vl"]}', 2)
     if options['-a']:
-        sql = 'select showid, showname from shows'
+        sql = 'select showid, showname from shows order by showid desc'
     elif options['-f']:
-        sql = 'select showid, showname from shows where status = "Followed"'
+        sql = 'select showid, showname from shows where status = "Followed" order by showid desc'
     elif options['-o']:
-        sql = 'select showid, showname from shows where status != "Followed"'
+        sql = 'select showid, showname from shows where status != "Followed" order by showid desc'
     elif options['-t']:
         sql = f'select showid, showname from shows where showid = {options["<showid>"]}'
     elif options['-r']:
-        sql = f'select showid, showname from shows where showid >= {options["<showid>"]}'
+        sql = f'select showid, showname from shows where showid >= {options["<showid>"]} order by showid desc'
     else:
         log.write(f"No known - parameter given, try plex_extract.py -h", 0)
         db.close()
