@@ -54,7 +54,7 @@ def func_get_the_episodes():
 
 def func_get_tvmaze_episode_info(epiid):
     epiinfo = execute_tvm_request(f'{tvmaze_apis.episode_info}{epiid}',
-                                  timeout=(20, 10), return_err=True)
+                                  timeout=(20, 10), return_err=True, log_file='Episodes_Update')
     if not epiinfo:
         log.write(f'Error with API call {epiinfo}', 0)
         return
@@ -112,7 +112,7 @@ if __name__ == '__main__':
     vli = 0
     episodes_to_update = []
     sql = ''
-    log = logging(caller='Episodes Update', filename='Episodes Update')
+    log = logging(caller='Episodes Update', filename='Episodes_Update')
     log.start()
     db = mariaDB(caller=log.caller, filename=log.filename, vli=vli)
     
