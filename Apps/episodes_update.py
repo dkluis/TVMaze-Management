@@ -41,7 +41,7 @@ def func_get_cli():
     elif options['-t']:
         sql = f'select epiid from episodes where epiid = {options["<epiid>"]}'
     elif options['-r']:
-        sql = f'select epiid from episodes where epiid >= {options["<epiid>"]} order by epiid desc'
+        sql = f'select epiid from episodes where epiid <= {options["<epiid>"]} order by epiid desc'
     else:
         log.write(f"No known - parameter given, try episodes_update.py -h", 0)
         quit()
@@ -72,9 +72,9 @@ def func_get_tvmaze_episode_info(epiid):
         airdate = None
     else:
         airdate = epiinfo['airdate']
-        
+    name = str(epiinfo['name']).replace('"', "").replace("'", "")
     sql_episodes = f"update episodes " \
-                   f'set epiname = "{epiinfo["name"]}", ' \
+                   f"set epiname = '{name}', " \
                    f"airdate = '{airdate}', " \
                    f"url = '{epiinfo['url']}', " \
                    f"season = '{epiinfo['season']}', " \
