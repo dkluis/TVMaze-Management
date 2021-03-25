@@ -42,9 +42,11 @@ def func_get_cli():
     if options['-a']:
         sql = 'select showid, showname from shows order by showid desc'
     elif options['-f']:
-        sql = 'select showid, showname from shows where status = "Followed" order by showid desc'
+        sql = 'select showid, showname from shows where status = "Followed" or status = "Undecided"' \
+              ' order by showid desc'
     elif options['-o']:
-        sql = 'select showid, showname from shows where status != "Followed" order by showid desc'
+        sql = 'select showid, showname from shows where status != "Followed" or status = "Undecided" ' \
+              'order by showid desc'
     elif options['-t']:
         sql = f'select showid, showname from shows where showid = {options["<showid>"]}'
     elif options['-r']:
