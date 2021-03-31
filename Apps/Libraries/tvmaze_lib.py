@@ -1035,7 +1035,10 @@ def process_download_name(download_name):
 def get_showid(clean_showname):
     db = mariaDB()
     logfile = logging(caller='Get Show Id', filename='Process')
-    sql = f'select showid, showname from shows where alt_showname = "{clean_showname}" and status = "Followed"'
+    # sql = f'select showid, showname from shows where alt_showname = "{clean_showname}" and status = "Followed"'
+    sql = f'select showid, showname from shows ' \
+          f'where alt_showname = "{clean_showname}" ' \
+          f'and status = "Followed" and showstatus = "Running" and download != "Skip" order by showname'
     result = db.execute_sql(sqltype='Fetch', sql=sql)
     if len(result) > 1:
         logfile.write(f'Something is up, too many shows found {result}', 0)
