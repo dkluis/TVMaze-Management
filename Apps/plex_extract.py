@@ -135,12 +135,9 @@ def func_update_plex(episodes):
         epi_episode = episode[2]
         epi_watched_date = episode[3]
         fixed_showname = fix_showname(epi_showname)
-        # sql = f'select showid from shows ' \
-        #       f'where (showname = "{fixed_showname}" or alt_showname = "{fixed_showname}") ' \
-        #       f'and status = "Followed"'
-        sql = f'select showid, from shows ' \
-              f'where (alt_showname = "{fixed_showname}" or showname = "{fixed_showname}") ' \
-              f'and status = "Followed" and showstatus = "Running" and download != "Skip" order by showname'
+        sql = f'select showid from shows ' \
+              f'where (showname = "{fixed_showname}" or alt_showname = "{fixed_showname}") ' \
+              f'and status = "Followed" and download != "Skip"'
         result = db.execute_sql(sqltype='Fetch', sql=sql)
         if not result:
             if vli > 3:
