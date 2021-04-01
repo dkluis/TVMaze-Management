@@ -1,4 +1,6 @@
 from Libraries import mariaDB, fix_showname
+from dateutil.parser import parse
+import datetime
 
 
 def find_show_via_name_and_episode(raw_show_name: str, season: int, epi_num: int, reason: str):
@@ -29,18 +31,30 @@ def find_show_id(show_name: str, season: int, epi_num: int):
 
 
 def determine_which_episode(epis_found: list, reason: str):
+    epis_det_download = []
     epis_determined = []
     if len(epis_found) == 0:
         return False, []
     
     for epi in epis_found:
         if not epi[2]:
-            epis_determined.append(epi)
+            epis_det_download.append(epi)
         elif epi[2] == 'Watched' or epi[2] == 'Skipped':
             pass
         elif epi[2] == reason:
             pass
         else:
-            epis_determined.append(epi)
-        
+            epis_det_download.append(epi)
+
+    if len(epis_det_download) > 1:
+        for epi in epis_det_download:
+            delta = (parse(str(epi[3])) - parse(datetime.datetime.today().strftime('%Y-%m-%d')))
+            days = abs(int(str(delta).split(' days')[0]))
+            if days < 730:
+                epis_determined.append(epi)
+            else:
+                print('Rejected due to number of days difference', epi)
+    else:
+        epis_determined = epis_det_download
+            
     return True, epis_determined
