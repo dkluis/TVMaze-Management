@@ -8,7 +8,7 @@ def find_show_via_name_and_episode(raw_show_name: str, season: int, epi_num: int
                                    update_date: datetime = None):
     """
     Find the episode id (TVMaze) of a show, season, number
-        Optionally update TVMaze with a status (reason) and reason date.
+        Optionally update TVMaze with a status (reason) and update date.
         Skipped, Downloaded, Watched
     
     :param raw_show_name:       Showname
@@ -74,9 +74,11 @@ def determine_which_episode(epis_found: list, reason: str):
     for epi in epis_found:
         if not epi[2]:
             epis_det_download.append(epi)
-        elif epi[2] == 'Watched' or epi[2] == 'Skipped':
+        elif epi[2] == 'Watched':
             pass
         elif epi[2] == reason:
+            pass
+        elif reason == 'Skipped' and epi[2] is not None:
             pass
         else:
             epis_det_download.append(epi)
