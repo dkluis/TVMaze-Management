@@ -228,7 +228,9 @@ def get_rarbg_api_options(show, seas):
 def get_piratebay_api_options(show, seas):
     piratebay_titles = []
     # api = 'https://piratebay.bid/s/?q=' + str(show).replace(' ', '+') + '+' + seas
-    api = 'https://pirate-bays.net/search/?q=' + str(show).replace(' ', '+') + '+' + seas
+    pb_info = db.execute_sql(sqltype='Fetch', sql=f'SELECT * from download_options '
+                                                  f'WHERE `providername` = "piratebay"')[0]
+    api = f"{pb_info[1]}{str(show).replace(' ', '+')}+{seas}"
     piratebay_data = execute_tvm_request(api=api, timeout=(20, 20))
     if not piratebay_data:
         return piratebay_titles
@@ -397,7 +399,7 @@ def process_the_episodes_to_download():
     downloaded_show = ''
     season_dled = False
     for epi_to_download in episodes_to_download:
-        hour_now = int(str(datetime.now())[11:13])
+        hour_now = int(str(datetime.datetime.now())[11:13])
         if epi_to_download[6] == date_delta('Now', -1) and hour_now < 6:
             if vli > 2:
                 log.write(f'Skipping {epi_to_download[3]} because of air date is {epi_to_download[6]} '
