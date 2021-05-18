@@ -227,7 +227,8 @@ def get_rarbg_api_options(show, seas):
 
 def get_piratebay_api_options(show, seas):
     piratebay_titles = []
-    api = 'https://piratebay.bid/s/?q=' + str(show).replace(' ', '+') + '+' + seas
+    # api = 'https://piratebay.bid/s/?q=' + str(show).replace(' ', '+') + '+' + seas
+    api = 'https://pirate-bays.net/search/?q=' + str(show).replace(' ', '+') + '+' + seas
     piratebay_data = execute_tvm_request(api=api, timeout=(20, 20))
     if not piratebay_data:
         return piratebay_titles
