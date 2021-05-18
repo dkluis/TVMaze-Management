@@ -21,8 +21,9 @@ Options:
 
 from bs4 import BeautifulSoup as Soup
 from docopt import docopt
+from datetime import datetime
 
-from Libraries import mariaDB, tvm_views, os, datetime, timedelta, date_delta, re, execute_tvm_request, \
+from Libraries import mariaDB, tvm_views, os, timedelta, date_delta, re, execute_tvm_request, \
     tvmaze_apis, date, logging, check_vli
 
 
@@ -399,7 +400,7 @@ def process_the_episodes_to_download():
     downloaded_show = ''
     season_dled = False
     for epi_to_download in episodes_to_download:
-        hour_now = int(str(datetime.datetime.now())[11:13])
+        hour_now = int(str(datetime.now())[11:13])
         if epi_to_download[6] == date_delta('Now', -1) and hour_now < 6:
             if vli > 2:
                 log.write(f'Skipping {epi_to_download[3]} because of air date is {epi_to_download[6]} '
