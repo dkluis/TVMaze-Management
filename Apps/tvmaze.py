@@ -480,7 +480,7 @@ def func_tvm_update(fl, si):
         sql.append(f'delete from episodes where `showid` = {si}')
     elif fl == 'UD':
         success = 'Undecided'
-        d = datetime.today() + timedelta(days=14)
+        d = datetime.today() + timedelta(days=31)
         download = str(d)[:10]
         sql.append(f'update shows set status = "{success}", download = "{download}" where `showid` = {si}')
     elif fl == 'SK':
