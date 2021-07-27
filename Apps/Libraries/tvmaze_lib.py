@@ -595,7 +595,7 @@ class tvm_views:
     shows_to_review_count = "SELECT count(*) " \
                             "FROM shows " \
                             "WHERE (status = 'New' AND record_updated <= CURRENT_DATE) OR " \
-                            "(status = 'Undecided' and record_updated >= tvmaze_upd_date) " \
+                            "(status = 'Undecided' and record_updated >= download) " \
                             "ORDER by download, showid;"
     eps_to_download = "SELECT e.*, s.download, s.alt_showname, s.imdb FROM episodes e " \
                       "JOIN shows s on e.showid = s.showid " \
