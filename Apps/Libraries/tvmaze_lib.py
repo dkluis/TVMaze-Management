@@ -590,7 +590,7 @@ class tvm_views:
                              "download, imdb, thetvdb " \
                              "FROM shows " \
                              "WHERE (status = 'New' AND record_updated <= CURRENT_DATE) OR " \
-                             "(status = 'Undecided' and download <= CURRENT_DATE) " \
+                             "(status = 'Undecided' and record_updated >= download) " \
                              "ORDER by download, showid;"
     shows_to_review_count = "SELECT count(*) " \
                             "FROM shows " \
