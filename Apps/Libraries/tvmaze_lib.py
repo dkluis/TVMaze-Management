@@ -34,7 +34,7 @@ class logging:
                 env = 'Test'
             else:
                 env = 'Prod'
-        
+
         secret = ''
         try:
             secret = open('/Users/dick/.tvmaze/config', 'r')
