@@ -11,10 +11,12 @@ set -o errexit
 ##
 #
 Logfile="/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Logs/Transmission.log"
+Inputfile="/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Logs/PlexAcquired.log"
 # AppDir='/Volumes/HD-Data-CA-Server/PlexMedia/PlexProcessing/TVMaze/Apps'
 
 # Position in the temp diretory
 # cd $AppDir
 
-echo $(date) "Transmission Started" >>$Logfile
+echo $(date) "Transmission Download Complete" >>$Logfile
 echo $TR_TORRENT_NAME >>$Logfile
+echo $TR_TORRENT_NAME >>$Inputfile
